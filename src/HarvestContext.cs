@@ -12,6 +12,7 @@ internal sealed class HarvestContext
     internal readonly string[] Inherited;
     internal readonly string[] OutputTraits;
     internal readonly bool Bonus;
+    private readonly string? companionId;
     private bool bonusApplied;
     private readonly Random qualityRandom;
     private readonly int qualityLevel;
@@ -23,6 +24,10 @@ internal sealed class HarvestContext
         WasReady = Ready(crop);
         HarvestId = CropCatalog.Raw(crop.GetData()!.HarvestItemId);
         Inherited = Traits.Read(crop.modData);
+        companionId = Companion.Read(crop.modData);
+        if (companionId != null && Companion.BaseDays(crop.modData) > 0
+            && Traits.RandomFor(crop, 53).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "companion") * ModEntry.Instance.Config.CompanionChance, 0, 1))
+            PendingExtras.Add(ItemRegistry.Create("(O)" + companionId, 1, 0));
         qualityLevel = TraitRules.Level(Inherited, "high_quality");
         qualityRandom = Traits.RandomFor(crop, 37);
         bool regrows = crop.GetData()!.RegrowDays > 0;
@@ -45,7 +50,7 @@ internal sealed class HarvestContext
             || !crop.fullyGrown.Value || crop.dayOfCurrentPhase.Value <= 0
             || crop.GetData()?.RegrowDays is not > 0) return;
         crop.dayOfCurrentPhase.Value = TraitRules.RegrowthDays(crop.dayOfCurrentPhase.Value,
-            Traits.Level(crop.modData, "fast_regrowth"), ModEntry.Instance.Config.FastRegrowthReduction);
+            Traits.Level(crop.modData, "fast_regrowth"), ModEntry.Instance.Config.FastRegrowthReduction, Companion.BaseDays(crop.modData));
     }
 
     internal List<Item> Decorate(Item item)
@@ -53,6 +58,7 @@ internal sealed class HarvestContext
         if (item.ItemId == HarvestId)
         {
             Traits.Write(item.modData, OutputTraits);
+            Companion.Write(item.modData, companionId);
             if (Bonus && !bonusApplied)
             {
                 item.Stack++;
@@ -60,7 +66,10 @@ internal sealed class HarvestContext
             }
         }
         else if (HarvestId == "421" && item.ItemId == "431")
+        {
             Traits.Write(item.modData, Inherited);
+            Companion.Write(item.modData, companionId);
+        }
         if (item.ItemId != HarvestId || qualityLevel <= 0 || item.Quality == 4) return [item];
         // Roll once per unit, including High Yield's extra unit. Preserve the source quality and
         // color until after the normal harvest calculation, then split stacks by resulting quality.

@@ -15,6 +15,7 @@ internal static class Patches
     {
         Patch(harmony, typeof(SObject), nameof(SObject.placementAction), nameof(PlacementPrefix), finalizer: nameof(PlacementFinalizer));
         Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.plant), nameof(PlantPrefix), nameof(PlantPostfix));
+        Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.applySpeedIncreases), prefix: nameof(GrowthPrefix), postfix: nameof(GrowthPostfix));
         Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.GetFertilizerSpeedBoost), postfix: nameof(SpeedPostfix));
         harmony.Patch(AccessTools.Method(typeof(Crop), nameof(Crop.harvest)),
             prefix: Method(nameof(HarvestPrefix)), transpiler: Method(nameof(HarvestTranspiler)), finalizer: Method(nameof(HarvestFinalizer)));
@@ -42,11 +43,13 @@ internal static class Patches
         placing = __state;
         return __exception;
     }
-    private static bool PlantPrefix(HoeDirtAlias __instance, string itemId, Farmer who, bool isFertilizer, ref bool __result, out string[] __state)
+    private sealed record PlantState(string[] Values, string? CompanionId);
+    private static bool PlantPrefix(HoeDirtAlias __instance, string itemId, Farmer who, bool isFertilizer, ref bool __result, out PlantState __state)
     {
         Item? seed = placing?.ItemId == CropCatalog.Raw(itemId) ? placing : who?.ActiveObject;
-        __state = !isFertilizer && seed?.ItemId == CropCatalog.Raw(itemId) ? Traits.Read(seed.modData) : [];
-        if (!isFertilizer && __state.Length > 0 && (!CropCatalog.Ground(__instance) || !CropCatalog.EligibleSeed(itemId)))
+        __state = !isFertilizer && seed?.ItemId == CropCatalog.Raw(itemId)
+            ? new(Traits.Read(seed.modData), Companion.Read(seed.modData)) : new([], null);
+        if (!isFertilizer && __state.Values.Length > 0 && (!CropCatalog.Ground(__instance) || !CropCatalog.EligibleSeed(itemId)))
         {
             __result = false;
             if (who?.IsLocalPlayer == true) Game1.showRedMessage("Trait seeds need tilled ground, outside a planter.");
@@ -54,16 +57,19 @@ internal static class Patches
         }
         return true;
     }
-    private static void PlantPostfix(HoeDirtAlias __instance, string itemId, Farmer who, bool isFertilizer, bool __result, string[] __state)
+    private static void PlantPostfix(HoeDirtAlias __instance, string itemId, Farmer who, bool isFertilizer, bool __result, PlantState __state)
     {
         if (!__result || isFertilizer || __instance.crop == null) return;
         Crop crop = __instance.crop;
         bool eligible = CropCatalog.Ground(__instance) && CropCatalog.EligibleSeed(itemId);
         crop.modData[Traits.EligibilityKey] = eligible ? "true" : "false";
-        Traits.Write(crop.modData, eligible ? __state : []);
+        Traits.Write(crop.modData, eligible ? __state.Values : []);
+        Companion.Write(crop.modData, eligible ? __state.CompanionId : null);
         // Reapply vanilla speed calculation after transferring traits. This preserves profession/paddy/fertilizer effects.
-        if (Core.TraitRules.Level(__state, "fast_growth") > 0) __instance.applySpeedIncreases(who);
+        if (Core.TraitRules.Level(__state.Values, "fast_growth") > 0 || Companion.BaseDays(crop.modData) > 0) __instance.applySpeedIncreases(who);
     }
+    private static void GrowthPrefix(HoeDirtAlias __instance) => Companion.RemoveGrowthDelay(__instance);
+    private static void GrowthPostfix(HoeDirtAlias __instance) => Companion.ApplyGrowth(__instance);
     private static void SpeedPostfix(HoeDirtAlias __instance, ref float __result)
     {
         if (__instance.crop is Crop crop && Traits.Eligible(crop, __instance) && Traits.Has(crop.modData, "fast_growth"))
@@ -109,18 +115,20 @@ internal static class Patches
     private static void StackPostfix(Item __instance, ISalable other, ref bool __result)
     {
         if (__result && other is Item item)
-            __result = Core.TraitRules.Same(string.Join(',', Traits.Read(__instance.modData)), string.Join(',', Traits.Read(item.modData)));
+            __result = Core.TraitRules.Same(string.Join(',', Traits.Read(__instance.modData)), string.Join(',', Traits.Read(item.modData)))
+                && Companion.Read(__instance.modData) == Companion.Read(item.modData);
     }
     private static void DescriptionPostfix(SObject __instance, ref string __result)
     {
         string[] traits = Traits.Read(__instance.modData);
-        if (traits.Length > 0) __result += "\n\nTraits: " + string.Join(", ", traits.Select(Core.TraitRules.Label));
+        if (traits.Length > 0) __result += "\n\nTraits: " + string.Join(", ", traits.Select(t => Core.TraitRules.Id(t) == "companion"
+                ? Core.TraitRules.Label(t) + ": " + Companion.Label(__instance.modData) : Core.TraitRules.Label(t)));
     }
     private static bool DropPrefix(SObject __instance, Item dropInItem, bool probe, Farmer who, ref bool __result, bool returnFalseIfItemConsumed)
     {
         if (!Breeder.IsMachine(__instance)) return true;
         if (Breeder.MenuMutex(__instance, who.currentLocation).IsLocked()) { __result = false; return false; }
-        int required = __instance.heldObject.Value == null ? 1 : Breeder.SeedsRequired;
+        int required = __instance.heldObject.Value == null || Breeder.CompanionMode(__instance) ? 1 : Breeder.SeedsRequired;
         __result = Breeder.Insert(__instance, dropInItem, probe);
         if (__result && !probe)
         {
@@ -162,9 +170,13 @@ internal static class Patches
     {
         if (!__result || probe || __instance.heldObject.Value is not Item output) return;
         output.modData.Remove(Traits.Key);
+        output.modData.Remove(Companion.Key);
         if (ModEntry.Instance.Config.EnableSeedMakerInheritance && __instance.QualifiedItemId == "(BC)25"
             && inputItem != null && CropCatalog.Matches(inputItem, output))
+        {
             Traits.Write(output.modData, Traits.Read(inputItem.modData));
+            Companion.Write(output.modData, Companion.Read(inputItem.modData));
+        }
     }
-    private static void CraftedPostfix(Item __result) => __result.modData.Remove(Traits.Key);
+    private static void CraftedPostfix(Item __result) { __result.modData.Remove(Traits.Key); __result.modData.Remove(Companion.Key); }
 }

@@ -23,12 +23,12 @@ public sealed class BreedingMachine(SObject machine, GameLocation location, Vect
     public Rectangle TileArea { get; } = new((int)tile.X, (int)tile.Y, 1, 1);
     // Automate caches failures by type; different pending donors require different seed matches.
     public string MachineTypeID => ModEntry.Id + ":" + machine.heldObject.Value?.QualifiedItemId
-        + ":" + (machine.heldObject.Value is Item donor ? Core.TraitRules.Encode(Traits.Read(donor.modData)) : "");
-    public MachineState GetState() => Breeder.MenuMutex(machine, Location).IsLocked() ? MachineState.Processing : machine.readyForHarvest.Value ? MachineState.Done : MachineState.Empty;
-    public ITrackedStack? GetOutput() => !Breeder.MenuMutex(machine, Location).IsLocked() && machine.readyForHarvest.Value && machine.heldObject.Value is Item item ? new BreedingOutput(machine, item) : null;
+        + ":" + (machine.heldObject.Value is Item donor ? Core.TraitRules.Encode(Traits.Read(donor.modData)) + ":" + Companion.Read(donor.modData) : "");
+    public MachineState GetState() => Breeder.CompanionMode(machine) ? MachineState.Processing : Breeder.MenuMutex(machine, Location).IsLocked() ? MachineState.Processing : machine.readyForHarvest.Value ? MachineState.Done : MachineState.Empty;
+    public ITrackedStack? GetOutput() => !Breeder.CompanionMode(machine) && !Breeder.MenuMutex(machine, Location).IsLocked() && machine.readyForHarvest.Value && machine.heldObject.Value is Item item ? new BreedingOutput(machine, item) : null;
     public bool SetInput(IStorage storage)
     {
-        if (Breeder.MenuMutex(machine, Location).IsLocked() || storage.HasLockedContainers() || machine.readyForHarvest.Value) return false;
+        if (Breeder.CompanionMode(machine) || Breeder.MenuMutex(machine, Location).IsLocked() || storage.HasLockedContainers() || machine.readyForHarvest.Value) return false;
         if (machine.heldObject.Value is Item donor)
         {
             if (!TryFindSeeds(storage, donor, out IConsumable? seeds)) return false;

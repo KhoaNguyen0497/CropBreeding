@@ -14,7 +14,7 @@ internal static class CropCatalog
     internal static bool EligibleSeed(string id) => !Excluded.Contains(Raw(id)) && Data.ContainsKey(Raw(id));
     internal static bool Matches(Item donor, Item seed) => EligibleSeed(seed.ItemId)
         && Raw(Data[Raw(seed.ItemId)].HarvestItemId) == Raw(donor.ItemId);
-    internal static bool IsProduce(Item item) => Data.Any(p => EligibleSeed(p.Key) && Raw(p.Value.HarvestItemId) == item.ItemId);
+    internal static bool IsProduce(Item item) => Companion.Valid(item);
     internal static bool Ground(HoeDirtAlias soil) => soil.Pot == null && soil.Location != null
         && soil.Location.terrainFeatures.TryGetValue(soil.Tile, out var feature) && ReferenceEquals(feature, soil);
 }

@@ -7,7 +7,7 @@ namespace CropBreeding.Core;
 public static class TraitRules
 {
     public const int MaximumLevel = 5;
-    public static readonly string[] Known = ["fast_growth", "high_yield", "fast_regrowth", "high_quality"];
+    public static readonly string[] Known = ["fast_growth", "high_yield", "fast_regrowth", "high_quality", "companion"];
     public static string Id(string trait) => trait.Split(':')[0];
     private static int TokenLevel(string token)
     {
@@ -50,25 +50,27 @@ public static class TraitRules
         result = Parse(Encode(result.Where(t => Id(t) != id).Append(Token(id, level + 1))));
         return true;
     }
+    public static int CompanionDelay(int baseDays) => (int)Math.Ceiling(Math.Max(0, baseDays) * .5);
+    public static string? CompanionChoice(string? donor, string? seed) => !string.IsNullOrEmpty(donor) ? donor : seed;
     public static int HarvestQuality(int quality, int inheritedLevel, double chancePerLevel, double roll)
     {
         if (inheritedLevel <= 0 || roll >= Math.Clamp(chancePerLevel * Math.Clamp(inheritedLevel, 0, MaximumLevel), 0, 1))
             return quality;
         return quality switch { 0 => 1, 1 => 2, 2 => 4, _ => quality };
     }
-    public static int RegrowthDays(int days, int level, double reductionPerLevel)
+    public static int RegrowthDays(int days, int level, double reductionPerLevel, int companionBaseDays = 0)
     {
-        if (days <= 0 || level <= 0) return days;
+        if (days <= 0) return days;
         // Whole-day countdown: round up, with a minimum of one day.
         double reduction = Math.Clamp(reductionPerLevel * Math.Clamp(level, 0, MaximumLevel), 0, 1);
-        return Math.Max(1, (int)Math.Ceiling(days * (1 - reduction) - 1e-9));
+        return Math.Max(1, (int)Math.Ceiling(days * (1 - reduction) + Math.Max(0, companionBaseDays) * .5 - 1e-9));
     }
     public static bool Same(string? a, string? b) => Encode(Parse(a)) == Encode(Parse(b));
     public static string Label(string token)
     {
         string name = Id(token) switch
         {
-            "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "fast_regrowth" => "Fast Regrowth", "high_quality" => "High Quality", _ => Id(token)
+            "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "fast_regrowth" => "Fast Regrowth", "high_quality" => "High Quality", "companion" => "Companion", _ => Id(token)
         };
         return $"{name} {TokenLevel(token)}";
     }

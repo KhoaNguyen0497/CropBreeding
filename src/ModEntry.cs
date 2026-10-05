@@ -22,6 +22,10 @@ public sealed class ModEntry : Mod
         harmony = new Harmony(Id);
         Patches.Apply(harmony);
         helper.Events.Content.AssetRequested += AssetRequested;
+        helper.Events.Content.AssetsInvalidated += (_, e) =>
+        {
+            if (e.NamesWithoutLocale.Any(n => n.IsEquivalentTo("Data/Crops"))) Companion.Invalidate();
+        };
         helper.Events.GameLoop.GameLaunched += (_, _) =>
         {
             helper.ModRegistry.GetApi<IAutomateApi>("Pathoschild.Automate")?.AddFactory(new BreedingFactory());
@@ -72,6 +76,7 @@ public sealed class ModEntry : Mod
         Utility.ForEachItem(item =>
         {
             item.modData.Remove(Traits.Key);
+            item.modData.Remove(Companion.Key);
             if (item is StardewValley.Object machine && Breeder.IsMachine(machine)) Breeder.Clear(machine);
             return true;
         });
@@ -81,6 +86,7 @@ public sealed class ModEntry : Mod
                 if (feature.crop is Crop crop)
                 {
                     crop.modData.Remove(Traits.Key);
+                    crop.modData.Remove(Companion.Key);
                     crop.modData.Remove(Traits.EligibilityKey);
                     feature.applySpeedIncreases(Game1.MasterPlayer);
                 }

@@ -40,7 +40,7 @@ internal static class AutoHarvesterIntegration
                 if (location.terrainFeatures.TryGetValue(new Vector2(x, y), out var feature)
                     && feature is HoeDirtAlias soil && soil.crop is Crop crop
                     && HarvestContext.Ready(crop) && Traits.Eligible(crop, soil)
-                    && Traits.Has(crop.modData, "fast_regrowth"))
+                    && (Traits.Has(crop.modData, "fast_regrowth") || Companion.BaseDays(crop.modData) > 0))
                     __state.Add((crop, soil));
     }
     private static void RunPostfix(List<(Crop Crop, HoeDirtAlias Soil)> __state)
@@ -49,11 +49,12 @@ internal static class AutoHarvesterIntegration
     }
     private static void PlanPostfix(Crop crop, HoeDirtAlias soil, List<Item>? __result)
     {
-        if (__result == null || !Traits.Eligible(crop, soil) || crop.GetData() == null) return;
+        if (__result == null || __result.Count == 0 || !Traits.Eligible(crop, soil) || crop.GetData() == null) return;
         var context = new HarvestContext(crop);
         var outputs = __result.SelectMany(context.Decorate).ToList();
         __result.Clear();
         __result.AddRange(outputs);
+        __result.AddRange(context.PendingExtras);
         // Plan outputs are only stored if Auto Harvester has capacity. Deterministic rolls make an
         // abandoned plan harmless, and its own storage keeps the produce and crop removal atomic.
     }
