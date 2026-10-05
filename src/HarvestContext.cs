@@ -23,7 +23,7 @@ internal sealed class HarvestContext
         bool regrows = crop.GetData()!.RegrowDays > 0;
         double chance = regrows && !ModEntry.Instance.Config.EnableRegrowingCropMutations
             ? 0 : ModEntry.Instance.Config.MutationChance;
-        OutputTraits = TraitRules.Mutate(Inherited, ModEntry.Instance.Config.MaximumTraits, chance, Traits.RandomFor(crop, 11));
+        OutputTraits = TraitRules.Mutate(Inherited, ModEntry.Instance.Config.MaximumTraits, chance, Traits.RandomFor(crop, 11), canRegrow: regrows);
         // Existing plant traits determine the current harvest effects. A new mutation starts working after replanting.
         Bonus = TraitRules.Level(Inherited, "high_yield") > 0 && Traits.RandomFor(crop, 23).NextDouble()
             < Math.Clamp(ModEntry.Instance.Config.ExtraYieldChance * TraitRules.Level(Inherited, "high_yield"), 0, 1);

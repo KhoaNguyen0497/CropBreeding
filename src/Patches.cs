@@ -108,6 +108,7 @@ internal static class Patches
     private static bool DropPrefix(SObject __instance, Item dropInItem, bool probe, Farmer who, ref bool __result, bool returnFalseIfItemConsumed)
     {
         if (!Breeder.IsMachine(__instance)) return true;
+        if (Breeder.MenuMutex(__instance, who.currentLocation).IsLocked()) { __result = false; return false; }
         int required = __instance.heldObject.Value == null ? 1 : Breeder.SeedsRequired;
         __result = Breeder.Insert(__instance, dropInItem, probe);
         if (__result && !probe)
@@ -121,11 +122,18 @@ internal static class Patches
     private static bool ActionPrefix(SObject __instance, Farmer who, bool justCheckingForActivity, ref bool __result)
     {
         if (!Breeder.IsMachine(__instance)) return true;
-        __result = __instance.heldObject.Value != null;
-        if (!justCheckingForActivity && __instance.heldObject.Value is Item item && who.IsLocalPlayer)
+        __result = true;
+        if (!justCheckingForActivity && who.IsLocalPlayer && Game1.activeClickableMenu == null)
         {
-            if (who.addItemToInventoryBool(item)) Breeder.Clear(__instance);
-            else Game1.showRedMessage("Inventory full.");
+            var location = who.currentLocation;
+            var mutex = Breeder.MenuMutex(__instance, location);
+            mutex.RequestLock(() =>
+            {
+                if (Game1.activeClickableMenu == null && location.objects.TryGetValue(__instance.TileLocation, out var placed)
+                    && ReferenceEquals(placed, __instance))
+                    Game1.activeClickableMenu = new UI.BreedingMenu(__instance, location, mutex);
+                else mutex.ReleaseLock();
+            }, () => Game1.showRedMessage("This machine is in use."));
         }
         return false;
     }

@@ -35,6 +35,12 @@ Check(TraitRules.RegrowthDays(-1, 5, .1) == -1, "non-regrowing stays non-regrowi
 Check(TraitRules.RegrowthDays(7, 0, .1) == 7, "no trait keeps normal regrowth");
 bool sawNew = false, sawUpgrade = false;
 for (int seed = 0; seed < 1000; seed++) {
+    var annual = TraitRules.Mutate(T(""), 3, 1, new Random(seed), canRegrow: false);
+    Check(TraitRules.Level(annual, "fast_regrowth") == 0, "single-harvest crops never gain Fast Regrowth");
+    var annualFull = T("fast_growth:5,high_yield:5");
+    Check(TraitRules.Mutate(annualFull, 3, 1, new Random(seed), canRegrow: false).SequenceEqual(annualFull), "non-regrowing pool exhausted");
+    var regrowing = TraitRules.Mutate(annualFull, 3, 1, new Random(seed), canRegrow: true);
+    Check(TraitRules.Level(regrowing, "fast_regrowth") == 1, "regrowing crops can gain Fast Regrowth");
     var inherited = T("high_yield,fast_regrowth");
     var next = TraitRules.Mutate(inherited, 3, 1, new Random(seed));
     Check(next.Length <= 3, "count cap");

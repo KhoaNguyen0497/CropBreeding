@@ -52,7 +52,7 @@ public sealed class ModEntry : Mod
                 data[Breeder.MachineId] = new BigCraftableData
                 {
                     Name = "Breeding Machine", DisplayName = "Breeding Machine",
-                    Description = "Insert one trait crop, then 10 matching seeds for one bred seed. Plain seeds copy traits; seeds with one level-1 trait merge. Interact to retrieve contents. Breaking it loses its contents.",
+                    Description = "Open to add one trait crop and 10 matching seeds, then choose Breed. Plain seeds copy traits; one level-1 trait can merge. Breaking it loses its contents.",
                     Texture = Id + "/BreedingMachine", SpriteIndex = 0,
                     CanBePlacedIndoors = true, CanBePlacedOutdoors = true, Fragility = 0, Price = 0
                 };

@@ -10,7 +10,7 @@ Plain seeds copy the donor crop's traits. Seeds with **exactly one trait at leve
 
 Examples: `X + Y` donor with `X` seeds gives `X2 + Y`; the same donor with `Z` seeds gives `X + Y + Z`. Each still costs ten seeds and one donor. Matching comes from the loaded `Data/Crops` seed ID and `HarvestItemId`, including Content Patcher/SVE changes; names are never used.
 
-The machine unlocks at Farming level 5. Its provisional recipe uses 50 wood, 5 iron bars and 1 battery pack. It uses a static 16×32 incubator-inspired wooden machine sprite with a green sprout. Click/interact to retrieve a waiting donor or completed seed; destroy the machine to lose its contents. Automate can supply inputs and collect outputs.
+The machine unlocks at Farming level 5. Its provisional recipe uses 50 wood, 5 iron bars and 1 battery pack. It uses a static 16×32 incubator-inspired wooden machine sprite with a green sprout. Interact with empty hands to open its two-slot menu: put a trait crop on the left and matching seeds on the right, then select **Breed**. Collect the finished seed from the left slot. You can retrieve the donor before breeding. Unused seeds return to your inventory when closing (or drop beside you if full); the donor/completed output stays in the machine. Destroying the machine loses its contents. The menu uses the normal inventory and controller navigation. Automate can supply inputs and collect outputs, and pauses for that machine while its menu is open.
 
 Coffee beans already act as both produce and seeds, so mutated beans can be replanted directly. They do not need the breeding machine.
 
@@ -20,7 +20,7 @@ Coffee beans already act as both produce and seeds, so mutated beans can be repl
 |---|---|
 | Fast Growth | Adds 10 percentage points per level to initial-growth speed reduction alongside fertilizer/professions. Total trait speed reduction is capped at 90%. Does not shorten regrowth. |
 | High Yield | 20% chance per level of one extra primary crop per harvest (capped at 100%); extra item preserves that output's quality/color. |
-| Fast Regrowth | Reduces the post-harvest regrowth countdown by 10% per level. Rounded up to whole days, minimum 1 day. Has no effect on single-harvest crops. |
+| Fast Regrowth | Reduces the post-harvest regrowth countdown by 10% per level. Rounded up to whole days, minimum 1 day. Can only appear or upgrade through mutation on crops whose loaded crop data supports regrowth, including SVE crops. Has no effect on single-harvest crops. |
 
 Premium and Hardy have been removed; old metadata for them is ignored. Existing config files can retain obsolete keys, but those keys have no effect. `ExtraYieldChance` now defaults to 0.20 and `FastRegrowthReduction` to 0.10 per level.
 

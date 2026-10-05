@@ -24,13 +24,14 @@ public static class TraitRules
     public static string Encode(IEnumerable<string> values) => string.Join(',', Parse(string.Join(',', values)));
     public static int Level(IEnumerable<string> traits, string id) => Parse(Encode(traits))
         .Where(t => Id(t) == id).Select(TokenLevel).DefaultIfEmpty(0).Max();
-    public static string[] Mutate(IEnumerable<string> inherited, int limit, double chance, Random random)
+    public static string[] Mutate(IEnumerable<string> inherited, int limit, double chance, Random random, bool canRegrow = true)
     {
         string[] current = Parse(Encode(inherited));
         if (random.NextDouble() >= Math.Clamp(chance, 0, 1)) return current;
         // Each eligible trait type has one chance: add it at level 1, or upgrade it by one.
-        string[] choices = Known.Where(id => Level(current, id) is > 0 and < MaximumLevel
-            || (Level(current, id) == 0 && current.Length < Math.Max(0, limit))).ToArray();
+        string[] choices = Known.Where(id => (id != "fast_regrowth" || canRegrow)
+            && (Level(current, id) is > 0 and < MaximumLevel
+                || (Level(current, id) == 0 && current.Length < Math.Max(0, limit)))).ToArray();
         if (choices.Length == 0) return current;
         string chosen = choices[random.Next(choices.Length)];
         return Parse(Encode(current.Where(t => Id(t) != chosen).Append(Token(chosen, Level(current, chosen) + 1))));
