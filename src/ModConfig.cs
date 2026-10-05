@@ -5,9 +5,8 @@ public sealed class ModConfig
     public double MutationChance { get; set; } = 0.05;
     public int MaximumTraits { get; set; } = 3;
     public double FastGrowthReduction { get; set; } = 0.10;
-    public double ExtraYieldChance { get; set; } = 0.25;
-    public double PremiumPriceBonus { get; set; } = 0.20;
-    public double WaterRetentionChance { get; set; } = 0.25;
+    public double ExtraYieldChance { get; set; } = 0.20;
+    public double FastRegrowthReduction { get; set; } = 0.10;
     // Pending decisions are conservative switches, not settled breeding rules.
     public bool EnableRegrowingCropMutations { get; set; } = false;
     public bool EnableSeedMakerInheritance { get; set; } = false;

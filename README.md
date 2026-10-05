@@ -19,11 +19,14 @@ Coffee beans already act as both produce and seeds, so mutated beans can be repl
 | Trait | Effect |
 |---|---|
 | Fast Growth | Adds 10 percentage points per level to initial-growth speed reduction alongside fertilizer/professions. Total trait speed reduction is capped at 90%. Does not shorten regrowth. |
-| High Yield | 25% chance per level of one extra primary crop per harvest (capped at 100%); extra item preserves that output's quality/color. |
-| Premium | 20% per level higher direct crop/seed sale price. Processing uses the ordinary input price. |
-| Hardy | 25% water-retention chance per level (capped at 100%), combined with normal retention. |
+| High Yield | 20% chance per level of one extra primary crop per harvest (capped at 100%); extra item preserves that output's quality/color. |
+| Fast Regrowth | Reduces the post-harvest regrowth countdown by 10% per level. Rounded up to whole days, minimum 1 day. Has no effect on single-harvest crops. |
 
-Default mutation chance is 5%; default cap is 3 unique traits, each with levels 1–5. Successful mutations choose uniformly among eligible trait types: add a missing type if there is room, or upgrade an existing type below level 5. Upgrades remain possible when the trait-count cap is reached. One mutation roll applies to all primary produce from a harvest. The new mutation is stored on produce; growth, retention and yield effects require replanting. Premium affects the resulting item's sale price immediately. Lowering the cap never deletes existing traits; plain-seed copying preserves them, but merging is blocked while the donor exceeds the count cap. Existing saves with unlevelled traits read as level 1. Traits are stored in save-compatible `modData`; different trait sets or levels cannot stack, and vanilla quality/color distinctions still apply.
+Premium and Hardy have been removed; old metadata for them is ignored. Existing config files can retain obsolete keys, but those keys have no effect. `ExtraYieldChance` now defaults to 0.20 and `FastRegrowthReduction` to 0.10 per level.
+
+Every primary crop harvested from a trait plant inherits its traits and levels, including every regrowing harvest. These crops can be used as donors to copy the traits into more seeds. A new mutation changes harvested produce, not the standing plant. For example, Fast Regrowth level 5 changes 7 days to 4, or 2 days to 1.
+
+Default mutation chance is 5%; default cap is 3 unique traits, each with levels 1–5. Successful mutations choose uniformly among eligible trait types: add a missing type if there is room, or upgrade an existing type below level 5. Upgrades remain possible when the trait-count cap is reached. One mutation roll applies to all primary produce from a harvest. The new mutation is stored on produce; growth, regrowth and yield effects require replanting. Lowering the cap never deletes existing traits; plain-seed copying preserves them, but merging is blocked while the donor exceeds the count cap. Existing saves with unlevelled traits read as level 1. Traits are stored in save-compatible `modData`; different trait sets or levels cannot stack, and vanilla quality/color distinctions still apply.
 
 ## Special cases
 

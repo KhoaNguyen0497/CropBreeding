@@ -11,25 +11,20 @@ namespace CropBreeding;
 internal static class Patches
 {
     [ThreadStatic] private static SObject? placing;
-    [ThreadStatic] internal static int Processing;
     internal static void Apply(Harmony harmony)
     {
         Patch(harmony, typeof(SObject), nameof(SObject.placementAction), nameof(PlacementPrefix), finalizer: nameof(PlacementFinalizer));
         Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.plant), nameof(PlantPrefix), nameof(PlantPostfix));
         Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.GetFertilizerSpeedBoost), postfix: nameof(SpeedPostfix));
-        Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.GetFertilizerWaterRetentionChance), postfix: nameof(WaterPostfix));
         harmony.Patch(AccessTools.Method(typeof(Crop), nameof(Crop.harvest)),
             prefix: Method(nameof(HarvestPrefix)), transpiler: Method(nameof(HarvestTranspiler)), finalizer: Method(nameof(HarvestFinalizer)));
         Patch(harmony, typeof(Item), nameof(Item.canStackWith), postfix: nameof(StackPostfix));
         Patch(harmony, typeof(SObject), nameof(SObject.getDescription), postfix: nameof(DescriptionPostfix));
-        var pricePatch = Method(nameof(PricePostfix));
-        pricePatch.priority = Priority.Last;
-        harmony.Patch(AccessTools.Method(typeof(SObject), nameof(SObject.sellToStorePrice)), postfix: pricePatch);
         Patch(harmony, typeof(SObject), nameof(SObject.performObjectDropInAction), nameof(DropPrefix));
         Patch(harmony, typeof(SObject), nameof(SObject.checkForAction), nameof(ActionPrefix));
         Patch(harmony, typeof(SObject), nameof(SObject.minutesElapsed), nameof(MinutesPrefix));
         Patch(harmony, typeof(SObject), nameof(SObject.performToolAction), nameof(ToolPrefix));
-        Patch(harmony, typeof(SObject), nameof(SObject.OutputMachine), nameof(ProcessPrefix), nameof(ProcessPostfix), nameof(ProcessFinalizer));
+        Patch(harmony, typeof(SObject), nameof(SObject.OutputMachine), postfix: nameof(ProcessPostfix));
         Patch(harmony, typeof(CraftingRecipe), nameof(CraftingRecipe.createItem), postfix: nameof(CraftedPostfix));
     }
     private static HarmonyMethod Method(string name) => new(typeof(Patches), name);
@@ -74,11 +69,6 @@ internal static class Patches
         if (__instance.crop is Crop crop && Traits.Eligible(crop, __instance) && Traits.Has(crop.modData, "fast_growth"))
             __result += (float)Math.Clamp(ModEntry.Instance.Config.FastGrowthReduction * Traits.Level(crop.modData, "fast_growth"), 0, 0.9);
     }
-    private static void WaterPostfix(HoeDirtAlias __instance, ref float __result)
-    {
-        if (__instance.crop is Crop crop && Traits.Eligible(crop, __instance) && Traits.Has(crop.modData, "hardy"))
-            __result = 1 - (1 - __result) * (1 - (float)Math.Clamp(ModEntry.Instance.Config.WaterRetentionChance * Traits.Level(crop.modData, "hardy"), 0, 1));
-    }
     private static void HarvestPrefix(Crop __instance, HoeDirtAlias soil, out HarvestContext? __state)
     {
         __state = HarvestContext.Current;
@@ -87,7 +77,10 @@ internal static class Patches
     }
     private static Exception? HarvestFinalizer(Exception? __exception, HarvestContext? __state)
     {
+        HarvestContext? current = HarvestContext.Current;
         HarvestContext.Current = __state;
+        if (__exception == null && current?.WasReady == true && current.Plant.Dirt is HoeDirtAlias soil)
+            HarvestContext.ApplyRegrowth(current.Plant, soil);
         return __exception;
     }
     private static IEnumerable<CodeInstruction> HarvestTranspiler(IEnumerable<CodeInstruction> instructions)
@@ -111,11 +104,6 @@ internal static class Patches
     {
         string[] traits = Traits.Read(__instance.modData);
         if (traits.Length > 0) __result += "\n\nTraits: " + string.Join(", ", traits.Select(Core.TraitRules.Label));
-    }
-    private static void PricePostfix(SObject __instance, ref int __result)
-    {
-        if (Processing == 0 && Traits.Has(__instance.modData, "premium"))
-            __result = (int)Math.Min(int.MaxValue, Math.Floor(__result * (1 + Math.Clamp(ModEntry.Instance.Config.PremiumPriceBonus * Traits.Level(__instance.modData, "premium"), 0, 10))));
     }
     private static bool DropPrefix(SObject __instance, Item dropInItem, bool probe, Farmer who, ref bool __result, bool returnFalseIfItemConsumed)
     {
@@ -151,7 +139,6 @@ internal static class Patches
     {
         if (Breeder.IsMachine(__instance) && (t == null || t is Axe || t is Pickaxe)) Breeder.Clear(__instance);
     }
-    private static void ProcessPrefix(out int __state) { __state = Processing; Processing++; }
     private static void ProcessPostfix(SObject __instance, Item? inputItem, bool probe, bool __result)
     {
         if (!__result || probe || __instance.heldObject.Value is not Item output) return;
@@ -160,6 +147,5 @@ internal static class Patches
             && inputItem != null && CropCatalog.Matches(inputItem, output))
             Traits.Write(output.modData, Traits.Read(inputItem.modData));
     }
-    private static Exception? ProcessFinalizer(Exception? __exception, int __state) { Processing = __state; return __exception; }
     private static void CraftedPostfix(Item __result) => __result.modData.Remove(Traits.Key);
 }
