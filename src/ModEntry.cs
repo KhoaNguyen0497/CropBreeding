@@ -1,4 +1,5 @@
 using HarmonyLib;
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -42,16 +43,17 @@ public sealed class ModEntry : Mod
     }
     private void AssetRequested(object? sender, AssetRequestedEventArgs e)
     {
-        if (e.NameWithoutLocale.IsEquivalentTo("Data/BigCraftables"))
+        if (e.NameWithoutLocale.IsEquivalentTo(Id + "/BreedingMachine"))
+            e.LoadFromModFile<Texture2D>("assets/breeding-machine.png", AssetLoadPriority.Exclusive);
+        else if (e.NameWithoutLocale.IsEquivalentTo("Data/BigCraftables"))
             e.Edit(asset =>
             {
                 var data = asset.AsDictionary<string, BigCraftableData>().Data;
-                BigCraftableData vanilla = data["25"];
                 data[Breeder.MachineId] = new BigCraftableData
                 {
                     Name = "Breeding Machine", DisplayName = "Breeding Machine",
                     Description = "Insert a trait crop, then its matching seed. Copies crop traits into one seed. Interact to retrieve contents. Breaking it loses its contents.",
-                    Texture = vanilla.Texture, SpriteIndex = vanilla.SpriteIndex,
+                    Texture = Id + "/BreedingMachine", SpriteIndex = 0,
                     CanBePlacedIndoors = true, CanBePlacedOutdoors = true, Fragility = 0, Price = 0
                 };
             });

@@ -6,7 +6,7 @@ A gameplay-focused SMAPI mod for Stardew Valley 1.6, including Stardew Valley Ex
 
 Grow crops on ordinary tilled ground. An eligible harvest has a configurable chance to gain one new trait. Existing traits stay intact. Put **one trait crop into the Breeding Machine, then one matching seed**; it produces one seed with the donor crop's exact traits. Donor traits replace existing seed traits, never merge. Matching comes from the loaded `Data/Crops` seed ID and `HarvestItemId`, including Content Patcher/SVE changes; names are never used.
 
-The machine unlocks at Farming level 5. Its provisional recipe uses 50 wood, 5 iron bars and 1 battery pack. It currently reuses the vanilla Seed Maker sprite. Click/interact to retrieve a waiting donor or completed seed; destroy the machine to lose its contents. Automate can supply inputs and collect outputs.
+The machine unlocks at Farming level 5. Its provisional recipe uses 50 wood, 5 iron bars and 1 battery pack. It uses a static 16×32 incubator-inspired wooden machine sprite with a green sprout. Click/interact to retrieve a waiting donor or completed seed; destroy the machine to lose its contents. Automate can supply inputs and collect outputs.
 
 Coffee beans already act as both produce and seeds, so mutated beans can be replanted directly. They do not need the breeding machine.
 
@@ -49,7 +49,7 @@ dotnet build src/CropBreeding.csproj -c Release -p:GamePath="/path/to/Stardew Va
 dotnet run --project tests/TraitRules.Tests.csproj
 ```
 
-Copy `CropBreeding.dll` and `manifest.json` from the build output into `Mods/CropBreeding`. Install on all multiplayer clients. No game binaries are included in this repository.
+Copy `CropBreeding.dll`, `manifest.json` and the `assets` directory from the build output into `Mods/CropBreeding`. Install on all multiplayer clients. No game binaries are included in this repository.
 
 Compile and pure trait-rule checks are automated locally; interactive game validation is still required. See [manual checks](docs/TESTING.md), particularly harvest integrations and controller interactions.
 

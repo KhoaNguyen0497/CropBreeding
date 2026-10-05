@@ -11,6 +11,7 @@
     <Reference Include="$(GamePath)/*.dll" Private="false" />
     <Reference Include="$(GamePath)/smapi-internal/*.dll" Private="false" />
     <None Update="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="assets/**/*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <Target Name="RequireGameReferences" BeforeTargets="ResolveReferences">
     <Error Condition="!Exists('$(GamePath)/Stardew Valley.dll')" Text="Set GamePath to your SMAPI game directory." />
