@@ -4,7 +4,11 @@ A gameplay-focused SMAPI mod for Stardew Valley 1.6, including Stardew Valley Ex
 
 ## Breeding loop
 
-Grow crops on ordinary tilled ground. An eligible harvest has a configurable chance to gain one new trait. Existing traits stay intact. Put **one trait crop into the Breeding Machine, then one matching seed**; it produces one seed with the donor crop's exact traits. Donor traits replace existing seed traits, never merge. Matching comes from the loaded `Data/Crops` seed ID and `HarvestItemId`, including Content Patcher/SVE changes; names are never used.
+Grow crops on ordinary tilled ground. An eligible harvest has a configurable chance to add one new level-1 trait or increase one existing trait by one level. Existing traits stay intact. Put **one trait crop into the Breeding Machine, then 10 matching seeds**; it consumes the inputs and produces **one bred seed**. The ten seeds must have identical traits and quality. Manual insertion requires a stack of at least ten; Automate can combine matching split stacks.
+
+Plain seeds copy the donor crop's traits. Seeds with **exactly one trait at level 1** merge that trait into the donor: an existing trait gains one level, or a different trait is added at level 1. Seeds with multiple traits or a trait above level 1 are rejected. A merge that would exceed the trait-count limit or level 5 is rejected without consuming the seeds or changing the waiting donor.
+
+Examples: `X + Y` donor with `X` seeds gives `X2 + Y`; the same donor with `Z` seeds gives `X + Y + Z`. Each still costs ten seeds and one donor. Matching comes from the loaded `Data/Crops` seed ID and `HarvestItemId`, including Content Patcher/SVE changes; names are never used.
 
 The machine unlocks at Farming level 5. Its provisional recipe uses 50 wood, 5 iron bars and 1 battery pack. It uses a static 16×32 incubator-inspired wooden machine sprite with a green sprout. Click/interact to retrieve a waiting donor or completed seed; destroy the machine to lose its contents. Automate can supply inputs and collect outputs.
 
@@ -14,12 +18,12 @@ Coffee beans already act as both produce and seeds, so mutated beans can be repl
 
 | Trait | Effect |
 |---|---|
-| Fast Growth | Adds 10 percentage points to initial-growth speed reduction alongside fertilizer/professions. Does not shorten regrowth. |
-| High Yield | 25% chance of one extra primary crop per harvest; extra item preserves that output's quality/color. |
-| Premium | 20% higher direct crop/seed sale price. Processing uses the ordinary input price. |
-| Hardy | 25% water-retention chance, combined with normal retention. |
+| Fast Growth | Adds 10 percentage points per level to initial-growth speed reduction alongside fertilizer/professions. Total trait speed reduction is capped at 90%. Does not shorten regrowth. |
+| High Yield | 25% chance per level of one extra primary crop per harvest (capped at 100%); extra item preserves that output's quality/color. |
+| Premium | 20% per level higher direct crop/seed sale price. Processing uses the ordinary input price. |
+| Hardy | 25% water-retention chance per level (capped at 100%), combined with normal retention. |
 
-Default mutation chance is 5%; default cap is 3 unique traits. One mutation roll applies to all primary produce from a harvest. The new mutation is stored on produce; growth, retention and yield effects require replanting. Premium affects the resulting item's sale price immediately. Lowering the cap never deletes existing traits. Traits are stored in save-compatible `modData`; different trait sets cannot stack, and vanilla quality/color distinctions still apply.
+Default mutation chance is 5%; default cap is 3 unique traits, each with levels 1–5. Successful mutations choose uniformly among eligible trait types: add a missing type if there is room, or upgrade an existing type below level 5. Upgrades remain possible when the trait-count cap is reached. One mutation roll applies to all primary produce from a harvest. The new mutation is stored on produce; growth, retention and yield effects require replanting. Premium affects the resulting item's sale price immediately. Lowering the cap never deletes existing traits; plain-seed copying preserves them, but merging is blocked while the donor exceeds the count cap. Existing saves with unlevelled traits read as level 1. Traits are stored in save-compatible `modData`; different trait sets or levels cannot stack, and vanilla quality/color distinctions still apply.
 
 ## Special cases
 

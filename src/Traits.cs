@@ -14,7 +14,8 @@ internal static class Traits
         string value = TraitRules.Encode(values);
         if (value.Length == 0) data.Remove(Key); else data[Key] = value;
     }
-    internal static bool Has(ModDataDictionary data, string value) => Read(data).Contains(value);
+    internal static int Level(ModDataDictionary data, string value) => TraitRules.Level(Read(data), value);
+    internal static bool Has(ModDataDictionary data, string value) => Level(data, value) > 0;
     internal static bool Eligible(Crop crop, HoeDirtAlias soil) => CropCatalog.Ground(soil) && !crop.forageCrop.Value
         && CropCatalog.EligibleSeed(crop.netSeedIndex.Value)
         && (!crop.modData.TryGetValue(EligibilityKey, out string allowed) || allowed != "false");

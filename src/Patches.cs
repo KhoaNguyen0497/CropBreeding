@@ -67,17 +67,17 @@ internal static class Patches
         crop.modData[Traits.EligibilityKey] = eligible ? "true" : "false";
         Traits.Write(crop.modData, eligible ? __state : []);
         // Reapply vanilla speed calculation after transferring traits. This preserves profession/paddy/fertilizer effects.
-        if (__state.Contains("fast_growth")) __instance.applySpeedIncreases(who);
+        if (Core.TraitRules.Level(__state, "fast_growth") > 0) __instance.applySpeedIncreases(who);
     }
     private static void SpeedPostfix(HoeDirtAlias __instance, ref float __result)
     {
         if (__instance.crop is Crop crop && Traits.Eligible(crop, __instance) && Traits.Has(crop.modData, "fast_growth"))
-            __result += (float)Math.Clamp(ModEntry.Instance.Config.FastGrowthReduction, 0, 0.9);
+            __result += (float)Math.Clamp(ModEntry.Instance.Config.FastGrowthReduction * Traits.Level(crop.modData, "fast_growth"), 0, 0.9);
     }
     private static void WaterPostfix(HoeDirtAlias __instance, ref float __result)
     {
         if (__instance.crop is Crop crop && Traits.Eligible(crop, __instance) && Traits.Has(crop.modData, "hardy"))
-            __result = 1 - (1 - __result) * (1 - (float)Math.Clamp(ModEntry.Instance.Config.WaterRetentionChance, 0, 1));
+            __result = 1 - (1 - __result) * (1 - (float)Math.Clamp(ModEntry.Instance.Config.WaterRetentionChance * Traits.Level(crop.modData, "hardy"), 0, 1));
     }
     private static void HarvestPrefix(Crop __instance, HoeDirtAlias soil, out HarvestContext? __state)
     {
@@ -115,16 +115,17 @@ internal static class Patches
     private static void PricePostfix(SObject __instance, ref int __result)
     {
         if (Processing == 0 && Traits.Has(__instance.modData, "premium"))
-            __result = (int)Math.Min(int.MaxValue, Math.Floor(__result * (1 + Math.Clamp(ModEntry.Instance.Config.PremiumPriceBonus, 0, 10))));
+            __result = (int)Math.Min(int.MaxValue, Math.Floor(__result * (1 + Math.Clamp(ModEntry.Instance.Config.PremiumPriceBonus * Traits.Level(__instance.modData, "premium"), 0, 10))));
     }
     private static bool DropPrefix(SObject __instance, Item dropInItem, bool probe, Farmer who, ref bool __result, bool returnFalseIfItemConsumed)
     {
         if (!Breeder.IsMachine(__instance)) return true;
+        int required = __instance.heldObject.Value == null ? 1 : Breeder.SeedsRequired;
         __result = Breeder.Insert(__instance, dropInItem, probe);
         if (__result && !probe)
         {
             // Vanilla consumes drop-in items only when its own handler does so; our handler owns consumption.
-            SObject.ConsumeInventoryItem(who, dropInItem, 1);
+            SObject.ConsumeInventoryItem(who, dropInItem, required);
             if (returnFalseIfItemConsumed) __result = false;
         }
         return false;

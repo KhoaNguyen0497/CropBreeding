@@ -5,6 +5,7 @@ namespace CropBreeding;
 
 internal static class Breeder
 {
+    internal const int SeedsRequired = 10;
     internal const string MachineId = ModEntry.Id + "_Breeder";
     internal static bool IsMachine(SObject machine) => machine.QualifiedItemId == "(BC)" + MachineId;
     internal static bool IsDonor(Item item) => item is SObject && item.Stack > 0
@@ -23,19 +24,24 @@ internal static class Breeder
             }
             return true;
         }
-        if (!CropCatalog.Matches(machine.heldObject.Value, item)) return false;
+        if (item.Stack < SeedsRequired || !CanBreed(machine.heldObject.Value, item, out string[] traits)) return false;
         if (!probe)
         {
             Item output = item.getOne();
             output.Stack = 1;
             output.Quality = 0;
-            // Copy donor only. Existing seed traits do not merge, and lowered caps do not erase inherited traits.
-            Traits.Write(output.modData, Traits.Read(machine.heldObject.Value.modData));
+            Traits.Write(output.modData, traits);
             machine.heldObject.Value = (SObject)output;
             machine.MinutesUntilReady = 0;
             machine.readyForHarvest.Value = true;
         }
         return true;
+    }
+    internal static bool CanBreed(Item donor, Item seed, out string[] traits)
+    {
+        traits = [];
+        return CropCatalog.Matches(donor, seed) && Core.TraitRules.TryBreed(Traits.Read(donor.modData),
+            Traits.Read(seed.modData), ModEntry.Instance.Config.MaximumTraits, out traits);
     }
     internal static void Clear(SObject machine)
     {

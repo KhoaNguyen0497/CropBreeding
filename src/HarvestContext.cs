@@ -21,8 +21,8 @@ internal sealed class HarvestContext
             ? 0 : ModEntry.Instance.Config.MutationChance;
         OutputTraits = TraitRules.Mutate(Inherited, ModEntry.Instance.Config.MaximumTraits, chance, Traits.RandomFor(crop, 11));
         // Existing plant traits determine the current harvest effects. A new mutation starts working after replanting.
-        Bonus = Inherited.Contains("high_yield") && Traits.RandomFor(crop, 23).NextDouble()
-            < Math.Clamp(ModEntry.Instance.Config.ExtraYieldChance, 0, 1);
+        Bonus = TraitRules.Level(Inherited, "high_yield") > 0 && Traits.RandomFor(crop, 23).NextDouble()
+            < Math.Clamp(ModEntry.Instance.Config.ExtraYieldChance * TraitRules.Level(Inherited, "high_yield"), 0, 1);
     }
 
     internal Item Decorate(Item item)
