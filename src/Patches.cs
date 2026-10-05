@@ -75,12 +75,23 @@ internal static class Patches
         HarvestContext.Current = Traits.Eligible(__instance, soil) && __instance.GetData() != null
             ? new HarvestContext(__instance) : null;
     }
-    private static Exception? HarvestFinalizer(Exception? __exception, HarvestContext? __state)
+    private static Exception? HarvestFinalizer(Exception? __exception, HarvestContext? __state, bool __result,
+        StardewValley.Characters.JunimoHarvester? junimoHarvester)
     {
         HarvestContext? current = HarvestContext.Current;
         HarvestContext.Current = __state;
-        if (__exception == null && current?.WasReady == true && current.Plant.Dirt is HoeDirtAlias soil)
-            HarvestContext.ApplyRegrowth(current.Plant, soil);
+        if (__exception == null && current?.WasReady == true)
+        {
+            bool succeeded = __result || (current.Plant.fullyGrown.Value && current.Plant.dayOfCurrentPhase.Value > 0);
+            if (succeeded)
+                foreach (Item extra in current.PendingExtras)
+                {
+                    if (junimoHarvester != null) junimoHarvester.tryToAddItemToHut(extra);
+                    else Game1.createItemDebris(extra, current.Plant.Dirt!.Tile * 64f + new Microsoft.Xna.Framework.Vector2(32),
+                        -1, current.Plant.currentLocation);
+                }
+            if (current.Plant.Dirt is HoeDirtAlias soil) HarvestContext.ApplyRegrowth(current.Plant, soil);
+        }
         return __exception;
     }
     private static IEnumerable<CodeInstruction> HarvestTranspiler(IEnumerable<CodeInstruction> instructions)

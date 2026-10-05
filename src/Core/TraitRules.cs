@@ -7,7 +7,7 @@ namespace CropBreeding.Core;
 public static class TraitRules
 {
     public const int MaximumLevel = 5;
-    public static readonly string[] Known = ["fast_growth", "high_yield", "fast_regrowth"];
+    public static readonly string[] Known = ["fast_growth", "high_yield", "fast_regrowth", "high_quality"];
     public static string Id(string trait) => trait.Split(':')[0];
     private static int TokenLevel(string token)
     {
@@ -50,6 +50,12 @@ public static class TraitRules
         result = Parse(Encode(result.Where(t => Id(t) != id).Append(Token(id, level + 1))));
         return true;
     }
+    public static int HarvestQuality(int quality, int inheritedLevel, double chancePerLevel, double roll)
+    {
+        if (inheritedLevel <= 0 || roll >= Math.Clamp(chancePerLevel * Math.Clamp(inheritedLevel, 0, MaximumLevel), 0, 1))
+            return quality;
+        return quality switch { 0 => 1, 1 => 2, 2 => 4, _ => quality };
+    }
     public static int RegrowthDays(int days, int level, double reductionPerLevel)
     {
         if (days <= 0 || level <= 0) return days;
@@ -62,7 +68,7 @@ public static class TraitRules
     {
         string name = Id(token) switch
         {
-            "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "fast_regrowth" => "Fast Regrowth", _ => Id(token)
+            "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "fast_regrowth" => "Fast Regrowth", "high_quality" => "High Quality", _ => Id(token)
         };
         return $"{name} {TokenLevel(token)}";
     }

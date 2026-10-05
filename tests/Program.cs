@@ -33,13 +33,27 @@ Check(TraitRules.RegrowthDays(2, 5, .1) == 1, "coffee half regrowth");
 Check(TraitRules.RegrowthDays(1, 5, 1) == 1, "minimum one day");
 Check(TraitRules.RegrowthDays(-1, 5, .1) == -1, "non-regrowing stays non-regrowing");
 Check(TraitRules.RegrowthDays(7, 0, .1) == 7, "no trait keeps normal regrowth");
+
+Check(TraitRules.HarvestQuality(0, 1, .05, .049) == 1, "normal to silver");
+Check(TraitRules.HarvestQuality(1, 1, .05, .049) == 2, "silver to gold");
+Check(TraitRules.HarvestQuality(2, 1, .05, .049) == 4, "gold to iridium skips invalid quality 3");
+Check(TraitRules.HarvestQuality(4, 5, .05, 0) == 4, "iridium stays iridium");
+Check(TraitRules.HarvestQuality(0, 0, .05, 0) == 0, "new mutation without inherited level cannot upgrade current harvest");
+Check(TraitRules.HarvestQuality(1, 2, .05, .12) == 1, "inherited level 2 cannot use mutated level 3 odds");
+Check(TraitRules.HarvestQuality(1, 3, .05, .12) == 2, "replanted level 3 uses 15 percent");
+Check(TraitRules.HarvestQuality(0, 5, .05, .249) == 1, "level five 25 percent success");
+Check(TraitRules.HarvestQuality(0, 5, .05, .25) == 0, "level five threshold failure");
+Check(TraitRules.HarvestQuality(0, 5, 1, 0) == 1, "cannot jump multiple tiers");
+Check(new[]{.01,.9,.02,.8}.Select(r => TraitRules.HarvestQuality(2, 1, .05, r)).SequenceEqual(new[]{4,2,4,2}), "independent rolls can split identical base-quality harvests");
+Breed("high_quality:2", "high_quality", 3, "high_quality:3");
+
 bool sawNew = false, sawUpgrade = false;
 for (int seed = 0; seed < 1000; seed++) {
     var annual = TraitRules.Mutate(T(""), 3, 1, new Random(seed), canRegrow: false);
     Check(TraitRules.Level(annual, "fast_regrowth") == 0, "single-harvest crops never gain Fast Regrowth");
-    var annualFull = T("fast_growth:5,high_yield:5");
+    var annualFull = T("fast_growth:5,high_yield:5,high_quality:5");
     Check(TraitRules.Mutate(annualFull, 3, 1, new Random(seed), canRegrow: false).SequenceEqual(annualFull), "non-regrowing pool exhausted");
-    var regrowing = TraitRules.Mutate(annualFull, 3, 1, new Random(seed), canRegrow: true);
+    var regrowing = TraitRules.Mutate(annualFull, 4, 1, new Random(seed), canRegrow: true);
     Check(TraitRules.Level(regrowing, "fast_regrowth") == 1, "regrowing crops can gain Fast Regrowth");
     var inherited = T("high_yield,fast_regrowth");
     var next = TraitRules.Mutate(inherited, 3, 1, new Random(seed));

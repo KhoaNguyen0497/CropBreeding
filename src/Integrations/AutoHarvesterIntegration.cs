@@ -51,7 +51,9 @@ internal static class AutoHarvesterIntegration
     {
         if (__result == null || !Traits.Eligible(crop, soil) || crop.GetData() == null) return;
         var context = new HarvestContext(crop);
-        foreach (Item item in __result) context.Decorate(item);
+        var outputs = __result.SelectMany(context.Decorate).ToList();
+        __result.Clear();
+        __result.AddRange(outputs);
         // Plan outputs are only stored if Auto Harvester has capacity. Deterministic rolls make an
         // abandoned plan harmless, and its own storage keeps the produce and crop removal atomic.
     }

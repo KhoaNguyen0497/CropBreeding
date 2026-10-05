@@ -13,6 +13,9 @@ internal sealed class HarvestContext
     internal readonly string[] OutputTraits;
     internal readonly bool Bonus;
     private bool bonusApplied;
+    private readonly Random qualityRandom;
+    private readonly int qualityLevel;
+    internal readonly List<Item> PendingExtras = [];
 
     internal HarvestContext(Crop crop)
     {
@@ -20,6 +23,8 @@ internal sealed class HarvestContext
         WasReady = Ready(crop);
         HarvestId = CropCatalog.Raw(crop.GetData()!.HarvestItemId);
         Inherited = Traits.Read(crop.modData);
+        qualityLevel = TraitRules.Level(Inherited, "high_quality");
+        qualityRandom = Traits.RandomFor(crop, 37);
         bool regrows = crop.GetData()!.RegrowDays > 0;
         double chance = regrows && !ModEntry.Instance.Config.EnableRegrowingCropMutations
             ? 0 : ModEntry.Instance.Config.MutationChance;
@@ -43,7 +48,7 @@ internal sealed class HarvestContext
             Traits.Level(crop.modData, "fast_regrowth"), ModEntry.Instance.Config.FastRegrowthReduction);
     }
 
-    internal Item Decorate(Item item)
+    internal List<Item> Decorate(Item item)
     {
         if (item.ItemId == HarvestId)
         {
@@ -56,7 +61,25 @@ internal sealed class HarvestContext
         }
         else if (HarvestId == "421" && item.ItemId == "431")
             Traits.Write(item.modData, Inherited);
-        return item;
+        if (item.ItemId != HarvestId || qualityLevel <= 0 || item.Quality == 4) return [item];
+        // Roll once per unit, including High Yield's extra unit. Preserve the source quality and
+        // color until after the normal harvest calculation, then split stacks by resulting quality.
+        int baseQuality = item.Quality;
+        int upgraded = 0;
+        int upgradedQuality = baseQuality;
+        for (int i = 0; i < item.Stack; i++)
+        {
+            int quality = TraitRules.HarvestQuality(baseQuality, qualityLevel,
+                ModEntry.Instance.Config.QualityUpgradeChance, qualityRandom.NextDouble());
+            if (quality != baseQuality) { upgraded++; upgradedQuality = quality; }
+        }
+        if (upgraded == 0) return [item];
+        if (upgraded == item.Stack) { item.Quality = upgradedQuality; return [item]; }
+        Item better = item.getOne();
+        better.Quality = upgradedQuality;
+        better.Stack = upgraded;
+        item.Stack -= upgraded;
+        return [item, better];
     }
 
     // Called only at the outgoing clone sites inside Crop.harvest. Does not alter crop data,
@@ -64,6 +87,18 @@ internal sealed class HarvestContext
     internal static Item CloneHarvest(Item source)
     {
         Item copy = source.getOne();
-        return Current?.Decorate(copy) ?? copy;
+        if (Current == null) return copy;
+        List<Item> outputs = Current.Decorate(copy);
+        // The vanilla clone site accepts one item stack. Only commit split-off extras if the
+        // enclosing harvest succeeds (e.g. not when the player's inventory rejects the crop).
+        if (outputs[0].Stack > 1)
+        {
+            Item extra = outputs[0].getOne();
+            extra.Stack = outputs[0].Stack - 1;
+            outputs[0].Stack = 1;
+            Current.PendingExtras.Add(extra);
+        }
+        Current.PendingExtras.AddRange(outputs.Skip(1));
+        return outputs[0];
     }
 }
