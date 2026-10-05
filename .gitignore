@@ -1,0 +1,6 @@
+bin/
+obj/
+.references/
+build/
+config.json
+*.user

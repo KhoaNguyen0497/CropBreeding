@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+    <Version>0.1.0</Version>
+    <GamePath Condition="'$(GamePath)' == ''">$(MSBuildProjectDirectory)/../.references</GamePath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="$(GamePath)/*.dll" Private="false" />
+    <Reference Include="$(GamePath)/smapi-internal/*.dll" Private="false" />
+    <None Update="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="RequireGameReferences" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(GamePath)/Stardew Valley.dll')" Text="Set GamePath to your SMAPI game directory." />
+  </Target>
+</Project>
