@@ -127,15 +127,11 @@ internal static class Patches
     private static bool DropPrefix(SObject __instance, Item dropInItem, bool probe, Farmer who, ref bool __result, bool returnFalseIfItemConsumed)
     {
         if (!Breeder.IsMachine(__instance)) return true;
-        if (Breeder.MenuMutex(__instance, who.currentLocation).IsLocked()) { __result = false; return false; }
-        int required = __instance.heldObject.Value == null || Breeder.CompanionMode(__instance) ? 1 : Breeder.SeedsRequired;
-        __result = Breeder.Insert(__instance, dropInItem, probe);
-        if (__result && !probe)
-        {
-            // Vanilla consumes drop-in items only when its own handler does so; our handler owns consumption.
-            SObject.ConsumeInventoryItem(who, dropInItem, required);
-            if (returnFalseIfItemConsumed) __result = false;
-        }
+        // Held inventory items are never deposited or consumed through the world interaction.
+        // Treat an actual interaction as opening the station; probes don't advertise item input.
+        __result = false;
+        if (!probe && who?.IsLocalPlayer == true)
+            ActionPrefix(__instance, who, false, ref __result);
         return false;
     }
     private static bool ActionPrefix(SObject __instance, Farmer who, bool justCheckingForActivity, ref bool __result)

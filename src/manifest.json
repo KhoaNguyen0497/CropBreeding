@@ -7,7 +7,6 @@
   "EntryDll": "CropBreeding.dll",
   "MinimumApiVersion": "4.0.0",
   "Dependencies": [
-    { "UniqueID": "Pathoschild.Automate", "IsRequired": false },
     { "UniqueID": "KhoaNguyen0497.AutoHarvester", "IsRequired": false }
   ]
 }

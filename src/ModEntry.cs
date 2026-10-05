@@ -28,7 +28,6 @@ public sealed class ModEntry : Mod
         };
         helper.Events.GameLoop.GameLaunched += (_, _) =>
         {
-            helper.ModRegistry.GetApi<IAutomateApi>("Pathoschild.Automate")?.AddFactory(new BreedingFactory());
             AutoHarvesterIntegration.Register(harmony, Monitor);
         };
         helper.Events.GameLoop.SaveLoaded += (_, _) => Unlock();
