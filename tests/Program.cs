@@ -66,8 +66,8 @@ for (int level = 0; level <= 5; level++)
 Breed("evergreen:4", "evergreen", 3, "evergreen:5");
 Breed("evergreen:5", "evergreen", 3, null);
 Breed("evergreen:5", "", 3, "evergreen:5");
-Check(TraitRules.Label("evergreen:4").Contains("dormant"), "dormant tooltip");
-Check(TraitRules.Label("evergreen:5").Contains("all seasons"), "active tooltip");
+Check(TraitRules.Label("evergreen:4") == "Evergreen 4", "level four tooltip");
+Check(TraitRules.Label("evergreen:5") == "Evergreen 5", "level five tooltip");
 Check(TraitRules.Mutate(T("evergreen:4"), 1, 1, new Random(0)).SequenceEqual(T("evergreen:5")), "Evergreen upgrades at trait cap");
 for (int seed = 0; seed < 1000; seed++) {
     var annual = TraitRules.Mutate(T(""), 3, 1, new Random(seed), canRegrow: false);

@@ -73,7 +73,6 @@ public static class TraitRules
         {
             "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "fast_regrowth" => "Fast Regrowth", "high_quality" => "High Quality", "companion" => "Companion", "evergreen" => "Evergreen", _ => Id(token)
         };
-        string label = $"{name} {TokenLevel(token)}";
-        return Id(token) == "evergreen" ? label + (EvergreenActive(TokenLevel(token)) ? " (all seasons)" : " (dormant until level 5)") : label;
+        return $"{name} {TokenLevel(token)}";
     }
 }
