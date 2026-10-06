@@ -95,4 +95,6 @@ Compile and pure trait-rule checks are automated locally; interactive game valid
 
 ## Removing traits
 
+Controller navigation includes the mode button, both input/selection controls, action button, inventory and close button. Switching modes keeps focus on the mode button. B closes the UI and consumes that press to prevent opening the player inventory; cursor/right-slot items are returned normally, without triggering a machine action. Holding an axe or pickaxe bypasses station interaction so tool use can remove it through the usual tool path.
+
 With both slots empty, cycle the mode button to **Remove Trait**. Insert one eligible seed with traits on the left. Select the right-hand trait button to cycle through its traits, then select **Remove**. Collect the seed from the left. Only the selected trait is removed; other levels, quality and metadata are retained. Removing Companion also clears its assigned crop. Removing the final trait returns a plain seed. No additional ingredient or fee is required. Crops are rejected unless the item itself is a supported plantable seed (e.g. coffee beans). The controller uses the same selectable buttons. Close/reopen preserves the staged seed; breaking the station destroys its contents as usual.

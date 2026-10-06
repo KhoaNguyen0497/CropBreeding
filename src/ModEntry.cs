@@ -20,6 +20,15 @@ public sealed class ModEntry : Mod
         Config = helper.ReadConfig<ModConfig>();
         harmony = new Harmony(Id);
         Patches.Apply(harmony);
+        helper.Events.Input.ButtonPressed += (_, e) =>
+        {
+            if (e.Button == SButton.ControllerB && Game1.activeClickableMenu is UI.BreedingMenu menu)
+            {
+                // Consume B before vanilla can also interpret the same press as opening inventory.
+                helper.Input.Suppress(e.Button);
+                menu.exitThisMenu();
+            }
+        };
         helper.Events.GameLoop.GameLaunched += (_, _) => Integrations.LookupAnythingIntegration.Register(harmony, Monitor);
         helper.Events.Content.AssetRequested += AssetRequested;
         helper.Events.Content.AssetsInvalidated += (_, e) =>

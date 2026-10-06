@@ -182,6 +182,11 @@ internal static class Patches
     private static bool ActionPrefix(SObject __instance, Farmer who, bool justCheckingForActivity, ref bool __result)
     {
         if (!Breeder.IsMachine(__instance)) return true;
+        if (who.CurrentTool is Axe or Pickaxe)
+        {
+            __result = false;
+            return false;
+        }
         __result = true;
         if (!justCheckingForActivity && who.IsLocalPlayer && Game1.activeClickableMenu == null)
         {
@@ -189,7 +194,8 @@ internal static class Patches
             var mutex = Breeder.MenuMutex(__instance, location);
             mutex.RequestLock(() =>
             {
-                if (Game1.activeClickableMenu == null && location.objects.TryGetValue(__instance.TileLocation, out var placed)
+                if (Game1.activeClickableMenu == null && who.CurrentTool is not Axe and not Pickaxe
+                    && location.objects.TryGetValue(__instance.TileLocation, out var placed)
                     && ReferenceEquals(placed, __instance))
                     Game1.activeClickableMenu = new UI.BreedingMenu(__instance, location, mutex);
                 else mutex.ReleaseLock();

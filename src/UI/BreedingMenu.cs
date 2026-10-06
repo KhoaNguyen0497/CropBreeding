@@ -1,5 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Network;
@@ -45,16 +47,40 @@ internal sealed class BreedingMenu : MenuWithInventory
         modeButton = new(new Rectangle(xPositionOnScreen + 520, yPositionOnScreen + 22, 276, 48), "Mode")
             { myID = 1003, downNeighborID = 1001 };
         donorSlot.upNeighborID = seedSlot.upNeighborID = 1003;
-        allClickableComponents = new(inventory.inventory) { donorSlot, seedSlot, breedButton, modeButton };
         foreach (var slot in inventory.inventory.Take(12)) slot.upNeighborID = 1002;
         initializeUpperRightCloseButton();
-        if (upperRightCloseButton != null) allClickableComponents.Add(upperRightCloseButton);
+        if (upperRightCloseButton != null)
+        {
+            upperRightCloseButton.myID = 1004;
+            upperRightCloseButton.leftNeighborID = 1003;
+            upperRightCloseButton.downNeighborID = 1001;
+            modeButton.rightNeighborID = 1004;
+        }
+        populateClickableComponentList();
         if (Game1.options.SnappyMenus) snapToDefaultClickableComponent();
     }
     public override void snapToDefaultClickableComponent()
     {
         currentlySnappedComponent = donorSlot;
         snapCursorToCurrentSnappedComponent();
+    }
+    public override void populateClickableComponentList()
+    {
+        // Vanilla's reflection-based discovery omits these private controls when rebuilding focus.
+        allClickableComponents = inventory == null ? new() : new(inventory.inventory);
+        foreach (var component in new[] { donorSlot, seedSlot, breedButton, modeButton })
+            if (component != null) allClickableComponents.Add(component);
+        if (upperRightCloseButton != null) allClickableComponents.Add(upperRightCloseButton);
+    }
+    public override void receiveGamePadButton(Buttons button)
+    {
+        if (button == Buttons.B)
+        {
+            ModEntry.Instance.Helper.Input.Suppress(SButton.ControllerB);
+            exitThisMenu();
+            return;
+        }
+        base.receiveGamePadButton(button);
     }
     public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds) => Layout();
     private bool Present => location.objects.TryGetValue(machine.TileLocation, out var current) && ReferenceEquals(current, machine);
@@ -71,6 +97,11 @@ internal sealed class BreedingMenu : MenuWithInventory
     public override void receiveLeftClick(int x, int y, bool playSound = true)
     {
         if (!Present || !mutex.IsLockHeld()) return;
+        if (upperRightCloseButton?.containsPoint(x, y) == true)
+        {
+            exitThisMenu();
+            return;
+        }
         if (modeButton.containsPoint(x, y))
         {
             if (machine.heldObject.Value != null || seeds != null || heldItem != null)
@@ -87,6 +118,11 @@ internal sealed class BreedingMenu : MenuWithInventory
                 selectedTrait = 0;
                 message = ModeHint;
                 Layout();
+                if (Game1.options.SnappyMenus)
+                {
+                    currentlySnappedComponent = modeButton;
+                    snapCursorToCurrentSnappedComponent();
+                }
             }
             return;
         }
