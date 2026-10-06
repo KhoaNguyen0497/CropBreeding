@@ -26,7 +26,7 @@ Evergreen: compare plain seeds and levels 1–4 against level 5 when planting ou
 8. Test cleanup on a backup with crops, placed machines, chest/inventory machines and pending contents; save/reload without the mod and check for missing-item remnants.
 9. Test multiplayer clients planting, harvesting, collecting and reconnecting. Trait modData should sync; everyone must have the mod.
 
-Known unresolved design decisions are recorded in README (16, 18). Regrowing mutations now default to enabled; verify each successful harvest can mutate produce while the standing plant retains its inherited traits. Explicitly disabling the config must still suppress regrowing mutations. Auto Harvester compatibility relies only on its vanilla `Crop.harvest` call; there is no reflection integration or optional dependency. Use its updated vanilla-harvesting version.
+Known unresolved design decisions are recorded in README (16). Regrowing mutations now default to enabled; verify each successful harvest can mutate produce while the standing plant retains its inherited traits. Explicitly disabling the config must still suppress regrowing mutations. Auto Harvester compatibility relies only on its vanilla `Crop.harvest` call; there is no reflection integration or optional dependency. Use its updated vanilla-harvesting version.
 
 10. Load legacy bare-ID trait metadata: it displays as level 1. Harvest max-count plants with level-1 traits: upgrades remain possible without adding types. Harvest plants with all traits at level 5: no trait loss. Check level-scaled initial growth, regrowth and yield at levels 1 and 5.
 

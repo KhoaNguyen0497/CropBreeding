@@ -221,12 +221,6 @@ internal static class Patches
         if (!__result || probe || __instance.heldObject.Value is not Item output) return;
         output.modData.Remove(Traits.Key);
         output.modData.Remove(Companion.Key);
-        if (ModEntry.Instance.Config.EnableSeedMakerInheritance && __instance.QualifiedItemId == "(BC)25"
-            && inputItem != null && CropCatalog.Matches(inputItem, output))
-        {
-            Traits.Write(output.modData, Traits.Read(inputItem.modData));
-            Companion.Write(output.modData, Companion.Read(inputItem.modData));
-        }
     }
     private static void CraftedPostfix(Item __result) { __result.modData.Remove(Traits.Key); __result.modData.Remove(Companion.Key); }
 }

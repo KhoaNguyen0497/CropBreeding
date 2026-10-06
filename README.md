@@ -80,7 +80,7 @@ Researcher and Seed Saver settings: `ResearcherMutationBonus=0.05`, `ResearcherG
 
 16. Foraged/shop/drop produce: no new mutations are granted to those sources. An otherwise matching item that already carries trait metadata can currently be used as a donor; no provenance restriction yet.
 
-18. Seed Maker inheritance: disabled by default (`EnableSeedMakerInheritance=false`). If enabled, only a genuinely matching seed output copies traits; mixed seeds/Ancient Seeds bonus results do not get unrelated traits.
+Seed Maker outputs always have no breeding traits or Companion assignment. There is no inheritance setting; any old `EnableSeedMakerInheritance` config entry is ignored.
 
 ## Build and test
 

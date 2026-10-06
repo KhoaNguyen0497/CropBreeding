@@ -14,5 +14,4 @@ public sealed class ModConfig
     public double ResearcherGrowthPenalty { get; set; } = 0.10;
     // Pending decisions are conservative switches, not settled breeding rules.
     public bool EnableRegrowingCropMutations { get; set; } = true;
-    public bool EnableSeedMakerInheritance { get; set; } = false;
 }
