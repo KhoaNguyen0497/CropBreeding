@@ -7,7 +7,13 @@ namespace CropBreeding.Core;
 public static class TraitRules
 {
     public const int MaximumLevel = 5;
-    public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver"];
+    public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver", "copper_bearing", "iron_bearing", "gold_bearing"];
+    public static int MaterialDropCount(int baseGrowthDays, int level, double roll)
+    {
+        // Each full five-day block contributes one 5% unit per inherited level.
+        int units = (Math.Max(0, baseGrowthDays) / 5) * Math.Clamp(level, 0, MaximumLevel);
+        return units / 20 + (roll < (units % 20) / 20.0 ? 1 : 0);
+    }
     public static double MutationRate(double baseline, int researcherLevel, double bonusPerLevel)
         => Math.Clamp(baseline + Math.Clamp(researcherLevel, 0, MaximumLevel) * Math.Max(0, bonusPerLevel), 0, 1);
     public static bool EvergreenActive(int level) => level >= MaximumLevel;
@@ -113,7 +119,8 @@ public static class TraitRules
     {
         string name = Id(token) switch
         {
-            "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "high_quality" => "High Quality", "companion" => "Companion", "evergreen" => "Evergreen", "researcher" => "Researcher", "seed_saver" => "Seed Saver", _ => Id(token)
+            "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "high_quality" => "High Quality", "companion" => "Companion", "evergreen" => "Evergreen", "researcher" => "Researcher", "seed_saver" => "Seed Saver",
+            "copper_bearing" => "Copper Bearing", "iron_bearing" => "Iron Bearing", "gold_bearing" => "Gold Bearing", _ => Id(token)
         };
         return $"{name} {TokenLevel(token)}";
     }

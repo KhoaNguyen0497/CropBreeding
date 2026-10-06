@@ -18,6 +18,12 @@ internal sealed class HarvestContext
     private readonly Random qualityRandom;
     private readonly int qualityLevel;
     internal readonly List<Item> PendingExtras = [];
+    private static readonly (string Trait, string ItemId, int Salt)[] Materials =
+    [
+        ("copper_bearing", "(O)334", 83),
+        ("iron_bearing", "(O)335", 89),
+        ("gold_bearing", "(O)336", 97)
+    ];
 
     internal HarvestContext(Crop crop)
     {
@@ -25,6 +31,17 @@ internal sealed class HarvestContext
         WasReady = Ready(crop);
         HarvestId = CropCatalog.Raw(crop.GetData()!.HarvestItemId);
         Inherited = Traits.Read(crop.modData);
+        int? baseGrowthDays = null;
+        foreach (var material in Materials)
+        {
+            int level = TraitRules.Level(Inherited, material.Trait);
+            if (level == 0) continue;
+            // Loaded crop data includes SVE/modded base growth, but no planted-phase speed,
+            // Companion delay, Researcher penalty or regrowth countdown.
+            baseGrowthDays ??= crop.GetData()!.DaysInPhase.Sum(days => Math.Max(0, days));
+            int count = TraitRules.MaterialDropCount(baseGrowthDays.Value, level, Traits.RandomFor(crop, material.Salt).NextDouble());
+            if (count > 0) PendingExtras.Add(ItemRegistry.Create(material.ItemId, count, 0));
+        }
         companionId = Companion.Read(crop.modData);
         if (Traits.RandomFor(crop, 71).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "seed_saver") * ModEntry.Instance.Config.SeedSaverChance, 0, 1))
         {
