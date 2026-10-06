@@ -90,6 +90,16 @@ Researcher and Seed Saver settings: `ResearcherMutationBonus=0.05`, `ResearcherG
 
 Seed Maker outputs always have no breeding traits or Companion assignment. There is no inheritance setting.
 
+## Error recovery and settings
+
+Each gameplay patch catches its own breeding errors and reports the full exception to SMAPI. A failed prefix lets the original action run; a failed result/tooltip patch preserves the original result. Crop growth/planting/Rooted and lookup changes restore captured state where possible. Harvest output decoration restores the original clone if it fails. Harvest bonuses run independently; an error in one does not permanently disable later actions or the whole mod. A harvest is never replayed, and an already-delivered item is never deliberately awarded again. Exceptions raised by vanilla or another mod's original code are not globally suppressed.
+
+Breeding-menu slot/button transactions restore their inputs on failure, then close safely and release the multiplayer lock. Items return through normal inventory/overflow handling; if that return fails, an undelivered remainder is sent to the Lost and Found when possible. A failed patch installation skips that target and continues installing unrelated patches. This is best-effort recovery from mod errors, not a guarantee against process-level failures, broken game state or another mod failing after irreversible side effects.
+
+Optional **Generic Mod Config Menu** support exposes all 12 settings with save/reset controls and percentage labels. `ShowErrorsInChat` defaults to `false`; enabling it adds local chat notices as well as full SMAPI errors. It does not send network chat or execute chat commands. Identical-action chat notices are limited to one per ten seconds; every caught error still goes to SMAPI. Malformed config loading falls back to defaults; numeric settings are bounded and non-finite rates are replaced with defaults.
+
+Changes apply to subsequent actions without restarting. Initial growth already stored on a planted crop updates only at its next normal growth recalculation or replanting; saving settings does not scan/rewrite existing crops. Material drop odds, Nurse Crop odds and level cap remain fixed gameplay rules, not config settings.
+
 ## Build and test
 
 Install .NET SDK 8 or newer and SMAPI 4 in Stardew Valley 1.6. Build using your game directory:
@@ -97,6 +107,7 @@ Install .NET SDK 8 or newer and SMAPI 4 in Stardew Valley 1.6. Build using your 
 ```sh
 dotnet build src/CropBreeding.csproj -c Release -p:GamePath="/path/to/Stardew Valley"
 dotnet run --project tests/TraitRules.Tests.csproj
+dotnet run --project safety-tests/Safety.Tests.csproj
 ```
 
 Copy `CropBreeding.dll`, `manifest.json` and the `assets` directory from the build output into `Mods/CropBreeding`. Install on all multiplayer clients. No game binaries are included in this repository.

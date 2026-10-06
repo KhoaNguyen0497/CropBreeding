@@ -47,8 +47,9 @@ internal static class LookupAnythingIntegration
         }
         catch (Exception ex)
         {
-            foreach (var target in installed) harmony.Unpatch(target, HarmonyPatchType.All, harmony.Id);
-            monitor.Log($"Lookup Anything display integration disabled: {ex}", LogLevel.Warn);
+            foreach (var target in installed)
+                ErrorHandler.Try("Remove incomplete Lookup Anything patch", () => harmony.Unpatch(target, HarmonyPatchType.All, harmony.Id));
+            ErrorHandler.Report("Register Lookup Anything display", ex);
         }
     }
 
@@ -57,32 +58,71 @@ internal static class LookupAnythingIntegration
 
     private static void SeedPostfix(Item seed, Crop? __result)
     {
-        if (__result == null || !seed.modData.ContainsKey(Traits.Key) || !CropCatalog.EligibleSeed(seed.ItemId)) return;
-        Traits.Write(__result.modData, Traits.Read(seed.modData));
-        Companion.Write(__result.modData, Companion.Read(seed.modData));
-        // Lookup Anything owns this detached crop. Never modify a planted crop or shared Data/Crops.
-        int[] phases = TraitRules.PreviewGrowthPhases(__result.phaseDays.ToArray(),
-            Traits.Level(seed.modData, "fast_growth"), ModEntry.Instance.Config.GrowthReductionPerLevel,
-            Game1.player.professions.Contains(Farmer.agriculturist), Companion.BaseDays(seed.modData), Traits.GrowthPenalty(seed.modData));
-        for (int i = 0; i < phases.Length; i++) __result.phaseDays[i] = phases[i];
-        Previews.GetValue(__result, _ => new object());
+        CropSnapshot? snapshot = null;
+        try
+        {
+            if (__result == null || !seed.modData.ContainsKey(Traits.Key) || !CropCatalog.EligibleSeed(seed.ItemId)) return;
+            snapshot = new CropSnapshot(__result);
+            Traits.Write(__result.modData, Traits.Read(seed.modData));
+            Companion.Write(__result.modData, Companion.Read(seed.modData));
+            // Lookup Anything owns this detached crop. Never modify a planted crop or shared Data/Crops.
+            int[] phases = TraitRules.PreviewGrowthPhases(__result.phaseDays.ToArray(),
+                Traits.Level(seed.modData, "fast_growth"), ModEntry.Instance.Config.GrowthReductionPerLevel,
+                Game1.player.professions.Contains(Farmer.agriculturist), Companion.BaseDays(seed.modData), Traits.GrowthPenalty(seed.modData));
+            for (int i = 0; i < phases.Length; i++) __result.phaseDays[i] = phases[i];
+            Previews.GetValue(__result, _ => new object());
+        }
+        catch (Exception ex)
+        {
+            if (snapshot != null) ErrorHandler.Try("Restore lookup seed preview", snapshot.Restore);
+            if (__result != null) Previews.Remove(__result);
+            ErrorHandler.Report("SeedPostfix", ex);
+        }
     }
 
     private static void ParserPostfix(object __instance, Crop? crop)
     {
-        if (!Supported(crop)) return;
-        // Override Lookup Anything's extra Agriculturist approximation: the preview already applied it.
-        firstDays.SetValue(__instance, crop!.phaseDays.Take(crop.phaseDays.Count - 1).Sum());
-        int days = crop.GetData()?.RegrowDays ?? -1;
-        regrowDays.SetValue(__instance, TraitRules.RegrowthDays(days, Traits.Level(crop.modData, "fast_growth"),
-            ModEntry.Instance.Config.GrowthReductionPerLevel, Companion.BaseDays(crop.modData), Traits.GrowthPenalty(crop.modData)));
-        if (TraitRules.EvergreenActive(Traits.Level(crop.modData, "evergreen")))
-            seasons.SetValue(__instance, new[] { Season.Spring, Season.Summer, Season.Fall, Season.Winter });
+        object? originalFirst = null, originalRegrow = null, originalSeasons = null;
+        bool captured = false;
+        try
+        {
+            if (!Supported(crop)) return;
+            originalFirst = firstDays.GetValue(__instance);
+            originalRegrow = regrowDays.GetValue(__instance);
+            originalSeasons = seasons.GetValue(__instance);
+            captured = true;
+            // Override Lookup Anything's extra Agriculturist approximation: the preview already applied it.
+            firstDays.SetValue(__instance, crop!.phaseDays.Take(crop.phaseDays.Count - 1).Sum());
+            int days = crop.GetData()?.RegrowDays ?? -1;
+            regrowDays.SetValue(__instance, TraitRules.RegrowthDays(days, Traits.Level(crop.modData, "fast_growth"),
+                ModEntry.Instance.Config.GrowthReductionPerLevel, Companion.BaseDays(crop.modData), Traits.GrowthPenalty(crop.modData)));
+            if (TraitRules.EvergreenActive(Traits.Level(crop.modData, "evergreen")))
+                seasons.SetValue(__instance, new[] { Season.Spring, Season.Summer, Season.Fall, Season.Winter });
+        }
+        catch (Exception ex)
+        {
+            if (captured) ErrorHandler.Try("Restore lookup fields", () =>
+            {
+                firstDays.SetValue(__instance, originalFirst);
+                regrowDays.SetValue(__instance, originalRegrow);
+                seasons.SetValue(__instance, originalSeasons);
+            });
+            ErrorHandler.Report("ParserPostfix", ex);
+        }
     }
 
     private static void NextHarvestPostfix(object __instance, ref SDate __result)
     {
-        if (parserCrop.GetValue(__instance) is Crop crop && Supported(crop) && crop.fullyGrown.Value)
-            __result = SDate.Now().AddDays(Math.Max(0, crop.dayOfCurrentPhase.Value));
+        SDate original = __result;
+        try
+        {
+            if (parserCrop.GetValue(__instance) is Crop crop && Supported(crop) && crop.fullyGrown.Value)
+                __result = SDate.Now().AddDays(Math.Max(0, crop.dayOfCurrentPhase.Value));
+        }
+        catch (Exception ex)
+        {
+            __result = original;
+            ErrorHandler.Report("NextHarvestPostfix", ex);
+        }
     }
 }

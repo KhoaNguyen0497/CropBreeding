@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12</LangVersion><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../src/ErrorHandler.cs" Link="ErrorHandler.cs" />
+    <Compile Include="../src/CropSnapshot.cs" Link="CropSnapshot.cs" />
+    <Compile Include="../src/ModConfig.cs" Link="ModConfig.cs" />
+    <Compile Include="../src/Core/TraitRules.cs" Link="TraitRules.cs" />
+    <Compile Include="../src/Integrations/GenericModConfigMenuIntegration.cs" Link="GenericModConfigMenuIntegration.cs" />
+  </ItemGroup>
+</Project>

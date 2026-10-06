@@ -12,6 +12,21 @@ public sealed class ModConfig
     public double RootedChance { get; set; } = 0.10;
     public double ResearcherMutationBonus { get; set; } = 0.05;
     public double ResearcherGrowthPenalty { get; set; } = 0.10;
-    // Pending decisions are conservative switches, not settled breeding rules.
     public bool EnableRegrowingCropMutations { get; set; } = true;
+    public bool ShowErrorsInChat { get; set; } = false;
+
+    public void Normalize()
+    {
+        MaximumTraits = Math.Clamp(MaximumTraits, 0, Core.TraitRules.Known.Length);
+        MutationChance = Rate(MutationChance, .05);
+        GrowthReductionPerLevel = Rate(GrowthReductionPerLevel, .05);
+        ExtraYieldPerLevel = Rate(ExtraYieldPerLevel, .20);
+        CompanionChance = Rate(CompanionChance, .20);
+        QualityUpgradeChance = Rate(QualityUpgradeChance, .05);
+        SeedSaverChance = Rate(SeedSaverChance, .10);
+        RootedChance = Rate(RootedChance, .10);
+        ResearcherMutationBonus = Rate(ResearcherMutationBonus, .05);
+        ResearcherGrowthPenalty = Rate(ResearcherGrowthPenalty, .10);
+    }
+    private static double Rate(double value, double fallback) => double.IsFinite(value) ? Math.Clamp(value, 0, 1) : fallback;
 }

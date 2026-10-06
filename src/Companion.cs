@@ -13,7 +13,7 @@ internal static class Companion
         get
         {
             if (growth != null) return growth;
-            growth = new(StringComparer.Ordinal);
+            var loaded = new Dictionary<string, int>(StringComparer.Ordinal);
             foreach (var pair in CropCatalog.Data)
             {
                 if (!CropCatalog.EligibleSeed(pair.Key)) continue;
@@ -23,8 +23,9 @@ internal static class Companion
                 if (ItemRegistry.GetData("(O)" + id) == null) continue;
                 // Multiple actual seed mappings can share a harvest. Use the longest base time
                 // consistently so an alternative fast seed cannot underprice the penalty.
-                growth[id] = Math.Max(growth.GetValueOrDefault(id), days);
+                loaded[id] = Math.Max(loaded.GetValueOrDefault(id), days);
             }
+            growth = loaded; // Publish only a complete cache; a failed build can retry later.
             return growth;
         }
     }
@@ -44,17 +45,27 @@ internal static class Companion
     }
     internal static string? Merge(ModDataDictionary donor, ModDataDictionary seed)
         => Core.TraitRules.CompanionChoice(Read(donor), Read(seed));
-    private const string GrowthDeltaKey = ModEntry.Id + "/GrowthPhaseDeltas";
+    internal const string GrowthDeltaKey = ModEntry.Id + "/GrowthPhaseDeltas";
     internal static void RemoveGrowthDelay(HoeDirtAlias soil)
     {
         if (soil.crop is not Crop crop) return;
         if (crop.modData.TryGetValue(GrowthDeltaKey, out string encoded))
         {
-            string[] deltas = encoded.Split(',');
-            if (deltas.Length == crop.phaseDays.Count)
+            var snapshot = new CropSnapshot(crop);
+            try
+            {
+                string[] deltas = encoded.Split(',');
+                if (deltas.Length != crop.phaseDays.Count) throw new InvalidOperationException("Saved growth adjustments do not match the crop's phases.");
+                int[] restored = new int[deltas.Length];
                 for (int i = 0; i < deltas.Length; i++)
-                    if (int.TryParse(deltas[i], out int delta)) crop.phaseDays[i] = Math.Max(0, crop.phaseDays[i] - delta);
-            crop.modData.Remove(GrowthDeltaKey);
+                {
+                    if (!int.TryParse(deltas[i], out int delta)) throw new InvalidOperationException("Invalid growth phase adjustment.");
+                    restored[i] = Math.Max(0, checked(crop.phaseDays[i] - delta));
+                }
+                for (int i = 0; i < restored.Length; i++) crop.phaseDays[i] = restored[i];
+                crop.modData.Remove(GrowthDeltaKey);
+            }
+            catch { ErrorHandler.Try("Restore growth bookkeeping", snapshot.Restore); throw; }
         }
     }
     internal static void ApplyGrowth(HoeDirtAlias soil)
@@ -65,10 +76,15 @@ internal static class Companion
         double penalty = Traits.GrowthPenalty(crop.modData);
         if ((days > 0 || level > 0 || penalty > 0) && crop.phaseDays.Count >= 2)
         {
-            int[] original = crop.phaseDays.ToArray();
-            int[] adjusted = Core.TraitRules.FinalGrowthPhases(original, level, ModEntry.Instance.Config.GrowthReductionPerLevel, days, penalty);
-            crop.modData[GrowthDeltaKey] = string.Join(",", adjusted.Select((value, i) => value - original[i]));
-            for (int i = 0; i < adjusted.Length; i++) crop.phaseDays[i] = adjusted[i];
+            var snapshot = new CropSnapshot(crop);
+            try
+            {
+                int[] original = crop.phaseDays.ToArray();
+                int[] adjusted = Core.TraitRules.FinalGrowthPhases(original, level, ModEntry.Instance.Config.GrowthReductionPerLevel, days, penalty);
+                crop.modData[GrowthDeltaKey] = string.Join(",", adjusted.Select((value, i) => value - original[i]));
+                for (int i = 0; i < adjusted.Length; i++) crop.phaseDays[i] = adjusted[i];
+            }
+            catch { ErrorHandler.Try("Restore vanilla growth", snapshot.Restore); throw; }
         }
     }
 }

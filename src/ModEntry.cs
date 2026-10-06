@@ -17,10 +17,15 @@ public sealed class ModEntry : Mod
     public override void Entry(IModHelper helper)
     {
         Instance = this;
-        Config = helper.ReadConfig<ModConfig>();
+        ErrorHandler.Try("Load settings", () =>
+        {
+            var loaded = helper.ReadConfig<ModConfig>() ?? new ModConfig();
+            loaded.Normalize();
+            Config = loaded;
+        });
         harmony = new Harmony(Id);
         Patches.Apply(harmony);
-        helper.Events.Input.ButtonPressed += (_, e) =>
+        helper.Events.Input.ButtonPressed += (_, e) => ErrorHandler.Try("Controller menu close", () =>
         {
             if (e.Button == SButton.ControllerB && Game1.activeClickableMenu is UI.BreedingMenu menu)
             {
@@ -28,33 +33,45 @@ public sealed class ModEntry : Mod
                 helper.Input.Suppress(e.Button);
                 menu.exitThisMenu();
             }
+        });
+        helper.Events.GameLoop.GameLaunched += (_, _) =>
+        {
+            ErrorHandler.Try("Register Lookup Anything", () => Integrations.LookupAnythingIntegration.Register(harmony, Monitor));
+            ErrorHandler.Try("Register config menu", Integrations.GenericModConfigMenuIntegration.Register);
         };
-        helper.Events.GameLoop.GameLaunched += (_, _) => Integrations.LookupAnythingIntegration.Register(harmony, Monitor);
-        helper.Events.Content.AssetRequested += AssetRequested;
-        helper.Events.Content.AssetsInvalidated += (_, e) =>
+        helper.Events.Content.AssetRequested += (sender, e) => ErrorHandler.Try("Load breeding assets", () => AssetRequested(sender, e));
+        helper.Events.Content.AssetsInvalidated += (_, e) => ErrorHandler.Try("Invalidate crop cache", () =>
         {
             if (e.NamesWithoutLocale.Any(n => n.IsEquivalentTo("Data/Crops"))) Companion.Invalidate();
-        };
-        helper.Events.GameLoop.SaveLoaded += (_, _) => Unlock();
-        helper.Events.GameLoop.DayStarted += (_, _) => Unlock();
-        helper.ConsoleCommands.Add("cropbreeding_give", "Give one Breeding Machine.", (_, _) =>
+        });
+        helper.Events.GameLoop.SaveLoaded += (_, _) => ErrorHandler.Try("Unlock recipe", Unlock);
+        helper.Events.GameLoop.DayStarted += (_, _) => ErrorHandler.Try("Unlock recipe", Unlock);
+        helper.ConsoleCommands.Add("cropbreeding_give", "Give one Breeding Machine.", (_, _) => ErrorHandler.Try("Give machine", () =>
         {
             if (Context.IsWorldReady) Game1.player.addItemByMenuIfNecessary(ItemRegistry.Create("(BC)" + Breeder.MachineId));
-        });
-        helper.ConsoleCommands.Add("cropbreeding_cleanup", "Remove breeding traits and machines before uninstalling. Save afterwards.", (_, _) => Cleanup());
-        helper.ConsoleCommands.Add("cropbreeding_catalog", "List supported seed IDs and their exact harvest IDs.", (_, _) =>
+        }));
+        helper.ConsoleCommands.Add("cropbreeding_cleanup", "Remove breeding traits and machines before uninstalling. Save afterwards.", (_, _) => ErrorHandler.Try("Cleanup", Cleanup));
+        helper.ConsoleCommands.Add("cropbreeding_catalog", "List supported seed IDs and their exact harvest IDs.", (_, _) => ErrorHandler.Try("List crop catalog", () =>
         {
             if (Context.IsWorldReady)
                 foreach (var pair in CropCatalog.Data.Where(p => CropCatalog.EligibleSeed(p.Key)))
                     Monitor.Log($"{pair.Key} -> {pair.Value.HarvestItemId}", LogLevel.Info);
-        });
+        }));
     }
     private void AssetRequested(object? sender, AssetRequestedEventArgs e)
     {
         if (e.NameWithoutLocale.IsEquivalentTo(Id + "/BreedingMachine"))
-            e.LoadFromModFile<Texture2D>("assets/breeding-machine.png", AssetLoadPriority.Exclusive);
+            e.LoadFrom(() =>
+            {
+                try { return Helper.ModContent.Load<Texture2D>("assets/breeding-machine.png"); }
+                catch (Exception ex)
+                {
+                    ErrorHandler.Report("Load machine sprite", ex);
+                    return Game1.bigCraftableSpriteSheet;
+                }
+            }, AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/BigCraftables"))
-            e.Edit(asset =>
+            e.Edit(asset => ErrorHandler.Try("Add breeding machine data", () =>
             {
                 var data = asset.AsDictionary<string, BigCraftableData>().Data;
                 data[Breeder.MachineId] = new BigCraftableData
@@ -64,10 +81,10 @@ public sealed class ModEntry : Mod
                     Texture = Id + "/BreedingMachine", SpriteIndex = 0,
                     CanBePlacedIndoors = true, CanBePlacedOutdoors = true, Fragility = 0, Price = 0
                 };
-            });
+            }));
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))
-            e.Edit(asset => asset.AsDictionary<string, string>().Data[Breeder.MachineId] =
-                $"388 50 335 5 787 1/Home/{Breeder.MachineId}/true/Farming 5/Breeding Machine");
+            e.Edit(asset => ErrorHandler.Try("Add breeding recipe", () => asset.AsDictionary<string, string>().Data[Breeder.MachineId] =
+                $"388 50 335 5 787 1/Home/{Breeder.MachineId}/true/Farming 5/Breeding Machine"));
     }
     private static void Unlock()
     {

@@ -80,17 +80,31 @@ internal sealed class HarvestContext
         int stages = TraitRules.NurseCropStages(level, false, Traits.RandomFor(Plant, 113).NextDouble());
         if (stages == 0) return;
         Vector2 origin = soil.Tile;
-        for (int x = -1; x <= 1; x++)
-            for (int y = -1; y <= 1; y++)
-            {
-                if ((x == 0 && y == 0)
-                    || !location.terrainFeatures.TryGetValue(origin + new Vector2(x, y), out var feature)
-                    || feature is not Tree tree || tree.stump.Value || tree.health.Value <= 0) continue;
-                // FruitTree is a separate terrain type. Direct stage changes avoid dayUpdate's
-                // unrelated seed spreading, moss, seasonal transformations and extra growth.
-                int next = TraitRules.AdvanceImmatureTree(tree.growthStage.Value, stages, Tree.treeStage);
-                if (next != tree.growthStage.Value) tree.growthStage.Value = next;
-            }
+        var changed = new List<(Tree Tree, int Stage)>();
+        try
+        {
+            for (int x = -1; x <= 1; x++)
+                for (int y = -1; y <= 1; y++)
+                {
+                    if ((x == 0 && y == 0)
+                        || !location.terrainFeatures.TryGetValue(origin + new Vector2(x, y), out var feature)
+                        || feature is not Tree tree || tree.stump.Value || tree.health.Value <= 0) continue;
+                    // FruitTree is a separate terrain type. Direct stage changes avoid dayUpdate's
+                    // unrelated seed spreading, moss, seasonal transformations and extra growth.
+                    int next = TraitRules.AdvanceImmatureTree(tree.growthStage.Value, stages, Tree.treeStage);
+                    if (next != tree.growthStage.Value)
+                    {
+                        changed.Add((tree, tree.growthStage.Value));
+                        tree.growthStage.Value = next;
+                    }
+                }
+        }
+        catch
+        {
+            foreach (var entry in changed)
+                ErrorHandler.Try("Restore tree stage", () => entry.Tree.growthStage.Value = entry.Stage);
+            throw;
+        }
     }
 
     internal bool TryRestart()
@@ -101,26 +115,35 @@ internal sealed class HarvestContext
             || !TraitRules.RootedTriggers(TraitRules.Level(Inherited, "rooted"), ModEntry.Instance.Config.RootedChance,
                 data.RegrowDays > 0, Traits.RandomFor(Plant, 107).NextDouble())) return false;
 
-        // Reuse the plant so its inherited traits, color and other mods' metadata survive.
-        // Remove our saved phase deltas before rebuilding vanilla growth, avoiding accumulation.
-        Companion.RemoveGrowthDelay(soil);
-        Plant.ResetPhaseDays();
-        Plant.currentPhase.Value = 0;
-        Plant.dayOfCurrentPhase.Value = 0;
-        Plant.fullyGrown.Value = false;
-        Plant.phaseToShow.Value = -1;
-        // Sunflower harvest temporarily changes this to its bonus seed item.
-        Plant.indexOfHarvest.Value = CropCatalog.Raw(data.HarvestItemId);
-        Plant.raisedSeeds.Value = data.IsRaised;
-        soil.nearWaterForPaddy.Value = -1;
-        soil.applySpeedIncreases(Game1.player);
-        if (soil.hasPaddyCrop() && soil.paddyWaterCheck())
+        var snapshot = new CropSnapshot(Plant);
+        try
         {
-            soil.state.Value = 1;
-            soil.updateNeighbors();
+            // Reuse the plant so its inherited traits, color and other mods' metadata survive.
+            // Remove our saved phase deltas before rebuilding vanilla growth, avoiding accumulation.
+            Companion.RemoveGrowthDelay(soil);
+            Plant.ResetPhaseDays();
+            Plant.currentPhase.Value = 0;
+            Plant.dayOfCurrentPhase.Value = 0;
+            Plant.fullyGrown.Value = false;
+            Plant.phaseToShow.Value = -1;
+            // Sunflower harvest temporarily changes this to its bonus seed item.
+            Plant.indexOfHarvest.Value = CropCatalog.Raw(data.HarvestItemId);
+            Plant.raisedSeeds.Value = data.IsRaised;
+            soil.nearWaterForPaddy.Value = -1;
+            soil.applySpeedIncreases(Game1.player);
+            if (soil.hasPaddyCrop() && soil.paddyWaterCheck())
+            {
+                soil.state.Value = 1;
+                soil.updateNeighbors();
+            }
+            Plant.updateDrawMath(soil.Tile);
+            return true;
         }
-        Plant.updateDrawMath(soil.Tile);
-        return true;
+        catch
+        {
+            ErrorHandler.Try("Restore crop after Rooted failure", snapshot.Restore);
+            throw;
+        }
     }
 
     internal static void ApplyRegrowth(Crop crop, HoeDirtAlias soil)
@@ -195,26 +218,58 @@ internal sealed class HarvestContext
     {
         Item copy = source.getOne();
         if (Current == null) return copy;
-        if (Current.yieldLevel > 0 && copy.ItemId == Current.HarvestId)
+        HarvestContext context = Current;
+        int stack = copy.Stack, quality = copy.Quality, extras = context.PendingExtras.Count;
+        int originalCount = context.primaryCount;
+        int sources = context.primaryOutputs.Count;
+        var lastSource = sources > 0 ? context.primaryOutputs[^1] : default;
+        string? originalTraits = null, originalCompanion = null;
+        bool captured = false;
+        try
         {
-            Current.primaryCount += copy.Stack;
-            // Vanilla reuses source templates. Keep counts rather than an item clone per unit.
-            var entries = Current.primaryOutputs;
-            if (entries.Count > 0 && ReferenceEquals(entries[^1].Source, source))
-                entries[^1] = (source, entries[^1].Count + copy.Stack);
-            else entries.Add((source, copy.Stack));
+            copy.modData.TryGetValue(Traits.Key, out originalTraits);
+            copy.modData.TryGetValue(Companion.Key, out originalCompanion);
+            captured = true;
+            if (Current.yieldLevel > 0 && copy.ItemId == Current.HarvestId)
+            {
+                Current.primaryCount += copy.Stack;
+                // Vanilla reuses source templates. Keep counts rather than an item clone per unit.
+                var entries = Current.primaryOutputs;
+                if (entries.Count > 0 && ReferenceEquals(entries[^1].Source, source))
+                    entries[^1] = (source, entries[^1].Count + copy.Stack);
+                else entries.Add((source, copy.Stack));
+            }
+            List<Item> outputs = Current.Decorate(copy);
+            // The vanilla clone site accepts one item stack. Only commit split-off extras if the
+            // enclosing harvest succeeds (e.g. not when the player's inventory rejects the crop).
+            if (outputs[0].Stack > 1)
+            {
+                Item extra = outputs[0].getOne();
+                extra.Stack = outputs[0].Stack - 1;
+                outputs[0].Stack = 1;
+                Current.PendingExtras.Add(extra);
+            }
+            Current.PendingExtras.AddRange(outputs.Skip(1));
+            return outputs[0];
         }
-        List<Item> outputs = Current.Decorate(copy);
-        // The vanilla clone site accepts one item stack. Only commit split-off extras if the
-        // enclosing harvest succeeds (e.g. not when the player's inventory rejects the crop).
-        if (outputs[0].Stack > 1)
+        catch (Exception ex)
         {
-            Item extra = outputs[0].getOne();
-            extra.Stack = outputs[0].Stack - 1;
-            outputs[0].Stack = 1;
-            Current.PendingExtras.Add(extra);
+            // Return the already-created vanilla clone. Never call getOne/harvest twice.
+            ErrorHandler.Try("Restore harvest output", () =>
+            {
+                copy.Stack = stack; copy.Quality = quality;
+                if (captured)
+                {
+                    if (originalTraits == null) copy.modData.Remove(Traits.Key); else copy.modData[Traits.Key] = originalTraits;
+                    if (originalCompanion == null) copy.modData.Remove(Companion.Key); else copy.modData[Companion.Key] = originalCompanion;
+                }
+                context.PendingExtras.RemoveRange(extras, context.PendingExtras.Count - extras);
+                context.primaryCount = originalCount;
+                if (context.primaryOutputs.Count > sources) context.primaryOutputs.RemoveRange(sources, context.primaryOutputs.Count - sources);
+                if (sources > 0) context.primaryOutputs[^1] = lastSource;
+            });
+            ErrorHandler.Report("Decorate harvest", ex);
+            return copy;
         }
-        Current.PendingExtras.AddRange(outputs.Skip(1));
-        return outputs[0];
     }
 }
