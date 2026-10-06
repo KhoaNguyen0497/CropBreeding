@@ -1,5 +1,7 @@
 using CropBreeding.Core;
+using Microsoft.Xna.Framework;
 using StardewValley;
+using StardewValley.TerrainFeatures;
 
 namespace CropBreeding;
 
@@ -66,6 +68,30 @@ internal sealed class HarvestContext
 
     internal static bool Ready(Crop crop) => !crop.dead.Value && crop.currentPhase.Value >= crop.phaseDays.Count - 1
         && (!crop.fullyGrown.Value || crop.dayOfCurrentPhase.Value <= 0);
+
+    // Called once after a successful harvest, before Rooted can restart the crop.
+    // One plant-wide roll; at most eight tile lookups, with no world scan or daily update.
+    internal void GrowNearbyTrees()
+    {
+        int level = TraitRules.Level(Inherited, "nurse_crop");
+        if (level == 0 || !WasReady || Plant.dead.Value || Plant.GetData() is not { } data
+            || data.RegrowDays > 0 || Plant.Dirt is not HoeDirtAlias soil
+            || Plant.currentLocation is not { } location) return;
+        int stages = TraitRules.NurseCropStages(level, false, Traits.RandomFor(Plant, 113).NextDouble());
+        if (stages == 0) return;
+        Vector2 origin = soil.Tile;
+        for (int x = -1; x <= 1; x++)
+            for (int y = -1; y <= 1; y++)
+            {
+                if ((x == 0 && y == 0)
+                    || !location.terrainFeatures.TryGetValue(origin + new Vector2(x, y), out var feature)
+                    || feature is not Tree tree || tree.stump.Value || tree.health.Value <= 0) continue;
+                // FruitTree is a separate terrain type. Direct stage changes avoid dayUpdate's
+                // unrelated seed spreading, moss, seasonal transformations and extra growth.
+                int next = TraitRules.AdvanceImmatureTree(tree.growthStage.Value, stages, Tree.treeStage);
+                if (next != tree.growthStage.Value) tree.growthStage.Value = next;
+            }
+    }
 
     internal bool TryRestart()
     {

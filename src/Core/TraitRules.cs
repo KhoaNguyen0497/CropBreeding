@@ -7,7 +7,16 @@ namespace CropBreeding.Core;
 public static class TraitRules
 {
     public const int MaximumLevel = 5;
-    public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver", "copper_bearing", "iron_bearing", "gold_bearing", "rooted"];
+    public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver", "copper_bearing", "iron_bearing", "gold_bearing", "rooted", "nurse_crop"];
+    public static int NurseCropStages(int level, bool canRegrow, double roll)
+    {
+        if (canRegrow) return 0;
+        int percent = Math.Clamp(level, 0, MaximumLevel) * 30;
+        return percent / 100 + (roll < (percent % 100) / 100.0 ? 1 : 0);
+    }
+    public static int AdvanceImmatureTree(int currentStage, int stages, int matureStage)
+        => currentStage < 0 || currentStage >= matureStage - 1 || stages <= 0
+            ? currentStage : currentStage + Math.Min(stages, matureStage - 1 - currentStage);
     public static bool RootedTriggers(int level, double chancePerLevel, bool canRegrow, double roll)
         => !canRegrow && roll < Math.Clamp(Math.Clamp(level, 0, MaximumLevel) * chancePerLevel, 0, 1);
     public static int MaterialDropCount(int baseGrowthDays, int level, double roll)
@@ -81,7 +90,7 @@ public static class TraitRules
         string[] current = Parse(Encode(inherited));
         if (random.NextDouble() >= Math.Clamp(chance, 0, 1)) return current;
         // Each eligible trait type has one chance: add it at level 1, or upgrade it by one.
-        string[] choices = Known.Where(id => (id != "rooted" || !canRegrow) && (Level(current, id) is > 0 and < MaximumLevel
+        string[] choices = Known.Where(id => (id is not ("rooted" or "nurse_crop") || !canRegrow) && (Level(current, id) is > 0 and < MaximumLevel
                 || (Level(current, id) == 0 && current.Length < Math.Max(0, limit)))).ToArray();
         if (choices.Length == 0) return current;
         string chosen = choices[random.Next(choices.Length)];
@@ -122,7 +131,7 @@ public static class TraitRules
         string name = Id(token) switch
         {
             "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "high_quality" => "High Quality", "companion" => "Companion", "evergreen" => "Evergreen", "researcher" => "Researcher", "seed_saver" => "Seed Saver",
-            "copper_bearing" => "Copper Bearing", "iron_bearing" => "Iron Bearing", "gold_bearing" => "Gold Bearing", "rooted" => "Rooted", _ => Id(token)
+            "copper_bearing" => "Copper Bearing", "iron_bearing" => "Iron Bearing", "gold_bearing" => "Gold Bearing", "rooted" => "Rooted", "nurse_crop" => "Nurse Crop", _ => Id(token)
         };
         return $"{name} {TokenLevel(token)}";
     }

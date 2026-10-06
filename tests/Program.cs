@@ -149,3 +149,39 @@ for (int i = 0; i < 1000; i++)
     sawRooted |= TraitRules.Level(TraitRules.Mutate([], 3, 1, new Random(i), false), "rooted") == 1;
 }
 Check(sawRooted, "annual crops can mutate Rooted");
+
+for (int level = 0; level <= 5; level++)
+{
+    int total = 0;
+    for (int i = 0; i < 1000; i++)
+    {
+        double roll = (i + .5) / 1000;
+        total += TraitRules.NurseCropStages(level, false, roll);
+        Check(TraitRules.NurseCropStages(level, true, roll) == 0, "Nurse Crop never affects regrowers");
+    }
+    Check(total == level * 300, $"Nurse Crop level {level} distribution including overflow");
+}
+Check(TraitRules.NurseCropStages(1, false, .3) == 0, "Nurse Crop threshold excludes equal roll");
+Check(TraitRules.NurseCropStages(4, false, .2) == 1, "Nurse Crop overflow threshold retains guaranteed stage");
+Check(TraitRules.NurseCropStages(5, false, .5) == 1, "Nurse Crop level five threshold");
+for (int stage = 0; stage <= 15; stage++)
+    for (int extra = 0; extra <= 2; extra++)
+    {
+        int next = TraitRules.AdvanceImmatureTree(stage, extra, 5);
+        Check(next >= stage, "Nurse Crop never shrinks existing trees");
+        Check(stage >= 4 ? next == stage : next == Math.Min(4, stage + extra), "Nurse Crop leaves final maturity step");
+    }
+Check(TraitRules.AdvanceImmatureTree(0, 2, 5) == 2, "Nurse Crop can advance planted tree seeds");
+Check(TraitRules.AdvanceImmatureTree(3, 2, 5) == 4, "Nurse Crop discards excess stages near maturity");
+Breed("nurse_crop:4", "nurse_crop", 3, "nurse_crop:5");
+Breed("nurse_crop:5", "nurse_crop", 3, null);
+Check(TraitRules.Label("nurse_crop:3") == "Nurse Crop 3", "Nurse Crop label");
+bool sawNurseCrop = false;
+for (int i = 0; i < 1000; i++)
+{
+    Check(TraitRules.Level(TraitRules.Mutate([], 3, 1, new Random(i), true), "nurse_crop") == 0, "regrowers cannot acquire Nurse Crop");
+    Check(TraitRules.Mutate(T("nurse_crop:2"), 1, 1, new Random(i), true).SequenceEqual(T("nurse_crop:2")), "regrowers cannot upgrade existing Nurse Crop");
+    sawNurseCrop |= TraitRules.Level(TraitRules.Mutate([], 3, 1, new Random(i), false), "nurse_crop") == 1;
+}
+Check(sawNurseCrop, "annual crops can acquire Nurse Crop");
+Console.WriteLine("Passed Nurse Crop overflow distribution, maturity cap, breeding and mutation eligibility checks.");
