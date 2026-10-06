@@ -9,6 +9,12 @@ public static class TraitRules
     public const int MaximumLevel = 5;
     public static readonly string[] Known = ["fast_growth", "high_yield", "fast_regrowth", "high_quality", "companion", "evergreen"];
     public static bool EvergreenActive(int level) => level >= MaximumLevel;
+    public static int ExtraYieldCount(int count, int level, double increasePerLevel, double roll)
+    {
+        double extra = Math.Max(0, count) * Math.Clamp(increasePerLevel * Math.Clamp(level, 0, MaximumLevel), 0, 1);
+        int guaranteed = (int)Math.Floor(extra);
+        return guaranteed + (roll < extra - guaranteed ? 1 : 0);
+    }
     // Detached seed preview: mirror vanilla applySpeedIncreases' phase rounding and three-pass limit.
     // No fertilizer or paddy bonus can be assumed before a planting tile is selected.
     public static int[] PreviewGrowthPhases(int[] original, int fastGrowthLevel, double reductionPerLevel, bool agriculturist, int companionBaseDays)

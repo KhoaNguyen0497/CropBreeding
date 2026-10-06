@@ -11,7 +11,9 @@ internal sealed class HarvestContext
     internal readonly string HarvestId;
     internal readonly string[] Inherited;
     internal readonly string[] OutputTraits;
-    internal readonly bool Bonus;
+    private readonly int yieldLevel;
+    private readonly List<(Item Source, int Count)> primaryOutputs = [];
+    private int primaryCount;
     private readonly string? companionId;
     private readonly Random qualityRandom;
     private readonly int qualityLevel;
@@ -34,8 +36,7 @@ internal sealed class HarvestContext
             ? 0 : ModEntry.Instance.Config.MutationChance;
         OutputTraits = TraitRules.Mutate(Inherited, ModEntry.Instance.Config.MaximumTraits, chance, Traits.RandomFor(crop, 11), canRegrow: regrows);
         // Existing plant traits determine the current harvest effects. A new mutation starts working after replanting.
-        Bonus = TraitRules.Level(Inherited, "high_yield") > 0 && Traits.RandomFor(crop, 23).NextDouble()
-            < Math.Clamp(ModEntry.Instance.Config.ExtraYieldChance * TraitRules.Level(Inherited, "high_yield"), 0, 1);
+        yieldLevel = TraitRules.Level(Inherited, "high_yield");
     }
 
     internal static bool Ready(Crop crop) => !crop.dead.Value && crop.currentPhase.Value >= crop.phaseDays.Count - 1
@@ -58,9 +59,6 @@ internal sealed class HarvestContext
         {
             Traits.Write(item.modData, OutputTraits);
             Companion.Write(item.modData, companionId);
-            // One roll per plant harvest, applied to every outgoing primary item, including
-            // vanilla multi-yield/bonus outputs. Companion items and byproducts never enter here.
-            if (Bonus) item.Stack *= 2;
         }
         else if (HarvestId == "421" && item.ItemId == "431")
         {
@@ -68,7 +66,7 @@ internal sealed class HarvestContext
             Companion.Write(item.modData, companionId);
         }
         if (item.ItemId != HarvestId || qualityLevel <= 0 || item.Quality == 4) return [item];
-        // Roll once per unit, including High Yield's extra unit. Preserve the source quality and
+        // Roll once per unit, including High Yield's extra units. Preserve the source quality and
         // color until after the normal harvest calculation, then split stacks by resulting quality.
         int baseQuality = item.Quality;
         int upgraded = 0;
@@ -88,12 +86,43 @@ internal sealed class HarvestContext
         return [item, better];
     }
 
+    internal void CompleteYield()
+    {
+        if (primaryCount == 0 || yieldLevel == 0) return;
+        Random random = Traits.RandomFor(Plant, 23);
+        int extra = TraitRules.ExtraYieldCount(primaryCount, yieldLevel,
+            ModEntry.Instance.Config.ExtraYieldChance, random.NextDouble());
+        for (int i = 0; i < extra; i++)
+        {
+            // Sample original output quality/color before High Quality, weighted by item count.
+            int index = random.Next(primaryCount);
+            foreach (var entry in primaryOutputs)
+            {
+                if (index < entry.Count)
+                {
+                    PendingExtras.AddRange(Decorate(entry.Source.getOne()));
+                    break;
+                }
+                index -= entry.Count;
+            }
+        }
+    }
+
     // Called only at the outgoing clone sites inside Crop.harvest. Does not alter crop data,
     // source templates, quality, colors, or unrelated item creation elsewhere in the game.
     internal static Item CloneHarvest(Item source)
     {
         Item copy = source.getOne();
         if (Current == null) return copy;
+        if (Current.yieldLevel > 0 && copy.ItemId == Current.HarvestId)
+        {
+            Current.primaryCount += copy.Stack;
+            // Vanilla reuses source templates. Keep counts rather than an item clone per unit.
+            var entries = Current.primaryOutputs;
+            if (entries.Count > 0 && ReferenceEquals(entries[^1].Source, source))
+                entries[^1] = (source, entries[^1].Count + copy.Stack);
+            else entries.Add((source, copy.Stack));
+        }
         List<Item> outputs = Current.Decorate(copy);
         // The vanilla clone site accepts one item stack. Only commit split-off extras if the
         // enclosing harvest succeeds (e.g. not when the player's inventory rejects the crop).

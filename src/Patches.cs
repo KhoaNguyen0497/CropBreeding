@@ -136,6 +136,7 @@ internal static class Patches
         if (__exception == null && current?.WasReady == true)
         {
             bool succeeded = __result || (current.Plant.fullyGrown.Value && current.Plant.dayOfCurrentPhase.Value > 0);
+            if (succeeded) current.CompleteYield();
             if (succeeded)
                 foreach (Item extra in current.PendingExtras)
                 {
