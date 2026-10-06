@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.GameData.Machines;
 using StardewValley.Tools;
@@ -19,6 +21,10 @@ internal static class Patches
             Patch(harmony, typeof(HoeDirtAlias), name, transpiler: nameof(PlantSeasonTranspiler));
         Patch(harmony, typeof(Crop), nameof(Crop.IsInSeason), postfix: nameof(CropSeasonPostfix), parameters: [typeof(GameLocation)]);
         Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.applySpeedIncreases), prefix: nameof(GrowthPrefix), postfix: nameof(GrowthPostfix));
+        Patch(harmony, typeof(Crop), nameof(Crop.newDay), postfix: nameof(CropReadyPostfix));
+        Patch(harmony, typeof(Crop), nameof(Crop.growCompletely), postfix: nameof(CropReadyPostfix));
+        Patch(harmony, typeof(Crop), nameof(Crop.draw), postfix: nameof(CropDrawPostfix),
+            parameters: [typeof(SpriteBatch), typeof(Vector2), typeof(Color), typeof(float)]);
         Patch(harmony, typeof(Crop), nameof(Crop.harvest), prefix: nameof(HarvestPrefix),
             transpiler: nameof(HarvestTranspiler), finalizer: nameof(HarvestFinalizer));
         Patch(harmony, typeof(Item), nameof(Item.canStackWith), postfix: nameof(StackPostfix));
@@ -59,6 +65,29 @@ internal static class Patches
         return __exception;
     }
     private sealed record PlantState(string[] Values, string? CompanionId);
+    private readonly record struct HarvestState(HarvestContext? Previous, bool WasReady);
+    [HarmonyPriority(Priority.Last)]
+    private static void CropReadyPostfix(Crop __instance)
+    {
+        try { MutationState.AfterGrowth(__instance); }
+        catch (Exception ex) { ErrorHandler.Report("Crop readiness", ex); }
+    }
+    private static void CropDrawPostfix(Crop __instance, SpriteBatch b, Vector2 tileLocation, Color toTint)
+    {
+        try
+        {
+            if (!MutationState.HasMutation(__instance)) return;
+            Vector2 position = Game1.GlobalToLocal(Game1.viewport, tileLocation * 64f + new Vector2(32, -24));
+            if (position.X < -16 || position.Y < -16 || position.X > Game1.viewport.Width + 16
+                || position.Y > Game1.viewport.Height + 16) return;
+            // Vanilla iridium-quality star from Item.DrawMenuIcons. A static 16px marker, not a
+            // quality forecast: it indicates a new/upgraded trait in the pending harvest only.
+            b.Draw(Game1.mouseCursors, position, new Rectangle(346, 392, 8, 8), toTint,
+                0f, new Vector2(4), 2f, SpriteEffects.None,
+                Math.Clamp((tileLocation.Y * 64f + 64f) / 10000f + .0001f, 0f, 1f));
+        }
+        catch (Exception ex) { ErrorHandler.Report("Draw mutation icon", ex); }
+    }
     private static void CropSeasonPostfix(Crop __instance, ref bool __result)
     {
         bool original = __result;
@@ -156,9 +185,14 @@ internal static class Patches
             crop.modData[Traits.EligibilityKey] = eligible ? "true" : "false";
             Traits.Write(crop.modData, eligible ? __state.Values : []);
             Companion.Write(crop.modData, eligible ? __state.CompanionId : null);
+            // Another planting patch may have instantly grown it before seed traits transferred.
+            // The newly planted crop must prepare from its actual inherited traits below.
+            crop.modData.Remove(MutationState.Key);
             // Reapply vanilla speed calculation after transferring traits. This preserves profession/paddy/fertilizer effects.
             if (Core.TraitRules.Level(__state.Values, "fast_growth") > 0 || Companion.BaseDays(crop.modData) > 0
                 || Traits.GrowthPenalty(crop.modData) > 0) __instance.applySpeedIncreases(who);
+            // Covers zero-day/instantly grown seeds after their inherited traits are assigned.
+            MutationState.EnsurePrepared(crop);
         }
         catch (Exception ex)
         {
@@ -187,28 +221,33 @@ internal static class Patches
         try { Companion.ApplyGrowth(__instance); }
         catch (Exception ex) { ErrorHandler.Report("Apply growth traits", ex); }
     }
-    private static void HarvestPrefix(Crop __instance, HoeDirtAlias soil, out HarvestContext? __state)
+    private static void HarvestPrefix(Crop __instance, HoeDirtAlias soil, out HarvestState __state)
     {
-        __state = HarvestContext.Current;
+        __state = new(HarvestContext.Current, false);
         HarvestContext.Current = null;
         try
         {
+            __state = __state with { WasReady = MutationState.Ready(__instance) };
             if (Traits.Eligible(__instance, soil) && __instance.GetData() != null)
                 HarvestContext.Current = new HarvestContext(__instance);
         }
         catch (Exception ex) { ErrorHandler.Report("Prepare harvest", ex); }
     }
     [HarmonyPriority(Priority.Last)]
-    private static Exception? HarvestFinalizer(Exception? __exception, HarvestContext? __state, ref bool __result,
+    private static Exception? HarvestFinalizer(Crop __instance, Exception? __exception, HarvestState __state, ref bool __result,
         StardewValley.Characters.JunimoHarvester? junimoHarvester)
     {
         HarvestContext? current = HarvestContext.Current;
-        HarvestContext.Current = __state;
+        HarvestContext.Current = __state.Previous;
         // Never suppress exceptions from vanilla or another mod, and never replay a harvest.
         try
         {
-            if (__exception != null || current?.WasReady != true) return __exception;
-            bool succeeded = __result || (current.Plant.fullyGrown.Value && current.Plant.dayOfCurrentPhase.Value > 0);
+            if (__exception != null || !__state.WasReady) return __exception;
+            bool succeeded = __result || (__instance.fullyGrown.Value && __instance.dayOfCurrentPhase.Value > 0);
+            // Also clear after a successful vanilla harvest if bonus-context preparation failed.
+            try { MutationState.CompleteHarvest(__instance, succeeded); }
+            catch (Exception ex) { ErrorHandler.Report("Finish mutation cycle", ex); }
+            if (current?.WasReady != true) return __exception;
             if (succeeded)
             {
                 int before = current.PendingExtras.Count;

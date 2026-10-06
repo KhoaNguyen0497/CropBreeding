@@ -20,8 +20,6 @@ internal sealed class HarvestContext
     private readonly Random qualityRandom;
     private readonly int qualityLevel;
     internal readonly List<Item> PendingExtras = [];
-    private static bool TraitAvailable(string id) => !TraitRules.MaterialDrops.TryGetValue(id, out var material)
-        || Game1.objectData.ContainsKey(material.ItemId);
 
     internal HarvestContext(Crop crop)
     {
@@ -56,18 +54,12 @@ internal sealed class HarvestContext
             PendingExtras.Add(ItemRegistry.Create("(O)" + companionId, 1, 0));
         qualityLevel = TraitRules.Level(Inherited, "high_quality");
         qualityRandom = Traits.RandomFor(crop, 37);
-        bool regrows = crop.GetData()!.RegrowDays > 0;
-        double chance = regrows && !ModEntry.Instance.Config.EnableRegrowingCropMutations
-            ? 0 : TraitRules.MutationRate(ModEntry.Instance.Config.MutationChance,
-                TraitRules.Level(Inherited, "researcher"), ModEntry.Instance.Config.ResearcherMutationBonus);
-        OutputTraits = TraitRules.Mutate(Inherited, ModEntry.Instance.Config.MaximumTraits, chance, Traits.RandomFor(crop, 11),
-            canRegrow: regrows, isAvailable: TraitAvailable);
+        OutputTraits = WasReady ? MutationState.ForHarvest(crop, Inherited) : Inherited;
         // Existing plant traits determine the current harvest effects. A new mutation starts working after replanting.
         yieldLevel = TraitRules.Level(Inherited, "high_yield");
     }
 
-    internal static bool Ready(Crop crop) => !crop.dead.Value && crop.currentPhase.Value >= crop.phaseDays.Count - 1
-        && (!crop.fullyGrown.Value || crop.dayOfCurrentPhase.Value <= 0);
+    internal static bool Ready(Crop crop) => MutationState.Ready(crop);
 
     // Called once after a successful harvest, before Rooted can restart the crop.
     // One plant-wide roll; at most eight tile lookups, with no world scan or daily update.

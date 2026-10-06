@@ -6,6 +6,7 @@
   <ItemGroup>
     <Compile Include="../src/ErrorHandler.cs" Link="ErrorHandler.cs" />
     <Compile Include="../src/CropSnapshot.cs" Link="CropSnapshot.cs" />
+    <Compile Include="../src/MutationState.cs" Link="MutationState.cs" />
     <Compile Include="../src/ModConfig.cs" Link="ModConfig.cs" />
     <Compile Include="../src/Core/TraitRules.cs" Link="TraitRules.cs" />
     <Compile Include="../src/Integrations/GenericModConfigMenuIntegration.cs" Link="GenericModConfigMenuIntegration.cs" />

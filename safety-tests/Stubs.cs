@@ -1,6 +1,7 @@
 // Minimal test doubles for the linked production code. These do not simulate gameplay.
 global using HoeDirtAlias = StardewValley.HoeDirt;
 using CropBreeding.Integrations;
+using StardewValley;
 
 namespace Microsoft.Xna.Framework
 {
@@ -22,13 +23,18 @@ namespace StardewValley
         public Metadata modData = new();
         public Net<int> currentPhase = new(2), dayOfCurrentPhase = new(1), phaseToShow = new(-1);
         public Net<bool> fullyGrown = new(false), raisedSeeds = new(true);
+        public Net<bool> dead = new(false);
         public Net<string> indexOfHarvest = new("24");
+        public CropData? Data = new();
+        public bool Eligible = true;
+        public CropData? GetData() => Data;
         public HoeDirt? Dirt;
         public int DrawUpdates;
         public void updateDrawMath(int tile) => DrawUpdates++;
     }
     public sealed class HoeDirt
     {
+        public Crop? crop;
         public Net<int> state = new(1), nearWaterForPaddy = new(0);
         public int Tile;
     }
@@ -42,7 +48,13 @@ namespace StardewValley
             Messages.Add(message);
         }
     }
-    public static class Game1 { public static Chat? chatBox = new(); }
+    public sealed class CropData { public int RegrowDays = -1; }
+    public static class Game1
+    {
+        public static Chat? chatBox = new();
+        public static bool IsMasterGame = true;
+        public static Dictionary<string, object> objectData = new();
+    }
 }
 namespace CropBreeding
 {
@@ -75,11 +87,21 @@ namespace CropBreeding
     }
     public sealed class ModEntry
     {
+        public const string Id = "CropBreeding.Tests";
         public static ModEntry Instance = new();
         public ModConfig Config = new();
         public MonitorStub Monitor = new();
         public HelperStub Helper = new();
         public Manifest ModManifest = new();
+    }
+    internal static class Traits
+    {
+        internal const string Key = "Traits";
+        internal static Func<Random> RandomFactory = () => new Random(0);
+        internal static int RandomCalls;
+        internal static Random RandomFor(Crop crop, double salt) { RandomCalls++; return RandomFactory(); }
+        internal static string[] Read(Metadata data) => Core.TraitRules.Parse(data.GetValueOrDefault(Key));
+        internal static bool Eligible(Crop crop, HoeDirt soil) => crop.Eligible;
     }
     public sealed class ConfigApi : IGenericModConfigMenuApi
     {

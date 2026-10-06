@@ -109,6 +109,7 @@ public sealed class ModEntry : Mod
                     crop.modData.Remove(Traits.Key);
                     crop.modData.Remove(Companion.Key);
                     crop.modData.Remove(Traits.EligibilityKey);
+                    crop.modData.Remove(MutationState.Key);
                     feature.applySpeedIncreases(Game1.MasterPlayer);
                 }
             foreach (var tile in location.objects.Pairs.Where(p => Breeder.IsMachine(p.Value)).Select(p => p.Key).ToArray())

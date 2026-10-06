@@ -27,9 +27,9 @@ internal static class GenericModConfigMenuIntegration
             api.AddSectionTitle(mod.ModManifest, () => "Breeding and mutations");
             api.AddNumberOption(mod.ModManifest, () => mod.Config.MaximumTraits, value => mod.Config.MaximumTraits = Math.Clamp(value, 0, Core.TraitRules.Known.Length),
                 () => "Maximum traits", () => "Unique traits per seed or crop. Zero prevents adding new traits. Lowering this does not remove existing traits.", 0, Core.TraitRules.Known.Length, 1, fieldId: nameof(ModConfig.MaximumTraits));
-            Percent(nameof(ModConfig.MutationChance), "Mutation chance", "Chance per plant harvest before Researcher.", c => c.MutationChance, (c, v) => c.MutationChance = v);
+            Percent(nameof(ModConfig.MutationChance), "Mutation chance", "Rolled once when each harvest becomes ready, before Researcher. Already stored outcomes are unchanged by settings edits.", c => c.MutationChance, (c, v) => c.MutationChance = v);
             api.AddBoolOption(mod.ModManifest, () => mod.Config.EnableRegrowingCropMutations, value => mod.Config.EnableRegrowingCropMutations = value,
-                () => "Mutations on regrowing crops", fieldId: nameof(ModConfig.EnableRegrowingCropMutations));
+                () => "Mutations on regrowing crops", () => "Affects future readiness rolls, not outcomes already stored on ready plants.", fieldId: nameof(ModConfig.EnableRegrowingCropMutations));
             api.AddSectionTitle(mod.ModManifest, () => "Trait effects per level");
             Percent(nameof(ModConfig.GrowthReductionPerLevel), "Fast Growth reduction", "Applies to initial growth and natural regrowth after other modifiers. Existing planted growth is updated at its next normal recalculation, not scanned when saving settings.", c => c.GrowthReductionPerLevel, (c, v) => c.GrowthReductionPerLevel = v);
             Percent(nameof(ModConfig.ExtraYieldPerLevel), "High Yield bonus", "Proportional extra produce, with fractional remainder chance. Total bonus capped at 100%.", c => c.ExtraYieldPerLevel, (c, v) => c.ExtraYieldPerLevel = v);
