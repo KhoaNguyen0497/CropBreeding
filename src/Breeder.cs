@@ -7,7 +7,8 @@ internal static class Breeder
 {
     internal const string ModeKey = ModEntry.Id + "/SetCompanionMode";
     internal static bool CompanionMode(SObject machine) => machine.modData.ContainsKey(ModeKey);
-    internal const int SeedsRequired = 10;
+    internal const int SeedsRequired = 5;
+    internal const int DonorsRequired = 5;
     internal const string MachineId = ModEntry.Id + "_Breeder";
     internal static StardewValley.Network.NetMutex MenuMutex(SObject machine, GameLocation location) =>
         Game1.player.team.GetOrCreateGlobalInventoryMutex($"{ModEntry.Id}/{location.NameOrUniqueName}/{machine.TileLocation.X}/{machine.TileLocation.Y}");
@@ -20,10 +21,11 @@ internal static class Breeder
         if (CompanionMode(machine)) return SetCompanion(machine, item, probe);
         if (machine.heldObject.Value == null)
         {
-            if (!IsDonor(item)) return false;
+            if (!IsDonor(item) || item.Stack < DonorsRequired) return false;
             if (!probe)
             {
                 machine.heldObject.Value = (SObject)item.getOne();
+                machine.heldObject.Value.Stack = DonorsRequired;
                 machine.MinutesUntilReady = -1;
                 machine.readyForHarvest.Value = false;
             }
@@ -68,7 +70,7 @@ internal static class Breeder
     internal static bool CanBreed(Item donor, Item seed, out string[] traits)
     {
         traits = [];
-        return CropCatalog.Matches(donor, seed) && Core.TraitRules.TryBreed(Traits.Read(donor.modData),
+        return donor.Stack >= DonorsRequired && IsDonor(donor) && CropCatalog.Matches(donor, seed) && Core.TraitRules.TryBreed(Traits.Read(donor.modData),
             Traits.Read(seed.modData), ModEntry.Instance.Config.MaximumTraits, out traits);
     }
     internal static void Clear(SObject machine)

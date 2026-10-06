@@ -16,7 +16,7 @@ internal sealed class BreedingMenu : MenuWithInventory
     private bool cleaned;
     private ClickableComponent donorSlot = null!, seedSlot = null!, breedButton = null!, modeButton = null!;
     private Item? hover;
-    private string message = "1 donor + 10 matching seeds = 1 bred seed";
+    private string message = "5 donor crops + 5 matching seeds = 1 bred seed";
 
     internal BreedingMenu(SObject machine, GameLocation location, NetMutex mutex)
         : base(okButton: false, trashCan: false, heldItemExitBehavior: ItemExitBehavior.ReturnToPlayer, allowExitWithHeldItem: true)
@@ -57,7 +57,7 @@ internal sealed class BreedingMenu : MenuWithInventory
     public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds) => Layout();
     private bool Present => location.objects.TryGetValue(machine.TileLocation, out var current) && ReferenceEquals(current, machine);
     private bool SettingCompanion => Breeder.CompanionMode(machine);
-    private string ModeHint => SettingCompanion ? "1 Companion seed + 1 chosen crop" : "1 donor + 10 matching seeds = 1 bred seed";
+    private string ModeHint => SettingCompanion ? "1 Companion seed + 1 chosen crop" : "5 donor crops + 5 matching seeds = 1 bred seed";
     private bool CanBreed => !machine.readyForHarvest.Value && machine.heldObject.Value is Item donor
         && seeds != null && (SettingCompanion ? seeds.Stack >= 1 && Breeder.CanAssign(donor, seeds)
             : seeds.Stack >= Breeder.SeedsRequired && Breeder.CanBreed(donor, seeds, out _));
@@ -87,11 +87,21 @@ internal sealed class BreedingMenu : MenuWithInventory
             }
             else if (heldItem != null && machine.heldObject.Value == null && Breeder.Insert(machine, heldItem, false))
             {
-                heldItem.Stack--;
+                heldItem.Stack -= SettingCompanion ? 1 : Breeder.DonorsRequired;
                 if (heldItem.Stack == 0) heldItem = null;
                 Game1.playSound("Ship");
             }
-            else message = SettingCompanion ? "Put a seed with Companion in the left slot." : "Put a crop with traits in the donor slot.";
+            else if (!SettingCompanion && !machine.readyForHarvest.Value && heldItem != null
+                && machine.heldObject.Value is Item pending && pending.Stack < Breeder.DonorsRequired
+                && pending.canStackWith(heldItem))
+            {
+                // Allow old saves with a single staged donor to be topped up without losing it.
+                int count = Math.Min(heldItem.Stack, Breeder.DonorsRequired - pending.Stack);
+                pending.Stack += count;
+                heldItem.Stack -= count;
+                if (heldItem.Stack == 0) heldItem = null;
+            }
+            else message = SettingCompanion ? "Put a seed with Companion in the left slot." : "Put a stack of at least 5 matching trait crops in the donor slot.";
             return;
         }
         if (seedSlot.containsPoint(x, y))
@@ -118,7 +128,7 @@ internal sealed class BreedingMenu : MenuWithInventory
                 message = "Ready! Collect your bred seed from the left slot.";
                 Game1.playSound("coin");
             }
-            else message = SettingCompanion ? "Choose a different eligible companion crop." : "Need a valid donor and 10 compatible seeds.";
+            else message = SettingCompanion ? "Choose a different eligible companion crop." : "Need 5 matching donor crops and 5 compatible seeds.";
             return;
         }
         base.receiveLeftClick(x, y, playSound);
@@ -164,8 +174,8 @@ internal sealed class BreedingMenu : MenuWithInventory
         b.Draw(Game1.fadeToBlackRect, new Rectangle(0, 0, Game1.uiViewport.Width, Game1.uiViewport.Height), Color.Black * .65f);
         drawTextureBox(b, xPositionOnScreen, yPositionOnScreen, width, height, Color.White);
         b.DrawString(Game1.dialogueFont, "Crop Breeding", new Vector2(xPositionOnScreen + 48, yPositionOnScreen + 28), Game1.textColor);
-        DrawSlot(b, donorSlot, machine.heldObject.Value, machine.readyForHarvest.Value ? "Bred seed" : SettingCompanion ? "Companion seed" : "Donor crop");
-        DrawSlot(b, seedSlot, seeds, SettingCompanion ? "Chosen crop (1)" : "Seeds (10)");
+        DrawSlot(b, donorSlot, machine.heldObject.Value, machine.readyForHarvest.Value ? "Bred seed" : SettingCompanion ? "Companion seed" : "Donor crops (5)");
+        DrawSlot(b, seedSlot, seeds, SettingCompanion ? "Chosen crop (1)" : "Seeds (5)");
         drawTextureBox(b, modeButton.bounds.X, modeButton.bounds.Y, modeButton.bounds.Width, modeButton.bounds.Height, Color.White);
         b.DrawString(Game1.smallFont, SettingCompanion ? "Mode: Set Companion" : "Mode: Breeding", new Vector2(modeButton.bounds.X + 12, modeButton.bounds.Y + 8), Game1.textColor);
         drawTextureBox(b, breedButton.bounds.X, breedButton.bounds.Y, breedButton.bounds.Width, breedButton.bounds.Height, CanBreed ? Color.White : Color.LightGray);
