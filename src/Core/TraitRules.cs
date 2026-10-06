@@ -100,13 +100,14 @@ public static class TraitRules
     {
         string[] current = Parse(Encode(inherited));
         if (random.NextDouble() >= Math.Clamp(chance, 0, 1)) return current;
-        // Each eligible trait type has one chance: add it at level 1, or upgrade it by one.
+        // Roll the full crop-eligible pool before checking slots/levels. Blocked picks are wasted, never rerolled.
         string[] choices = Known.Where(id => (isAvailable?.Invoke(id) ?? true)
-            && (id is not ("rooted" or "nurse_crop") || !canRegrow) && (Level(current, id) is > 0 and < MaximumLevel
-                || (Level(current, id) == 0 && current.Length < Math.Max(0, limit)))).ToArray();
+            && (id is not ("rooted" or "nurse_crop") || !canRegrow)).ToArray();
         if (choices.Length == 0) return current;
         string chosen = choices[random.Next(choices.Length)];
-        return Parse(Encode(current.Where(t => Id(t) != chosen).Append(Token(chosen, Level(current, chosen) + 1))));
+        int level = Level(current, chosen);
+        if (level >= MaximumLevel || (level == 0 && current.Length >= Math.Max(0, limit))) return current;
+        return Parse(Encode(current.Where(t => Id(t) != chosen).Append(Token(chosen, level + 1))));
     }
     public static bool TryBreed(IEnumerable<string> donor, IEnumerable<string> seed, int limit, out string[] result)
     {

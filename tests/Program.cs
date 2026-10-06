@@ -87,7 +87,7 @@ Breed("evergreen:5", "evergreen", 3, null);
 Breed("evergreen:5", "", 3, "evergreen:5");
 Check(TraitRules.Label("evergreen:4") == "Evergreen 4", "level four tooltip");
 Check(TraitRules.Label("evergreen:5") == "Evergreen 5", "level five tooltip");
-Check(TraitRules.Mutate(T("evergreen:4"), 1, 1, new Random(0)).SequenceEqual(T("evergreen:5")), "Evergreen upgrades at trait cap");
+Check(TraitRules.Mutate(T("evergreen:4"), 1, 1, new Random(0), isAvailable: id => id == "evergreen").SequenceEqual(T("evergreen:5")), "selected Evergreen upgrades at trait cap");
 for (int seed = 0; seed < 1000; seed++) {
     var annual = TraitRules.Mutate(T(""), 3, 1, new Random(seed), canRegrow: false);
     var annualFull = T("fast_growth:5,high_yield:5,high_quality:5,companion:5,evergreen:5");
@@ -99,7 +99,7 @@ for (int seed = 0; seed < 1000; seed++) {
     Check(TraitRules.Known.Sum(id => TraitRules.Level(next,id) - TraitRules.Level(inherited,id)) == 1, "exactly one level gained per mutation");
     sawNew |= next.Length == 3; sawUpgrade |= next.Length == 2;
     var atCap = TraitRules.Mutate(T("high_yield:4,evergreen:5,fast_growth:5"), 3, 1, new Random(seed));
-    Check(TraitRules.Level(atCap,"high_yield") == 5 && atCap.Length == 3, "can upgrade at count cap");
+    Check(TraitRules.Level(atCap,"high_yield") is 4 or 5 && atCap.Length == 3, "count cap permits selected upgrade or unchanged result");
     var full = T("high_yield:5,evergreen:5,fast_growth:5");
     Check(TraitRules.Mutate(full, 3, 1, new Random(seed)).SequenceEqual(full), "maxed traits stay intact");
     Check(TraitRules.Mutate(inherited, 3, 0, new Random(seed)).SequenceEqual(inherited), "zero chance");
@@ -206,3 +206,40 @@ foreach (string id in TraitRules.MaterialDrops.Keys)
     }
 }
 Console.WriteLine("Passed material trait availability, inheritance, annual/regrowing mutation and breeding checks.");
+
+foreach (bool regrows in new[] { false, true })
+{
+    string[] pool = TraitRules.Known.Where(id => !regrows || id is not ("rooted" or "nurse_crop")).ToArray();
+    string[] capped = T("high_yield:4,evergreen:5,fast_growth:5");
+    for (int index = 0; index < pool.Length; index++)
+    {
+        var roll = new SelectedTraitRandom(index);
+        var result = TraitRules.Mutate(capped, 3, 1, roll, regrows);
+        var expected = pool[index] == "high_yield" ? T("high_yield:5,evergreen:5,fast_growth:5") : capped;
+        Check(result.SequenceEqual(expected), "only selecting the upgradeable trait changes a capped plant");
+        Check(roll.PoolSize == pool.Length && roll.SelectionCalls == 1, "full eligible pool, exactly one pick, no reroll");
+        var emptyRoll = new SelectedTraitRandom(index);
+        Check(TraitRules.Mutate([], 3, 1, emptyRoll, regrows).SequenceEqual(T(pool[index])), "every eligible trait selectable on an empty plant");
+        Check(emptyRoll.PoolSize == roll.PoolSize, "trait ownership and levels do not change selection pool");
+    }
+}
+var failedRoll = new SelectedTraitRandom(0, .05);
+Check(TraitRules.Mutate([], 3, .05, failedRoll).Length == 0 && failedRoll.SelectionCalls == 0, "failed base roll never picks a trait");
+var availableRoll = new SelectedTraitRandom(0);
+Check(TraitRules.Mutate([], 3, 1, availableRoll, false, id => id == "evergreen").SequenceEqual(T("evergreen"))
+    && availableRoll.PoolSize == 1, "unavailable traits excluded before selection");
+Console.WriteLine("Passed full-pool mutation selection, wasted capped/maxed picks, no rerolls and intrinsic eligibility checks.");
+
+sealed class SelectedTraitRandom(int index, double chanceRoll = 0) : Random
+{
+    public int PoolSize { get; private set; }
+    public int SelectionCalls { get; private set; }
+    public override double NextDouble() => chanceRoll;
+    public override int Next(int maxValue)
+    {
+        PoolSize = maxValue;
+        SelectionCalls++;
+        if (index < 0 || index >= maxValue) throw new InvalidOperationException("Unexpected mutation pool size.");
+        return index;
+    }
+}
