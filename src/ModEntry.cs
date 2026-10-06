@@ -4,7 +4,6 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.GameData.BigCraftables;
-using CropBreeding.Integrations;
 
 namespace CropBreeding;
 
@@ -25,10 +24,6 @@ public sealed class ModEntry : Mod
         helper.Events.Content.AssetsInvalidated += (_, e) =>
         {
             if (e.NamesWithoutLocale.Any(n => n.IsEquivalentTo("Data/Crops"))) Companion.Invalidate();
-        };
-        helper.Events.GameLoop.GameLaunched += (_, _) =>
-        {
-            AutoHarvesterIntegration.Register(harmony, Monitor);
         };
         helper.Events.GameLoop.SaveLoaded += (_, _) => Unlock();
         helper.Events.GameLoop.DayStarted += (_, _) => Unlock();
