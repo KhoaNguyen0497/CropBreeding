@@ -61,6 +61,12 @@ Breed("companion:5", "companion", 3, null);
 Breed("fast_growth", "companion", 3, "fast_growth,companion");
 Breed("high_quality,fast_growth,high_yield", "companion", 3, null);
 bool sawNew = false, sawUpgrade = false;
+int[] previewBase = [1, 2, 2, 99999];
+Check(TraitRules.PreviewGrowthPhases(previewBase, 0, .1, false, 0).SequenceEqual(previewBase), "plain preview unchanged");
+Check(TraitRules.PreviewGrowthPhases(previewBase, 0, .1, false, 7).SequenceEqual(new[] { 1, 2, 6, 99999 }), "preview companion rounds up");
+Check(TraitRules.PreviewGrowthPhases(previewBase, 2, .1, false, 7).SequenceEqual(new[] { 1, 1, 6, 99999 }), "preview speed before companion");
+Check(TraitRules.PreviewGrowthPhases(previewBase, 0, .1, true, 0).SequenceEqual(new[] { 1, 1, 2, 99999 }), "preview Agriculturist vanilla rounding");
+Check(previewBase.SequenceEqual(new[] { 1, 2, 2, 99999 }), "preview never mutates source phases");
 for (int level = 0; level <= 5; level++)
     Check(TraitRules.EvergreenActive(level) == (level == 5), $"Evergreen activation level {level}");
 Breed("evergreen:4", "evergreen", 3, "evergreen:5");

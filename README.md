@@ -33,6 +33,10 @@ Default mutation chance is 5%; default cap is 3 unique traits, each with levels 
 
 ## Special cases
 
+### Lookup Anything
+
+Optional display integration adjusts trait seed previews, planted crop growth/regrowth summaries and next-harvest countdowns. Evergreen 5 displays all four seasons and avoids false out-of-season harvest warnings. Seed previews include Fast Growth, Companion and the current player's Agriculturist profession, without assuming fertilizer or paddy adjacency. Planted crops use their existing phase durations and countdowns. This does not change shared crop data or actual plants, and runs only during lookups. Harvest yield/quality probability fields remain Lookup Anything's base calculations, not breeding-trait forecasts. If Lookup Anything's internal API changes, the integration logs a warning and disables itself; gameplay does not depend on it.
+
 - Excluded: Mixed Seeds, Mixed Flower Seeds, spring/summer/fall/winter forage seeds, vanilla Fiber Seeds, Qi Beans, tea saplings, trees and grass.
 - Normal ground only, including greenhouse/Ginger Island tilled ground. Garden Pots and modded planters using pot soil are excluded; trait seeds are refused there so traits aren't silently discarded. A custom planter implementing actual terrain soil needs an explicit compatibility rule.
 - SVE crops are discovered from their real loaded data. **Ancient Fiber is eligible**; only vanilla Fiber Seeds are excluded.

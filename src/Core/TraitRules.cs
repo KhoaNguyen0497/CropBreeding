@@ -9,6 +9,21 @@ public static class TraitRules
     public const int MaximumLevel = 5;
     public static readonly string[] Known = ["fast_growth", "high_yield", "fast_regrowth", "high_quality", "companion", "evergreen"];
     public static bool EvergreenActive(int level) => level >= MaximumLevel;
+    // Detached seed preview: mirror vanilla applySpeedIncreases' phase rounding and three-pass limit.
+    // No fertilizer or paddy bonus can be assumed before a planting tile is selected.
+    public static int[] PreviewGrowthPhases(int[] original, int fastGrowthLevel, double reductionPerLevel, bool agriculturist, int companionBaseDays)
+    {
+        int[] phases = (int[])original.Clone();
+        float speed = (float)Math.Clamp(reductionPerLevel * fastGrowthLevel, 0, .9);
+        if (agriculturist) speed += .1f;
+        int remove = (int)Math.Ceiling(phases.Take(Math.Max(0, phases.Length - 1)).Sum() * speed);
+        for (int pass = 0; pass < 3 && remove > 0; pass++)
+            for (int i = 0; i < phases.Length && remove > 0; i++)
+                if ((i > 0 || phases[i] > 1) && phases[i] != 99999 && phases[i] > 0)
+                { phases[i]--; remove--; }
+        if (phases.Length >= 2) phases[phases.Length - 2] += CompanionDelay(companionBaseDays);
+        return phases;
+    }
     public static string Id(string trait) => trait.Split(':')[0];
     private static int TokenLevel(string token)
     {

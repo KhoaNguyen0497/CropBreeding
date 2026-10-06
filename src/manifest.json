@@ -5,5 +5,8 @@
   "Description": "Breed inherited crop traits using matching seeds and harvested produce.",
   "UniqueID": "KhoaNguyen0497.CropBreeding",
   "EntryDll": "CropBreeding.dll",
-  "MinimumApiVersion": "4.0.0"
+  "MinimumApiVersion": "4.0.0",
+  "Dependencies": [
+    { "UniqueID": "Pathoschild.LookupAnything", "IsRequired": false }
+  ]
 }

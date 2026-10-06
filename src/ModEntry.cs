@@ -20,6 +20,7 @@ public sealed class ModEntry : Mod
         Config = helper.ReadConfig<ModConfig>();
         harmony = new Harmony(Id);
         Patches.Apply(harmony);
+        helper.Events.GameLoop.GameLaunched += (_, _) => Integrations.LookupAnythingIntegration.Register(harmony, Monitor);
         helper.Events.Content.AssetRequested += AssetRequested;
         helper.Events.Content.AssetsInvalidated += (_, e) =>
         {
