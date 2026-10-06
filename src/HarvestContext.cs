@@ -13,7 +13,6 @@ internal sealed class HarvestContext
     internal readonly string[] OutputTraits;
     internal readonly bool Bonus;
     private readonly string? companionId;
-    private bool bonusApplied;
     private readonly Random qualityRandom;
     private readonly int qualityLevel;
     internal readonly List<Item> PendingExtras = [];
@@ -59,11 +58,9 @@ internal sealed class HarvestContext
         {
             Traits.Write(item.modData, OutputTraits);
             Companion.Write(item.modData, companionId);
-            if (Bonus && !bonusApplied)
-            {
-                item.Stack++;
-                bonusApplied = true;
-            }
+            // One roll per plant harvest, applied to every outgoing primary item, including
+            // vanilla multi-yield/bonus outputs. Companion items and byproducts never enter here.
+            if (Bonus) item.Stack *= 2;
         }
         else if (HarvestId == "421" && item.ItemId == "431")
         {
