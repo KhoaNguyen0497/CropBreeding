@@ -68,7 +68,7 @@ Regrowing crop mutations are enabled by default (`EnableRegrowingCropMutations=t
 
 ## Decisions still open
 
-Researcher and Seed Saver settings: `ResearcherMutationBonus=0.05`, `ResearcherGrowthPenalty=0.10`, `SeedSaverChance=0.10`, all per level. Researcher does not bypass disabled regrowing mutations or trait/level caps. Seed Saver returns one seed at most per plant harvest, regardless of primary yield. Neither trait scans the world. There is currently no selective trait-removal feature.
+Researcher and Seed Saver settings: `ResearcherMutationBonus=0.05`, `ResearcherGrowthPenalty=0.10`, `SeedSaverChance=0.10`, all per level. Researcher does not bypass disabled regrowing mutations or trait/level caps. Seed Saver returns one seed at most per plant harvest, regardless of primary yield. Neither trait scans the world. Remove Trait mode can remove Researcher or any other selected trait from a seed.
 
 16. Foraged/shop/drop produce: no new mutations are granted to those sources. An otherwise matching item that already carries trait metadata can currently be used as a donor; no provenance restriction yet.
 
@@ -92,3 +92,7 @@ Compile and pure trait-rule checks are automated locally; interactive game valid
 - `cropbreeding_give`: give a machine for testing.
 - `cropbreeding_catalog`: list the exact eligible seed → harvest mappings from your installed mods.
 - `cropbreeding_cleanup`: as the host, remove traits, placed/inventory breeding machines, their contents and recipe unlocks. **Back up your save first, run this while the mod is installed, save, quit, then remove the mod.** Ordinary crops remain. This command intentionally destroys machine contents.
+
+## Removing traits
+
+With both slots empty, cycle the mode button to **Remove Trait**. Insert one eligible seed with traits on the left. Select the right-hand trait button to cycle through its traits, then select **Remove**. Collect the seed from the left. Only the selected trait is removed; other levels, quality and metadata are retained. Removing Companion also clears its assigned crop. Removing the final trait returns a plain seed. No additional ingredient or fee is required. Crops are rejected unless the item itself is a supported plantable seed (e.g. coffee beans). The controller uses the same selectable buttons. Close/reopen preserves the staged seed; breaking the station destroys its contents as usual.

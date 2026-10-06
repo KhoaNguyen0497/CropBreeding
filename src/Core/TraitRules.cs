@@ -64,6 +64,8 @@ public static class TraitRules
         .GroupBy(Id).OrderBy(g => g.Key, StringComparer.Ordinal)
         .Select(g => Token(g.Key, g.Max(TokenLevel))).ToArray();
     public static string Encode(IEnumerable<string> values) => string.Join(',', Parse(string.Join(',', values)));
+    public static string[] Without(IEnumerable<string> values, string id)
+        => Parse(Encode(values)).Where(t => Id(t) != id).ToArray();
     public static int Level(IEnumerable<string> traits, string id) => Parse(Encode(traits))
         .Where(t => Id(t) == id).Select(TokenLevel).DefaultIfEmpty(0).Max();
     public static string[] Mutate(IEnumerable<string> inherited, int limit, double chance, Random random, bool canRegrow = true)

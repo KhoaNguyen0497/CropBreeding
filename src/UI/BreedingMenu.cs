@@ -14,6 +14,7 @@ internal sealed class BreedingMenu : MenuWithInventory
     private readonly NetMutex mutex;
     private Item? seeds;
     private bool cleaned;
+    private int selectedTrait;
     private ClickableComponent donorSlot = null!, seedSlot = null!, breedButton = null!, modeButton = null!;
     private Item? hover;
     private string message = "5 donor crops + 5 matching seeds = 1 bred seed";
@@ -38,6 +39,7 @@ internal sealed class BreedingMenu : MenuWithInventory
             { myID = 1000, rightNeighborID = 1001, downNeighborID = 1002 };
         seedSlot = new(new Rectangle(xPositionOnScreen + 528, yPositionOnScreen + 120, 64, 64), "Seeds")
             { myID = 1001, leftNeighborID = 1000, downNeighborID = 1002 };
+        if (RemovingTrait) seedSlot.bounds = new Rectangle(xPositionOnScreen + 440, yPositionOnScreen + 120, 340, 64);
         breedButton = new(new Rectangle(xPositionOnScreen + 352, yPositionOnScreen + 232, 160, 64), "Breed")
             { myID = 1002, upNeighborID = 1000, downNeighborID = inventory.inventory[0].myID };
         modeButton = new(new Rectangle(xPositionOnScreen + 520, yPositionOnScreen + 22, 276, 48), "Mode")
@@ -57,10 +59,14 @@ internal sealed class BreedingMenu : MenuWithInventory
     public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds) => Layout();
     private bool Present => location.objects.TryGetValue(machine.TileLocation, out var current) && ReferenceEquals(current, machine);
     private bool SettingCompanion => Breeder.CompanionMode(machine);
-    private string ModeHint => SettingCompanion ? "1 Companion seed + 1 chosen crop" : "5 donor crops + 5 matching seeds = 1 bred seed";
+    private bool RemovingTrait => Breeder.RemoveMode(machine);
+    private string[] RemovalTraits => machine.heldObject.Value is Item item && !machine.readyForHarvest.Value ? Traits.Read(item.modData) : [];
+    private string? SelectedTrait => RemovalTraits is { Length: > 0 } traits ? traits[selectedTrait % traits.Length] : null;
+    private string ModeHint => RemovingTrait ? "Insert 1 seed, choose a trait, then select Remove." : SettingCompanion ? "1 Companion seed + 1 chosen crop" : "5 donor crops + 5 matching seeds = 1 bred seed";
     private bool CanBreed => !machine.readyForHarvest.Value && machine.heldObject.Value is Item donor
-        && seeds != null && (SettingCompanion ? seeds.Stack >= 1 && Breeder.CanAssign(donor, seeds)
-            : seeds.Stack >= Breeder.SeedsRequired && Breeder.CanBreed(donor, seeds, out _));
+        && (RemovingTrait ? Breeder.CanRemoveFrom(donor) && SelectedTrait != null
+            : seeds != null && (SettingCompanion ? seeds.Stack >= 1 && Breeder.CanAssign(donor, seeds)
+            : seeds.Stack >= Breeder.SeedsRequired && Breeder.CanBreed(donor, seeds, out _)));
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
     {
@@ -71,9 +77,16 @@ internal sealed class BreedingMenu : MenuWithInventory
                 message = "Empty both slots before changing mode.";
             else
             {
-                if (SettingCompanion) machine.modData.Remove(Breeder.ModeKey);
+                if (RemovingTrait) machine.modData.Remove(Breeder.RemoveModeKey);
+                else if (SettingCompanion)
+                {
+                    machine.modData.Remove(Breeder.ModeKey);
+                    machine.modData[Breeder.RemoveModeKey] = "true";
+                }
                 else machine.modData[Breeder.ModeKey] = "true";
+                selectedTrait = 0;
                 message = ModeHint;
+                Layout();
             }
             return;
         }
@@ -87,11 +100,12 @@ internal sealed class BreedingMenu : MenuWithInventory
             }
             else if (heldItem != null && machine.heldObject.Value == null && Breeder.Insert(machine, heldItem, false))
             {
-                heldItem.Stack -= SettingCompanion ? 1 : Breeder.DonorsRequired;
+                heldItem.Stack -= SettingCompanion || RemovingTrait ? 1 : Breeder.DonorsRequired;
+                selectedTrait = 0;
                 if (heldItem.Stack == 0) heldItem = null;
                 Game1.playSound("Ship");
             }
-            else if (!SettingCompanion && !machine.readyForHarvest.Value && heldItem != null
+            else if (!SettingCompanion && !RemovingTrait && !machine.readyForHarvest.Value && heldItem != null
                 && machine.heldObject.Value is Item pending && pending.Stack < Breeder.DonorsRequired
                 && pending.canStackWith(heldItem))
             {
@@ -101,11 +115,16 @@ internal sealed class BreedingMenu : MenuWithInventory
                 heldItem.Stack -= count;
                 if (heldItem.Stack == 0) heldItem = null;
             }
-            else message = SettingCompanion ? "Put a seed with Companion in the left slot." : "Put a stack of at least 5 matching trait crops in the donor slot.";
+            else message = RemovingTrait ? "Put a seed with traits in the left slot." : SettingCompanion ? "Put a seed with Companion in the left slot." : "Put a stack of at least 5 matching trait crops in the donor slot.";
             return;
         }
         if (seedSlot.containsPoint(x, y))
         {
+            if (RemovingTrait)
+            {
+                if (RemovalTraits.Length > 0) selectedTrait = (selectedTrait + 1) % RemovalTraits.Length;
+                return;
+            }
             if (heldItem == null) { heldItem = seeds; seeds = null; }
             else if (SettingCompanion ? !Companion.Valid(heldItem) : !CropCatalog.EligibleSeed(heldItem.ItemId))
                 message = SettingCompanion ? "Choose an eligible companion crop." : "Put matching seeds in this slot.";
@@ -121,6 +140,16 @@ internal sealed class BreedingMenu : MenuWithInventory
         }
         if (breedButton.containsPoint(x, y))
         {
+            if (RemovingTrait)
+            {
+                if (CanBreed && SelectedTrait is string trait && Breeder.RemoveTrait(machine, Core.TraitRules.Id(trait)))
+                {
+                    message = "Trait removed. Collect your seed from the left slot.";
+                    Game1.playSound("coin");
+                }
+                else message = "Insert a seed with traits and choose a trait to remove.";
+                return;
+            }
             if (CanBreed && Breeder.Insert(machine, seeds!, false))
             {
                 seeds!.Stack -= SettingCompanion ? 1 : Breeder.SeedsRequired;
@@ -174,12 +203,19 @@ internal sealed class BreedingMenu : MenuWithInventory
         b.Draw(Game1.fadeToBlackRect, new Rectangle(0, 0, Game1.uiViewport.Width, Game1.uiViewport.Height), Color.Black * .65f);
         drawTextureBox(b, xPositionOnScreen, yPositionOnScreen, width, height, Color.White);
         b.DrawString(Game1.dialogueFont, "Crop Breeding", new Vector2(xPositionOnScreen + 48, yPositionOnScreen + 28), Game1.textColor);
-        DrawSlot(b, donorSlot, machine.heldObject.Value, machine.readyForHarvest.Value ? "Bred seed" : SettingCompanion ? "Companion seed" : "Donor crops (5)");
-        DrawSlot(b, seedSlot, seeds, SettingCompanion ? "Chosen crop (1)" : "Seeds (5)");
+        DrawSlot(b, donorSlot, machine.heldObject.Value, machine.readyForHarvest.Value ? "Bred seed" : RemovingTrait ? "Seed (1)" : SettingCompanion ? "Companion seed" : "Donor crops (5)");
+        if (RemovingTrait)
+        {
+            b.DrawString(Game1.smallFont, "Choose trait (click to cycle)", new Vector2(seedSlot.bounds.X, seedSlot.bounds.Y - 40), Game1.textColor);
+            drawTextureBox(b, seedSlot.bounds.X, seedSlot.bounds.Y, seedSlot.bounds.Width, seedSlot.bounds.Height, Color.White);
+            b.DrawString(Game1.smallFont, SelectedTrait is string trait ? Core.TraitRules.Label(trait) : "No trait selected",
+                new Vector2(seedSlot.bounds.X + 12, seedSlot.bounds.Y + 16), Game1.textColor);
+        }
+        else DrawSlot(b, seedSlot, seeds, SettingCompanion ? "Chosen crop (1)" : "Seeds (5)");
         drawTextureBox(b, modeButton.bounds.X, modeButton.bounds.Y, modeButton.bounds.Width, modeButton.bounds.Height, Color.White);
-        b.DrawString(Game1.smallFont, SettingCompanion ? "Mode: Set Companion" : "Mode: Breeding", new Vector2(modeButton.bounds.X + 12, modeButton.bounds.Y + 8), Game1.textColor);
+        b.DrawString(Game1.smallFont, RemovingTrait ? "Mode: Remove Trait" : SettingCompanion ? "Mode: Set Companion" : "Mode: Breeding", new Vector2(modeButton.bounds.X + 12, modeButton.bounds.Y + 8), Game1.textColor);
         drawTextureBox(b, breedButton.bounds.X, breedButton.bounds.Y, breedButton.bounds.Width, breedButton.bounds.Height, CanBreed ? Color.White : Color.LightGray);
-        b.DrawString(Game1.smallFont, SettingCompanion ? "Set" : "Breed", new Vector2(breedButton.bounds.X + 40, breedButton.bounds.Y + 16), CanBreed ? Game1.textColor : Color.Gray);
+        b.DrawString(Game1.smallFont, RemovingTrait ? "Remove" : SettingCompanion ? "Set" : "Breed", new Vector2(breedButton.bounds.X + 40, breedButton.bounds.Y + 16), CanBreed ? Game1.textColor : Color.Gray);
         b.DrawString(Game1.smallFont, message, new Vector2(xPositionOnScreen + 48, yPositionOnScreen + 312), Game1.textColor);
         inventory.draw(b);
         upperRightCloseButton?.draw(b);

@@ -6,6 +6,8 @@ namespace CropBreeding;
 internal static class Breeder
 {
     internal const string ModeKey = ModEntry.Id + "/SetCompanionMode";
+    internal const string RemoveModeKey = ModEntry.Id + "/RemoveTraitMode";
+    internal static bool RemoveMode(SObject machine) => machine.modData.ContainsKey(RemoveModeKey);
     internal static bool CompanionMode(SObject machine) => machine.modData.ContainsKey(ModeKey);
     internal const int SeedsRequired = 5;
     internal const int DonorsRequired = 5;
@@ -18,6 +20,16 @@ internal static class Breeder
     internal static bool Insert(SObject machine, Item item, bool probe)
     {
         if (machine.readyForHarvest.Value || item.Stack < 1) return false;
+        if (RemoveMode(machine))
+        {
+            if (machine.heldObject.Value != null || !CanRemoveFrom(item)) return false;
+            if (!probe)
+            {
+                machine.heldObject.Value = (SObject)item.getOne();
+                machine.MinutesUntilReady = -1;
+            }
+            return true;
+        }
         if (CompanionMode(machine)) return SetCompanion(machine, item, probe);
         if (machine.heldObject.Value == null)
         {
@@ -48,6 +60,21 @@ internal static class Breeder
     internal static bool CanAssign(Item seed, Item crop) => CropCatalog.EligibleSeed(seed.ItemId)
         && Traits.Has(seed.modData, "companion") && Companion.Valid(crop)
         && Companion.Read(seed.modData) != crop.ItemId;
+    internal static bool CanRemoveFrom(Item seed) => seed is SObject && seed.Stack > 0
+        && CropCatalog.EligibleSeed(seed.ItemId) && Traits.Read(seed.modData).Length > 0;
+    internal static bool RemoveTrait(SObject machine, string trait)
+    {
+        if (!RemoveMode(machine) || machine.readyForHarvest.Value || machine.heldObject.Value is not Item seed
+            || !CanRemoveFrom(seed) || Traits.Level(seed.modData, trait) == 0) return false;
+        string? companion = Companion.Read(seed.modData);
+        Item output = seed.getOne();
+        Traits.Write(output.modData, Core.TraitRules.Without(Traits.Read(seed.modData), trait));
+        Companion.Write(output.modData, companion);
+        machine.heldObject.Value = (SObject)output;
+        machine.readyForHarvest.Value = true;
+        machine.MinutesUntilReady = 0;
+        return true;
+    }
     private static bool SetCompanion(SObject machine, Item item, bool probe)
     {
         if (machine.heldObject.Value == null)

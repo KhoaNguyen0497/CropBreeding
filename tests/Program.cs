@@ -119,3 +119,6 @@ Check(TraitRules.RegrowthDays(-1, 0, .05, 8, .5) == -1, "Researcher cannot creat
 Breed("researcher:2", "researcher", 3, "researcher:3");
 Breed("seed_saver:4", "seed_saver", 3, "seed_saver:5");
 Breed("seed_saver:5", "", 3, "seed_saver:5");
+Check(TraitRules.Without(T("researcher:5,high_yield:3,companion:2"), "researcher").SequenceEqual(T("high_yield:3,companion:2")), "remove selected trait preserves other levels");
+Check(TraitRules.Without(T("researcher:5"), "researcher").Length == 0, "removing last trait gives plain seed");
+Check(TraitRules.Without(T("high_yield:3"), "researcher").SequenceEqual(T("high_yield:3")), "absent removal preserves traits");
