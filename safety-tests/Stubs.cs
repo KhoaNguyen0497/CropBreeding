@@ -10,13 +10,15 @@ namespace Microsoft.Xna.Framework
 namespace StardewModdingAPI
 {
     public interface IManifest { }
-    public enum LogLevel { Error }
+    public enum LogLevel { Error, Warn }
+    public interface IMonitor { void Log(string message, LogLevel level); }
     public static class Context { public static bool IsWorldReady = true; }
 }
 namespace StardewValley
 {
     public sealed class Net<T>(T value) { public T Value = value; }
     public sealed class Metadata : Dictionary<string, string> { public IEnumerable<KeyValuePair<string, string>> Pairs => this; }
+    public sealed class Item { public Metadata modData = new(); }
     public sealed class Crop
     {
         public List<int> phaseDays = [1, 2, 3, 99999];
@@ -58,7 +60,7 @@ namespace StardewValley
 }
 namespace CropBreeding
 {
-    public sealed class MonitorStub
+    public sealed class MonitorStub : StardewModdingAPI.IMonitor
     {
         public List<string> Messages = [];
         public bool Throw;
@@ -102,6 +104,11 @@ namespace CropBreeding
         internal static Random RandomFor(Crop crop, double salt) { RandomCalls++; return RandomFactory(); }
         internal static string[] Read(Metadata data) => Core.TraitRules.Parse(data.GetValueOrDefault(Key));
         internal static bool Eligible(Crop crop, HoeDirt soil) => crop.Eligible;
+    }
+    internal static class Companion
+    {
+        internal static string? Read(Metadata data) => data.GetValueOrDefault("Companion");
+        internal static string Label(Metadata data) => Read(data) ?? "unassigned";
     }
     public sealed class ConfigApi : IGenericModConfigMenuApi
     {

@@ -18,6 +18,7 @@ internal static class LookupAnythingIntegration
     {
         if (!ModEntry.Instance.Helper.ModRegistry.IsLoaded("Pathoschild.LookupAnything")) return;
         Type? subject = AccessTools.TypeByName("Pathoschild.Stardew.LookupAnything.Framework.Lookups.Items.ItemSubject");
+        LookupTraitDescriptions.Register(harmony, subject, monitor);
         Type? parser = subject?.Assembly.GetType("Pathoschild.Stardew.Common.DataParsers.CropDataParser");
         var seedMethod = subject == null ? null : AccessTools.Method(subject, "TryGetCropForSeed", new[] { typeof(Item), typeof(GameLocation) });
         var constructor = parser == null ? null : AccessTools.Constructor(parser, new[] { typeof(Crop), typeof(bool) });

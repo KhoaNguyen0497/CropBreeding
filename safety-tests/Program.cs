@@ -65,3 +65,4 @@ Check(brokenApi.Unregistered, "partial GMCM registration removed");
 Console.WriteLine("Passed injected failures, reporter isolation, crop rollback, config validation and all GMCM fields/save/reset checks. Uses test doubles, not an in-game test.");
 
 MutationLifecycleTests.Run();
+LookupDescriptionTests.Run();
