@@ -63,9 +63,9 @@ Both penalties use the companion's **initial base growth days** from loaded `Dat
 - The companion portion is never reduced by speed bonuses. A single-harvest plant remains single-harvest.
 - Reapplying fertilizer/speed calculations replaces the initial delay rather than accumulating it. Cleanup removes the recorded delay.
 
-## Decisions still open
+Regrowing crop mutations are enabled by default (`EnableRegrowingCropMutations=true`). Every successful harvest can mutate its produce at the configured mutation chance; the original plant does not permanently acquire the new mutation. Existing config files explicitly set to `false` must be changed to `true` to enable this.
 
-12. Regrowing crop mutation frequency: disabled by default (`EnableRegrowingCropMutations=false`). If enabled, each harvest can mutate its produce; the original plant does not permanently acquire the new mutation.
+## Decisions still open
 
 16. Foraged/shop/drop produce: no new mutations are granted to those sources. An otherwise matching item that already carries trait metadata can currently be used as a donor; no provenance restriction yet.
 

@@ -10,6 +10,6 @@ public sealed class ModConfig
     public double QualityUpgradeChance { get; set; } = 0.05;
     public double FastRegrowthReduction { get; set; } = 0.10;
     // Pending decisions are conservative switches, not settled breeding rules.
-    public bool EnableRegrowingCropMutations { get; set; } = false;
+    public bool EnableRegrowingCropMutations { get; set; } = true;
     public bool EnableSeedMakerInheritance { get; set; } = false;
 }
