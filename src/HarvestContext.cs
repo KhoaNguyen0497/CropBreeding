@@ -50,7 +50,7 @@ internal sealed class HarvestContext
             || !crop.fullyGrown.Value || crop.dayOfCurrentPhase.Value <= 0
             || crop.GetData()?.RegrowDays is not > 0) return;
         crop.dayOfCurrentPhase.Value = TraitRules.RegrowthDays(crop.dayOfCurrentPhase.Value,
-            Traits.Level(crop.modData, "fast_regrowth"), ModEntry.Instance.Config.FastRegrowthReduction, Companion.BaseDays(crop.modData));
+            Traits.Level(crop.modData, "fast_growth"), ModEntry.Instance.Config.GrowthReductionPerLevel, Companion.BaseDays(crop.modData));
     }
 
     internal List<Item> Decorate(Item item)

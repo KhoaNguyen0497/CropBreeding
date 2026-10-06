@@ -20,7 +20,6 @@ internal static class Patches
         harmony.Patch(AccessTools.Method(typeof(Crop), nameof(Crop.IsInSeason), new[] { typeof(GameLocation) }),
             postfix: Method(nameof(CropSeasonPostfix)));
         Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.applySpeedIncreases), prefix: nameof(GrowthPrefix), postfix: nameof(GrowthPostfix));
-        Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.GetFertilizerSpeedBoost), postfix: nameof(SpeedPostfix));
         harmony.Patch(AccessTools.Method(typeof(Crop), nameof(Crop.harvest)),
             prefix: Method(nameof(HarvestPrefix)), transpiler: Method(nameof(HarvestTranspiler)), finalizer: Method(nameof(HarvestFinalizer)));
         Patch(harmony, typeof(Item), nameof(Item.canStackWith), postfix: nameof(StackPostfix));
@@ -116,18 +115,15 @@ internal static class Patches
         if (Core.TraitRules.Level(__state.Values, "fast_growth") > 0 || Companion.BaseDays(crop.modData) > 0) __instance.applySpeedIncreases(who);
     }
     private static void GrowthPrefix(HoeDirtAlias __instance) => Companion.RemoveGrowthDelay(__instance);
+    [HarmonyPriority(Priority.Last)]
     private static void GrowthPostfix(HoeDirtAlias __instance) => Companion.ApplyGrowth(__instance);
-    private static void SpeedPostfix(HoeDirtAlias __instance, ref float __result)
-    {
-        if (__instance.crop is Crop crop && Traits.Eligible(crop, __instance) && Traits.Has(crop.modData, "fast_growth"))
-            __result += (float)Math.Clamp(ModEntry.Instance.Config.FastGrowthReduction * Traits.Level(crop.modData, "fast_growth"), 0, 0.9);
-    }
     private static void HarvestPrefix(Crop __instance, HoeDirtAlias soil, out HarvestContext? __state)
     {
         __state = HarvestContext.Current;
         HarvestContext.Current = Traits.Eligible(__instance, soil) && __instance.GetData() != null
             ? new HarvestContext(__instance) : null;
     }
+    [HarmonyPriority(Priority.Last)]
     private static Exception? HarvestFinalizer(Exception? __exception, HarvestContext? __state, bool __result,
         StardewValley.Characters.JunimoHarvester? junimoHarvester)
     {

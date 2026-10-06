@@ -45,9 +45,18 @@ internal static class Companion
     internal static string? Merge(ModDataDictionary donor, ModDataDictionary seed)
         => Core.TraitRules.CompanionChoice(Read(donor), Read(seed));
     private const string AppliedDelayKey = ModEntry.Id + "/AppliedCompanionDelay";
+    private const string GrowthDeltaKey = ModEntry.Id + "/GrowthPhaseDeltas";
     internal static void RemoveGrowthDelay(HoeDirtAlias soil)
     {
         if (soil.crop is not Crop crop) return;
+        if (crop.modData.TryGetValue(GrowthDeltaKey, out string encoded))
+        {
+            string[] deltas = encoded.Split(',');
+            if (deltas.Length == crop.phaseDays.Count)
+                for (int i = 0; i < deltas.Length; i++)
+                    if (int.TryParse(deltas[i], out int delta)) crop.phaseDays[i] = Math.Max(0, crop.phaseDays[i] - delta);
+            crop.modData.Remove(GrowthDeltaKey);
+        }
         if (crop.modData.TryGetValue(AppliedDelayKey, out string value) && int.TryParse(value, out int delay)
             && delay > 0 && crop.phaseDays.Count >= 2)
             crop.phaseDays[crop.phaseDays.Count - 2] = Math.Max(0, crop.phaseDays[crop.phaseDays.Count - 2] - delay);
@@ -57,11 +66,13 @@ internal static class Companion
     {
         if (soil.crop is not Crop crop || !Traits.Eligible(crop, soil)) return;
         int days = BaseDays(crop.modData);
-        if (days > 0 && crop.phaseDays.Count >= 2)
+        int level = Traits.Level(crop.modData, "fast_growth");
+        if ((days > 0 || level > 0) && crop.phaseDays.Count >= 2)
         {
-            int delay = Core.TraitRules.CompanionDelay(days);
-            crop.phaseDays[crop.phaseDays.Count - 2] += delay;
-            crop.modData[AppliedDelayKey] = delay.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            int[] original = crop.phaseDays.ToArray();
+            int[] adjusted = Core.TraitRules.FinalGrowthPhases(original, level, ModEntry.Instance.Config.GrowthReductionPerLevel, days);
+            crop.modData[GrowthDeltaKey] = string.Join(",", adjusted.Select((value, i) => value - original[i]));
+            for (int i = 0; i < adjusted.Length; i++) crop.phaseDays[i] = adjusted[i];
         }
     }
 }

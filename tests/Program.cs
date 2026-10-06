@@ -7,19 +7,19 @@ static void Breed(string donor, string seed, int cap, string? expected)
     Check(ok == (expected != null), $"accept/reject {donor} + {seed}");
     if (ok) Check(TraitRules.Same(TraitRules.Encode(result), expected), $"output {donor} + {seed}");
 }
-Check(TraitRules.Same("high_yield,fast_regrowth,high_yield", "fast_regrowth:1,high_yield:1"), "legacy level-one save compatibility");
+Check(TraitRules.Same("high_yield,evergreen,high_yield", "evergreen:1,high_yield:1"), "legacy level-one save compatibility");
 Check(!TraitRules.Same("high_yield", "high_yield:2"), "different levels never stack");
 Check(TraitRules.Same("high_yield:2,high_yield:4", "high_yield:4"), "duplicate metadata keeps highest level");
-Check(TraitRules.Encode(T("unknown,high_yield:0,fast_regrowth:garbage")) == "", "invalid metadata");
+Check(TraitRules.Encode(T("unknown,high_yield:0,evergreen:garbage")) == "", "invalid metadata");
 Check(TraitRules.Level(T("high_yield:99"), "high_yield") == 5, "loaded levels clamped");
 Breed("fast_growth,high_yield", "fast_growth", 3, "fast_growth:2,high_yield");
-Breed("fast_growth,high_yield", "fast_regrowth", 3, "fast_growth,high_yield,fast_regrowth");
+Breed("fast_growth,high_yield", "evergreen", 3, "fast_growth,high_yield,evergreen");
 Breed("fast_growth:4,high_yield", "fast_growth", 2, "fast_growth:5,high_yield");
 Breed("fast_growth:5,high_yield", "fast_growth", 3, null);
-Breed("fast_growth,high_yield", "fast_regrowth", 2, null);
-Breed("fast_growth,high_yield,fast_regrowth", "fast_growth", 3, "fast_growth:2,high_yield,fast_regrowth");
-Breed("fast_growth,high_yield", "fast_regrowth:2", 3, null);
-Breed("fast_growth,high_yield", "fast_regrowth,high_yield", 3, null);
+Breed("fast_growth,high_yield", "evergreen", 2, null);
+Breed("fast_growth,high_yield,evergreen", "fast_growth", 3, "fast_growth:2,high_yield,evergreen");
+Breed("fast_growth,high_yield", "evergreen:2", 3, null);
+Breed("fast_growth,high_yield", "evergreen,high_yield", 3, null);
 Breed("fast_growth:3,high_yield", "", 3, "fast_growth:3,high_yield");
 Breed("fast_growth:3,high_yield", "", 1, "fast_growth:3,high_yield");
 Breed("fast_growth:3,high_yield", "fast_growth", 1, null);
@@ -49,8 +49,8 @@ Breed("high_quality:2", "high_quality", 3, "high_quality:3");
 
 Check(5 + TraitRules.CompanionDelay(7) == 9, "5-day main plus half 7-day companion rounds to 9");
 Check(TraitRules.RegrowthDays(4, 0, .1, 7) == 8, "regrowth adds half companion base growth");
-Check(TraitRules.RegrowthDays(4, 5, .1, 7) == 6, "speed applies to main regrowth only, round once");
-Check(TraitRules.RegrowthDays(7, 1, .1, 7) == 10, "do not round intermediate shortened regrowth");
+Check(TraitRules.RegrowthDays(4, 5, .05, 7) == 6, "speed applies after companion, round once");
+Check(TraitRules.RegrowthDays(7, 1, .05, 7) == 10, "do not round intermediate shortened regrowth");
 Check(TraitRules.RegrowthDays(-1, 5, .1, 7) == -1, "companion never creates regrowth");
 Check(TraitRules.CompanionDelay(0) == 0, "unassigned companion no penalty");
 Check(TraitRules.CompanionChoice("strawberry", "blueberry") == "strawberry", "donor companion wins");
@@ -73,7 +73,7 @@ Check(TraitRules.ExtraYieldCount(4, 0, .2, 0) == 0, "no inherited level no bonus
 int[] previewBase = [1, 2, 2, 99999];
 Check(TraitRules.PreviewGrowthPhases(previewBase, 0, .1, false, 0).SequenceEqual(previewBase), "plain preview unchanged");
 Check(TraitRules.PreviewGrowthPhases(previewBase, 0, .1, false, 7).SequenceEqual(new[] { 1, 2, 6, 99999 }), "preview companion rounds up");
-Check(TraitRules.PreviewGrowthPhases(previewBase, 2, .1, false, 7).SequenceEqual(new[] { 1, 1, 6, 99999 }), "preview speed before companion");
+Check(TraitRules.PreviewGrowthPhases(previewBase, 2, .05, false, 7).SequenceEqual(new[] { 1, 1, 6, 99999 }), "preview speed after companion");
 Check(TraitRules.PreviewGrowthPhases(previewBase, 0, .1, true, 0).SequenceEqual(new[] { 1, 1, 2, 99999 }), "preview Agriculturist vanilla rounding");
 Check(previewBase.SequenceEqual(new[] { 1, 2, 2, 99999 }), "preview never mutates source phases");
 for (int level = 0; level <= 5; level++)
@@ -86,20 +86,17 @@ Check(TraitRules.Label("evergreen:5") == "Evergreen 5", "level five tooltip");
 Check(TraitRules.Mutate(T("evergreen:4"), 1, 1, new Random(0)).SequenceEqual(T("evergreen:5")), "Evergreen upgrades at trait cap");
 for (int seed = 0; seed < 1000; seed++) {
     var annual = TraitRules.Mutate(T(""), 3, 1, new Random(seed), canRegrow: false);
-    Check(TraitRules.Level(annual, "fast_regrowth") == 0, "single-harvest crops never gain Fast Regrowth");
     var annualFull = T("fast_growth:5,high_yield:5,high_quality:5,companion:5,evergreen:5");
     Check(TraitRules.Mutate(annualFull, 5, 1, new Random(seed), canRegrow: false).SequenceEqual(annualFull), "non-regrowing pool exhausted");
-    var regrowing = TraitRules.Mutate(annualFull, 6, 1, new Random(seed), canRegrow: true);
-    Check(TraitRules.Level(regrowing, "fast_regrowth") == 1, "regrowing crops can gain Fast Regrowth");
-    var inherited = T("high_yield,fast_regrowth");
+    var inherited = T("high_yield,evergreen");
     var next = TraitRules.Mutate(inherited, 3, 1, new Random(seed));
     Check(next.Length <= 3, "count cap");
     Check(inherited.All(t => TraitRules.Level(next, TraitRules.Id(t)) >= TraitRules.Level(inherited, TraitRules.Id(t))), "never lose levels");
     Check(TraitRules.Known.Sum(id => TraitRules.Level(next,id) - TraitRules.Level(inherited,id)) == 1, "exactly one level gained per mutation");
     sawNew |= next.Length == 3; sawUpgrade |= next.Length == 2;
-    var atCap = TraitRules.Mutate(T("high_yield:4,fast_regrowth:5,fast_growth:5"), 3, 1, new Random(seed));
+    var atCap = TraitRules.Mutate(T("high_yield:4,evergreen:5,fast_growth:5"), 3, 1, new Random(seed));
     Check(TraitRules.Level(atCap,"high_yield") == 5 && atCap.Length == 3, "can upgrade at count cap");
-    var full = T("high_yield:5,fast_regrowth:5,fast_growth:5");
+    var full = T("high_yield:5,evergreen:5,fast_growth:5");
     Check(TraitRules.Mutate(full, 3, 1, new Random(seed)).SequenceEqual(full), "maxed traits stay intact");
     Check(TraitRules.Mutate(inherited, 3, 0, new Random(seed)).SequenceEqual(inherited), "zero chance");
     Check(TraitRules.Mutate(inherited, 1, 1, new Random(seed)).Length == 2, "lowered cap never removes traits");
@@ -107,3 +104,8 @@ for (int seed = 0; seed < 1000; seed++) {
 Check(sawNew && sawUpgrade, "mutations can add and upgrade");
 Check(TraitRules.Mutate(Array.Empty<string>(), 0, 1, new Random(1)).Length == 0, "zero cap");
 Console.WriteLine("Passed merge examples/rejections, legacy metadata, level-aware stacks and mutation invariants across 1,000 random seeds.");
+
+Check(TraitRules.Same("fast_regrowth:4,fast_growth:2", "fast_growth:4"), "legacy growth merge preserves higher level");
+Check(TraitRules.RegrowthDays(10, 5, .05, 8) == 11, "final reduction covers companion");
+Check(TraitRules.FinalGrowthPhases(new[] { 1, 2, 2, 99999 }, 5, .05, 7).Take(3).Sum() == 7, "initial growth rounds only after combined reduction");
+Check(!TraitRules.Known.Contains("fast_regrowth"), "removed separate trait");
