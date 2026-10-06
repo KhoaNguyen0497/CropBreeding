@@ -9,6 +9,7 @@ public sealed class ModConfig
     public double CompanionChance { get; set; } = 0.20;
     public double QualityUpgradeChance { get; set; } = 0.05;
     public double SeedSaverChance { get; set; } = 0.10;
+    public double RootedChance { get; set; } = 0.10;
     public double ResearcherMutationBonus { get; set; } = 0.05;
     public double ResearcherGrowthPenalty { get; set; } = 0.10;
     // Pending decisions are conservative switches, not settled breeding rules.

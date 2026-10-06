@@ -125,7 +125,7 @@ internal static class Patches
             ? new HarvestContext(__instance) : null;
     }
     [HarmonyPriority(Priority.Last)]
-    private static Exception? HarvestFinalizer(Exception? __exception, HarvestContext? __state, bool __result,
+    private static Exception? HarvestFinalizer(Exception? __exception, HarvestContext? __state, ref bool __result,
         StardewValley.Characters.JunimoHarvester? junimoHarvester)
     {
         HarvestContext? current = HarvestContext.Current;
@@ -142,6 +142,9 @@ internal static class Patches
                         -1, current.Plant.currentLocation);
                 }
             if (current.Plant.Dirt is HoeDirtAlias soil) HarvestContext.ApplyRegrowth(current.Plant, soil);
+            // Commit extras first. A successful annual harvest returns true to request removal;
+            // only override that result after Rooted has restarted the plant successfully.
+            if (succeeded && __result && current.TryRestart()) __result = false;
         }
         return __exception;
     }

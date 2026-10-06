@@ -67,6 +67,36 @@ internal sealed class HarvestContext
     internal static bool Ready(Crop crop) => !crop.dead.Value && crop.currentPhase.Value >= crop.phaseDays.Count - 1
         && (!crop.fullyGrown.Value || crop.dayOfCurrentPhase.Value <= 0);
 
+    internal bool TryRestart()
+    {
+        var data = Plant.GetData();
+        if (!WasReady || Plant.dead.Value || data == null || Plant.Dirt is not HoeDirtAlias soil
+            || !ReferenceEquals(soil.crop, Plant) || !Traits.Eligible(Plant, soil)
+            || !TraitRules.RootedTriggers(TraitRules.Level(Inherited, "rooted"), ModEntry.Instance.Config.RootedChance,
+                data.RegrowDays > 0, Traits.RandomFor(Plant, 107).NextDouble())) return false;
+
+        // Reuse the plant so its inherited traits, color and other mods' metadata survive.
+        // Remove our saved phase deltas before rebuilding vanilla growth, avoiding accumulation.
+        Companion.RemoveGrowthDelay(soil);
+        Plant.ResetPhaseDays();
+        Plant.currentPhase.Value = 0;
+        Plant.dayOfCurrentPhase.Value = 0;
+        Plant.fullyGrown.Value = false;
+        Plant.phaseToShow.Value = -1;
+        // Sunflower harvest temporarily changes this to its bonus seed item.
+        Plant.indexOfHarvest.Value = CropCatalog.Raw(data.HarvestItemId);
+        Plant.raisedSeeds.Value = data.IsRaised;
+        soil.nearWaterForPaddy.Value = -1;
+        soil.applySpeedIncreases(Game1.player);
+        if (soil.hasPaddyCrop() && soil.paddyWaterCheck())
+        {
+            soil.state.Value = 1;
+            soil.updateNeighbors();
+        }
+        Plant.updateDrawMath(soil.Tile);
+        return true;
+    }
+
     internal static void ApplyRegrowth(Crop crop, HoeDirtAlias soil)
     {
         // Call only for a crop which was ready before the harvest attempt. A failed/full-storage

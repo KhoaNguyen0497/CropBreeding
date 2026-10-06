@@ -135,3 +135,17 @@ Check(TraitRules.MaterialDropCount(45, 5, .249) == 3, "225 percent can grant thr
 Check(TraitRules.MaterialDropCount(28, 0, 0) == 0, "newly mutated material trait has no inherited benefit");
 Breed("copper_bearing:4", "copper_bearing", 3, "copper_bearing:5");
 Breed("iron_bearing:2", "gold_bearing", 3, "iron_bearing:2,gold_bearing");
+Check(TraitRules.RootedTriggers(1, .1, false, .099), "Rooted one 10 percent success");
+Check(!TraitRules.RootedTriggers(1, .1, false, .1), "Rooted threshold failure");
+Check(TraitRules.RootedTriggers(5, .1, false, .499), "Rooted five 50 percent success");
+Check(!TraitRules.RootedTriggers(5, .1, false, .5), "Rooted five threshold failure");
+Check(!TraitRules.RootedTriggers(5, .1, true, 0), "natural regrowers cannot restart");
+Check(!TraitRules.RootedTriggers(0, .1, false, 0), "new mutation cannot restart parent");
+Breed("rooted:2", "rooted", 3, "rooted:3");
+bool sawRooted = false;
+for (int i = 0; i < 1000; i++)
+{
+    Check(TraitRules.Level(TraitRules.Mutate([], 3, 1, new Random(i), true), "rooted") == 0, "regrowers cannot mutate Rooted");
+    sawRooted |= TraitRules.Level(TraitRules.Mutate([], 3, 1, new Random(i), false), "rooted") == 1;
+}
+Check(sawRooted, "annual crops can mutate Rooted");
