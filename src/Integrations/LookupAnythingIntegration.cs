@@ -63,7 +63,7 @@ internal static class LookupAnythingIntegration
         // Lookup Anything owns this detached crop. Never modify a planted crop or shared Data/Crops.
         int[] phases = TraitRules.PreviewGrowthPhases(__result.phaseDays.ToArray(),
             Traits.Level(seed.modData, "fast_growth"), ModEntry.Instance.Config.GrowthReductionPerLevel,
-            Game1.player.professions.Contains(Farmer.agriculturist), Companion.BaseDays(seed.modData));
+            Game1.player.professions.Contains(Farmer.agriculturist), Companion.BaseDays(seed.modData), Traits.GrowthPenalty(seed.modData));
         for (int i = 0; i < phases.Length; i++) __result.phaseDays[i] = phases[i];
         Previews.GetValue(__result, _ => new object());
     }
@@ -75,7 +75,7 @@ internal static class LookupAnythingIntegration
         firstDays.SetValue(__instance, crop!.phaseDays.Take(crop.phaseDays.Count - 1).Sum());
         int days = crop.GetData()?.RegrowDays ?? -1;
         regrowDays.SetValue(__instance, TraitRules.RegrowthDays(days, Traits.Level(crop.modData, "fast_growth"),
-            ModEntry.Instance.Config.GrowthReductionPerLevel, Companion.BaseDays(crop.modData)));
+            ModEntry.Instance.Config.GrowthReductionPerLevel, Companion.BaseDays(crop.modData), Traits.GrowthPenalty(crop.modData)));
         if (TraitRules.EvergreenActive(Traits.Level(crop.modData, "evergreen")))
             seasons.SetValue(__instance, new[] { Season.Spring, Season.Summer, Season.Fall, Season.Winter });
     }

@@ -109,3 +109,13 @@ Check(TraitRules.Same("fast_regrowth:4,fast_growth:2", "fast_growth:4"), "legacy
 Check(TraitRules.RegrowthDays(10, 5, .05, 8) == 11, "final reduction covers companion");
 Check(TraitRules.FinalGrowthPhases(new[] { 1, 2, 2, 99999 }, 5, .05, 7).Take(3).Sum() == 7, "initial growth rounds only after combined reduction");
 Check(!TraitRules.Known.Contains("fast_regrowth"), "removed separate trait");
+Check(Math.Abs(TraitRules.MutationRate(.05, 1, .05) - .10) < 1e-9, "Researcher one 10 percent total");
+Check(Math.Abs(TraitRules.MutationRate(.05, 5, .05) - .30) < 1e-9, "Researcher five 30 percent total");
+Check(TraitRules.MutationRate(.9, 5, .1) == 1, "mutation rate capped");
+Check(TraitRules.RegrowthDays(10, 0, .05, 0, .5) == 15, "Researcher five 50 percent slower");
+Check(TraitRules.RegrowthDays(10, 5, .05, 8, .5) == 16, "Researcher and Companion before Fast Growth");
+Check(TraitRules.FinalGrowthPhases(new[] { 1, 2, 2, 99999 }, 0, .05, 0, .5).Take(3).Sum() == 8, "Researcher extends initial growth");
+Check(TraitRules.RegrowthDays(-1, 0, .05, 8, .5) == -1, "Researcher cannot create regrowth");
+Breed("researcher:2", "researcher", 3, "researcher:3");
+Breed("seed_saver:4", "seed_saver", 3, "seed_saver:5");
+Breed("seed_saver:5", "", 3, "seed_saver:5");

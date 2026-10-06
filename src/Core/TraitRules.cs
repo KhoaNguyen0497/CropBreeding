@@ -7,7 +7,9 @@ namespace CropBreeding.Core;
 public static class TraitRules
 {
     public const int MaximumLevel = 5;
-    public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen"];
+    public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver"];
+    public static double MutationRate(double baseline, int researcherLevel, double bonusPerLevel)
+        => Math.Clamp(baseline + Math.Clamp(researcherLevel, 0, MaximumLevel) * Math.Max(0, bonusPerLevel), 0, 1);
     public static bool EvergreenActive(int level) => level >= MaximumLevel;
     public static int ExtraYieldCount(int count, int level, double increasePerLevel, double roll)
     {
@@ -17,7 +19,7 @@ public static class TraitRules
     }
     // Detached seed preview: mirror vanilla applySpeedIncreases' phase rounding and three-pass limit.
     // No fertilizer or paddy bonus can be assumed before a planting tile is selected.
-    public static int[] PreviewGrowthPhases(int[] original, int fastGrowthLevel, double reductionPerLevel, bool agriculturist, int companionBaseDays)
+    public static int[] PreviewGrowthPhases(int[] original, int fastGrowthLevel, double reductionPerLevel, bool agriculturist, int companionBaseDays, double growthPenalty = 0)
     {
         int[] phases = (int[])original.Clone();
         float speed = agriculturist ? .1f : 0;
@@ -26,16 +28,17 @@ public static class TraitRules
             for (int i = 0; i < phases.Length && remove > 0; i++)
                 if ((i > 0 || phases[i] > 1) && phases[i] != 99999 && phases[i] > 0)
                 { phases[i]--; remove--; }
-        return FinalGrowthPhases(phases, fastGrowthLevel, reductionPerLevel, companionBaseDays);
+        return FinalGrowthPhases(phases, fastGrowthLevel, reductionPerLevel, companionBaseDays, growthPenalty);
     }
-    public static int[] FinalGrowthPhases(int[] original, int level, double reductionPerLevel, int companionBaseDays)
+    public static int[] FinalGrowthPhases(int[] original, int level, double reductionPerLevel, int companionBaseDays, double growthPenalty = 0)
     {
         int[] phases = (int[])original.Clone();
         if (phases.Length < 2) return phases;
         int baseDays = phases.Take(phases.Length - 1).Sum();
-        int target = RegrowthDays(baseDays, level, reductionPerLevel, companionBaseDays);
+        int target = RegrowthDays(baseDays, level, reductionPerLevel, companionBaseDays, growthPenalty);
         phases[phases.Length - 2] += CompanionDelay(companionBaseDays);
         int remove = phases.Take(phases.Length - 1).Sum() - target;
+        if (remove < 0) phases[phases.Length - 2] -= remove;
         while (remove > 0)
         {
             bool changed = false;
@@ -96,19 +99,19 @@ public static class TraitRules
             return quality;
         return quality switch { 0 => 1, 1 => 2, 2 => 4, _ => quality };
     }
-    public static int RegrowthDays(int days, int level, double reductionPerLevel, int companionBaseDays = 0)
+    public static int RegrowthDays(int days, int level, double reductionPerLevel, int companionBaseDays = 0, double growthPenalty = 0)
     {
         if (days <= 0) return days;
         // Whole-day countdown: round up, with a minimum of one day.
         double reduction = Math.Clamp(reductionPerLevel * Math.Clamp(level, 0, MaximumLevel), 0, 1);
-        return Math.Max(1, (int)Math.Ceiling((days + Math.Max(0, companionBaseDays) * .5) * (1 - reduction) - 1e-9));
+        return Math.Max(1, (int)Math.Ceiling((days + Math.Max(0, companionBaseDays) * .5) * (1 + Math.Max(0, growthPenalty)) * (1 - reduction) - 1e-9));
     }
     public static bool Same(string? a, string? b) => Encode(Parse(a)) == Encode(Parse(b));
     public static string Label(string token)
     {
         string name = Id(token) switch
         {
-            "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "high_quality" => "High Quality", "companion" => "Companion", "evergreen" => "Evergreen", _ => Id(token)
+            "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "high_quality" => "High Quality", "companion" => "Companion", "evergreen" => "Evergreen", "researcher" => "Researcher", "seed_saver" => "Seed Saver", _ => Id(token)
         };
         return $"{name} {TokenLevel(token)}";
     }

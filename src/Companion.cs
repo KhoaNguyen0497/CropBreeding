@@ -67,10 +67,11 @@ internal static class Companion
         if (soil.crop is not Crop crop || !Traits.Eligible(crop, soil)) return;
         int days = BaseDays(crop.modData);
         int level = Traits.Level(crop.modData, "fast_growth");
-        if ((days > 0 || level > 0) && crop.phaseDays.Count >= 2)
+        double penalty = Traits.GrowthPenalty(crop.modData);
+        if ((days > 0 || level > 0 || penalty > 0) && crop.phaseDays.Count >= 2)
         {
             int[] original = crop.phaseDays.ToArray();
-            int[] adjusted = Core.TraitRules.FinalGrowthPhases(original, level, ModEntry.Instance.Config.GrowthReductionPerLevel, days);
+            int[] adjusted = Core.TraitRules.FinalGrowthPhases(original, level, ModEntry.Instance.Config.GrowthReductionPerLevel, days, penalty);
             crop.modData[GrowthDeltaKey] = string.Join(",", adjusted.Select((value, i) => value - original[i]));
             for (int i = 0; i < adjusted.Length; i++) crop.phaseDays[i] = adjusted[i];
         }

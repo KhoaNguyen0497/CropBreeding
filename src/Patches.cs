@@ -112,7 +112,8 @@ internal static class Patches
         Traits.Write(crop.modData, eligible ? __state.Values : []);
         Companion.Write(crop.modData, eligible ? __state.CompanionId : null);
         // Reapply vanilla speed calculation after transferring traits. This preserves profession/paddy/fertilizer effects.
-        if (Core.TraitRules.Level(__state.Values, "fast_growth") > 0 || Companion.BaseDays(crop.modData) > 0) __instance.applySpeedIncreases(who);
+        if (Core.TraitRules.Level(__state.Values, "fast_growth") > 0 || Companion.BaseDays(crop.modData) > 0
+            || Traits.GrowthPenalty(crop.modData) > 0) __instance.applySpeedIncreases(who);
     }
     private static void GrowthPrefix(HoeDirtAlias __instance) => Companion.RemoveGrowthDelay(__instance);
     [HarmonyPriority(Priority.Last)]

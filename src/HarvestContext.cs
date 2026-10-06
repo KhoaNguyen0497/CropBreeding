@@ -26,6 +26,13 @@ internal sealed class HarvestContext
         HarvestId = CropCatalog.Raw(crop.GetData()!.HarvestItemId);
         Inherited = Traits.Read(crop.modData);
         companionId = Companion.Read(crop.modData);
+        if (Traits.RandomFor(crop, 71).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "seed_saver") * ModEntry.Instance.Config.SeedSaverChance, 0, 1))
+        {
+            Item seed = ItemRegistry.Create("(O)" + CropCatalog.Raw(crop.netSeedIndex.Value), 1, 0);
+            Traits.Write(seed.modData, Inherited);
+            Companion.Write(seed.modData, companionId);
+            PendingExtras.Add(seed);
+        }
         if (companionId != null && Companion.BaseDays(crop.modData) > 0
             && Traits.RandomFor(crop, 53).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "companion") * ModEntry.Instance.Config.CompanionChance, 0, 1))
             PendingExtras.Add(ItemRegistry.Create("(O)" + companionId, 1, 0));
@@ -33,7 +40,8 @@ internal sealed class HarvestContext
         qualityRandom = Traits.RandomFor(crop, 37);
         bool regrows = crop.GetData()!.RegrowDays > 0;
         double chance = regrows && !ModEntry.Instance.Config.EnableRegrowingCropMutations
-            ? 0 : ModEntry.Instance.Config.MutationChance;
+            ? 0 : TraitRules.MutationRate(ModEntry.Instance.Config.MutationChance,
+                TraitRules.Level(Inherited, "researcher"), ModEntry.Instance.Config.ResearcherMutationBonus);
         OutputTraits = TraitRules.Mutate(Inherited, ModEntry.Instance.Config.MaximumTraits, chance, Traits.RandomFor(crop, 11), canRegrow: regrows);
         // Existing plant traits determine the current harvest effects. A new mutation starts working after replanting.
         yieldLevel = TraitRules.Level(Inherited, "high_yield");
@@ -50,7 +58,7 @@ internal sealed class HarvestContext
             || !crop.fullyGrown.Value || crop.dayOfCurrentPhase.Value <= 0
             || crop.GetData()?.RegrowDays is not > 0) return;
         crop.dayOfCurrentPhase.Value = TraitRules.RegrowthDays(crop.dayOfCurrentPhase.Value,
-            Traits.Level(crop.modData, "fast_growth"), ModEntry.Instance.Config.GrowthReductionPerLevel, Companion.BaseDays(crop.modData));
+            Traits.Level(crop.modData, "fast_growth"), ModEntry.Instance.Config.GrowthReductionPerLevel, Companion.BaseDays(crop.modData), Traits.GrowthPenalty(crop.modData));
     }
 
     internal List<Item> Decorate(Item item)

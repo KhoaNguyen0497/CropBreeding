@@ -18,6 +18,8 @@ Coffee beans already act as both produce and seeds, so mutated beans can be repl
 
 | Trait | Effect |
 |---|---|
+| Researcher | Adds 5 percentage points of mutation chance per level: default total 10/15/20/25/30%. Adds 10% initial growth and regrowth time per level. Timing: (ordinary adjusted growth + Companion delay) × Researcher multiplier × Fast Growth multiplier, rounded up once. Uses the parent's inherited level. |
+| Seed Saver | 10% chance per level (up to 50%) to return one matching seed per successful plant harvest. Copies the parent's original traits, levels and Companion choice, never the new harvest mutation. No High Yield multiplication or High Quality upgrade. Works on regrowing harvests and directly plantable coffee too. |
 | Evergreen | Levels 1–4 are dormant and still occupy a trait slot. Level 5 allows planting and growth in all seasons, including winter, and prevents seasonal death on eligible tilled ground. Regrowing crops keep regrowing; single-harvest crops remain single-harvest. Normal watering and location restrictions still apply. |
 | Fast Growth | Reduces initial growth and supported regrowth by 5% per level (25% at level 5), after ordinary bonuses and Companion delay. Round the final result up, minimum one day. Never creates regrowth for single-harvest crops. |
 | High Yield | Adds 20% primary output per level (up to +100%). Guaranteed whole extra items plus one roll for the fractional remainder, calculated across the whole plant harvest. For 4 base items, level 1 gives 4 plus an 80% chance of a fifth; level 2 gives 5 plus a 60% chance of a sixth. Includes vanilla bonus produce; excludes Companion output and byproducts. Extras inherit the same mutation and sample original output quality/color; High Quality rolls independently per item. |
@@ -65,6 +67,8 @@ Both penalties use the companion's **initial base growth days** from loaded `Dat
 Regrowing crop mutations are enabled by default (`EnableRegrowingCropMutations=true`). Every successful harvest can mutate its produce at the configured mutation chance; the original plant does not permanently acquire the new mutation. Existing config files explicitly set to `false` must be changed to `true` to enable this.
 
 ## Decisions still open
+
+Researcher and Seed Saver settings: `ResearcherMutationBonus=0.05`, `ResearcherGrowthPenalty=0.10`, `SeedSaverChance=0.10`, all per level. Researcher does not bypass disabled regrowing mutations or trait/level caps. Seed Saver returns one seed at most per plant harvest, regardless of primary yield. Neither trait scans the world. There is currently no selective trait-removal feature.
 
 16. Foraged/shop/drop produce: no new mutations are granted to those sources. An otherwise matching item that already carries trait metadata can currently be used as a donor; no provenance restriction yet.
 
