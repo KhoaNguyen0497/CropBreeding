@@ -185,3 +185,26 @@ for (int i = 0; i < 1000; i++)
 }
 Check(sawNurseCrop, "annual crops can acquire Nurse Crop");
 Console.WriteLine("Passed Nurse Crop overflow distribution, maturity cap, breeding and mutation eligibility checks.");
+
+Check(TraitRules.MaterialDrops.Values.Select(v => v.Salt).Distinct().Count() == TraitRules.MaterialDrops.Count,
+    "material traits have independent random salts");
+Check(!TraitRules.MaterialDrops.Values.Any(v => v.ItemId is "92" or "MysticSyrup"), "Sap and Mystic Syrup excluded");
+foreach (string id in TraitRules.MaterialDrops.Keys)
+{
+    Check(TraitRules.Known.Contains(id), "material traits are recognized");
+    Breed(id + ":4", id, 3, id + ":5");
+    Breed(id + ":5", id, 3, null);
+    Check(TraitRules.Without(T(id), id).Length == 0, "material trait removable");
+    foreach (bool regrows in new[] { false, true })
+    {
+        Check(TraitRules.Mutate([], 3, 1, new Random(1), regrows, available => available == id).SequenceEqual(T(id)),
+            "each material can mutate on annuals and regrowers");
+        Check(TraitRules.Mutate(T(id + ":2"), 1, 1, new Random(1), regrows, _ => false).SequenceEqual(T(id + ":2")),
+            "missing output disables upgrades without deleting inherited trait");
+    }
+}
+static bool WithoutSve(string id) => id is not ("birch_water_bearing" or "fir_wax_bearing");
+for (int i = 0; i < 1000; i++)
+    Check(TraitRules.Mutate([], 3, 1, new Random(i), isAvailable: WithoutSve).All(t => WithoutSve(TraitRules.Id(t))),
+        "missing SVE outputs never enter mutation pool");
+Console.WriteLine("Passed material trait availability, inheritance, annual/regrowing mutation and breeding checks.");

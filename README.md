@@ -23,6 +23,15 @@ Coffee beans already act as both produce and seeds, so mutated beans can be repl
 | Copper Bearing | Produces Copper Bars using the material-drop rule below. |
 | Iron Bearing | Produces Iron Bars using the material-drop rule below. |
 | Gold Bearing | Produces Gold Bars using the material-drop rule below. |
+| Maple Bearing | Produces Maple Syrup using the material-drop rule. |
+| Resin Bearing | Produces Oak Resin using the material-drop rule. |
+| Tar Bearing | Produces Pine Tar using the material-drop rule. |
+| Common Mushroom Bearing | Produces Common Mushrooms using the material-drop rule. |
+| Red Mushroom Bearing | Produces Red Mushrooms using the material-drop rule. |
+| Purple Mushroom Bearing | Produces Purple Mushrooms using the material-drop rule. |
+| Fiddlehead Bearing | Produces Fiddlehead Ferns using the material-drop rule. |
+| Birch Water Bearing | Produces SVE Birch Water using the material-drop rule; only mutates when that item is installed. |
+| Fir Wax Bearing | Produces SVE Fir Wax using the material-drop rule; only mutates when that item is installed. |
 | Researcher | Adds 5 percentage points of mutation chance per level: default total 10/15/20/25/30%. Adds 10% initial growth and regrowth time per level. Timing: (ordinary adjusted growth + Companion delay) × Researcher multiplier × Fast Growth multiplier, rounded up once. Uses the parent's inherited level. |
 | Seed Saver | 10% chance per level (up to 50%) to return one matching seed per successful plant harvest. Copies the parent's original traits, levels and Companion choice, never the new harvest mutation. No High Yield multiplication or High Quality upgrade. Works on regrowing harvests and directly plantable coffee too. |
 | Evergreen | Levels 1–4 are dormant and still occupy a trait slot. Level 5 allows planting and growth in all seasons, including winter, and prevents seasonal death on eligible tilled ground. Regrowing crops keep regrowing; single-harvest crops remain single-harvest. Normal watering and location restrictions still apply. |
@@ -44,6 +53,8 @@ Nurse Crop rolls once per plant harvest using the inherited level and applies th
 Rooted uses the parent's inherited level (`RootedChance=0.10` per level), retains its traits/Companion/color, and resets initial growth using current fertilizer, the harvesting player's Agriculturist profession (local game player for automated harvests), paddy adjacency, Companion, Researcher and Fast Growth. It keeps the soil's current water and fertilizer state. Harvest mutations affect produce only; failed harvests, natural regrowers, dead plants, tool destruction, giant crops and excluded crops never restart. Seasonal restrictions still apply unless Evergreen 5 protects the plant. Sunflower harvest IDs are restored before restarting. All harvest extras are committed first; then the vanilla harvest removal result is changed so hand/scythe/Junimo and the vanilla-based Auto Harvester retain the reset plant. No separate Auto Harvester integration or continuous scan is required.
 
 Material traits each roll independently once per successful plant harvest, using the inherited level. Chance is `floor(base initial growth days / 5) × 5% × level`. Every complete 100% guarantees one bar; the remaining chance can add one more. A 28-day crop gets 25% at level 1, 100% at level 4, and 125% at level 5 (one guaranteed plus 25% for a second). Under five base days gives zero. Every regrowing harvest uses the same initial base growth, never the regrowth interval. Base growth comes from loaded crop data (including SVE); fertilizer, professions, Fast Growth, Researcher and Companion do not change these odds. Bars are plain items, unaffected by primary crop quantity, High Yield, High Quality or Companion. Failed harvests deliver no bars. These are ordinary inheritable/mutable/removable traits and each occupies one trait slot. No continuous scans are added.
+
+Tapper-product traits use exactly the same material-drop formula and harvest path as Copper/Iron/Gold Bearing, including regrowing crops. Each successful drop adds one item; chances above 100% guarantee whole items plus a fractional chance of one more. No Sap or Mystic Syrup trait is included. Each product has a separate trait/roll, takes one normal trait slot, and produces plain normal-quality items. SVE products use their exact object IDs, not name matching. If an output item is missing, its trait cannot be acquired/upgraded by mutation and produces no error items; existing trait metadata survives so reinstalling its content restores the effect. Material checks iterate only the parent's actual traits, and mutation availability uses loaded object-data lookups. No extra world scans or dependency on SVE are added.
 
 ### Lookup Anything
 

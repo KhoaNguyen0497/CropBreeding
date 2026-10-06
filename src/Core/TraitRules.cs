@@ -7,7 +7,25 @@ namespace CropBreeding.Core;
 public static class TraitRules
 {
     public const int MaximumLevel = 5;
-    public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver", "copper_bearing", "iron_bearing", "gold_bearing", "rooted", "nurse_crop"];
+    public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver", "copper_bearing", "iron_bearing", "gold_bearing", "rooted", "nurse_crop",
+        "maple_bearing", "resin_bearing", "tar_bearing", "common_mushroom_bearing", "red_mushroom_bearing", "purple_mushroom_bearing", "fiddlehead_bearing", "birch_water_bearing", "fir_wax_bearing"];
+    // Exact object IDs, with independent stable rolls. SVE outputs are optional.
+    public static readonly IReadOnlyDictionary<string, (string ItemId, int Salt)> MaterialDrops =
+        new Dictionary<string, (string ItemId, int Salt)>(StringComparer.Ordinal)
+        {
+            ["copper_bearing"] = ("334", 83),
+            ["iron_bearing"] = ("335", 89),
+            ["gold_bearing"] = ("336", 97),
+            ["maple_bearing"] = ("724", 127),
+            ["resin_bearing"] = ("725", 131),
+            ["tar_bearing"] = ("726", 137),
+            ["common_mushroom_bearing"] = ("404", 139),
+            ["red_mushroom_bearing"] = ("420", 149),
+            ["purple_mushroom_bearing"] = ("422", 151),
+            ["fiddlehead_bearing"] = ("259", 157),
+            ["birch_water_bearing"] = ("FlashShifter.StardewValleyExpandedCP_Birch_Water", 163),
+            ["fir_wax_bearing"] = ("FlashShifter.StardewValleyExpandedCP_Fir_Wax", 167)
+        };
     public static int NurseCropStages(int level, bool canRegrow, double roll)
     {
         if (canRegrow) return 0;
@@ -85,12 +103,14 @@ public static class TraitRules
         => Parse(Encode(values)).Where(t => Id(t) != id).ToArray();
     public static int Level(IEnumerable<string> traits, string id) => Parse(Encode(traits))
         .Where(t => Id(t) == id).Select(TokenLevel).DefaultIfEmpty(0).Max();
-    public static string[] Mutate(IEnumerable<string> inherited, int limit, double chance, Random random, bool canRegrow = true)
+    public static string[] Mutate(IEnumerable<string> inherited, int limit, double chance, Random random, bool canRegrow = true,
+        Func<string, bool>? isAvailable = null)
     {
         string[] current = Parse(Encode(inherited));
         if (random.NextDouble() >= Math.Clamp(chance, 0, 1)) return current;
         // Each eligible trait type has one chance: add it at level 1, or upgrade it by one.
-        string[] choices = Known.Where(id => (id is not ("rooted" or "nurse_crop") || !canRegrow) && (Level(current, id) is > 0 and < MaximumLevel
+        string[] choices = Known.Where(id => (isAvailable?.Invoke(id) ?? true)
+            && (id is not ("rooted" or "nurse_crop") || !canRegrow) && (Level(current, id) is > 0 and < MaximumLevel
                 || (Level(current, id) == 0 && current.Length < Math.Max(0, limit)))).ToArray();
         if (choices.Length == 0) return current;
         string chosen = choices[random.Next(choices.Length)];
@@ -131,7 +151,11 @@ public static class TraitRules
         string name = Id(token) switch
         {
             "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "high_quality" => "High Quality", "companion" => "Companion", "evergreen" => "Evergreen", "researcher" => "Researcher", "seed_saver" => "Seed Saver",
-            "copper_bearing" => "Copper Bearing", "iron_bearing" => "Iron Bearing", "gold_bearing" => "Gold Bearing", "rooted" => "Rooted", "nurse_crop" => "Nurse Crop", _ => Id(token)
+            "copper_bearing" => "Copper Bearing", "iron_bearing" => "Iron Bearing", "gold_bearing" => "Gold Bearing", "rooted" => "Rooted", "nurse_crop" => "Nurse Crop",
+            "maple_bearing" => "Maple Bearing", "resin_bearing" => "Resin Bearing", "tar_bearing" => "Tar Bearing",
+            "common_mushroom_bearing" => "Common Mushroom Bearing", "red_mushroom_bearing" => "Red Mushroom Bearing",
+            "purple_mushroom_bearing" => "Purple Mushroom Bearing", "fiddlehead_bearing" => "Fiddlehead Bearing",
+            "birch_water_bearing" => "Birch Water Bearing", "fir_wax_bearing" => "Fir Wax Bearing", _ => Id(token)
         };
         return $"{name} {TokenLevel(token)}";
     }
