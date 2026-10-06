@@ -8,8 +8,8 @@ public static class TraitRules
 {
     public const int MaximumLevel = 5;
     public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver", "copper_bearing", "iron_bearing", "gold_bearing", "rooted", "nurse_crop",
-        "maple_bearing", "resin_bearing", "tar_bearing", "common_mushroom_bearing", "red_mushroom_bearing", "purple_mushroom_bearing", "fiddlehead_bearing", "birch_water_bearing", "fir_wax_bearing"];
-    // Exact object IDs, with independent stable rolls. SVE outputs are optional.
+        "maple_bearing", "resin_bearing", "tar_bearing"];
+    // Exact object IDs, with independent stable rolls.
     public static readonly IReadOnlyDictionary<string, (string ItemId, int Salt)> MaterialDrops =
         new Dictionary<string, (string ItemId, int Salt)>(StringComparer.Ordinal)
         {
@@ -18,13 +18,7 @@ public static class TraitRules
             ["gold_bearing"] = ("336", 97),
             ["maple_bearing"] = ("724", 127),
             ["resin_bearing"] = ("725", 131),
-            ["tar_bearing"] = ("726", 137),
-            ["common_mushroom_bearing"] = ("404", 139),
-            ["red_mushroom_bearing"] = ("420", 149),
-            ["purple_mushroom_bearing"] = ("422", 151),
-            ["fiddlehead_bearing"] = ("259", 157),
-            ["birch_water_bearing"] = ("FlashShifter.StardewValleyExpandedCP_Birch_Water", 163),
-            ["fir_wax_bearing"] = ("FlashShifter.StardewValleyExpandedCP_Fir_Wax", 167)
+            ["tar_bearing"] = ("726", 137)
         };
     public static int NurseCropStages(int level, bool canRegrow, double roll)
     {
@@ -152,10 +146,7 @@ public static class TraitRules
         {
             "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "high_quality" => "High Quality", "companion" => "Companion", "evergreen" => "Evergreen", "researcher" => "Researcher", "seed_saver" => "Seed Saver",
             "copper_bearing" => "Copper Bearing", "iron_bearing" => "Iron Bearing", "gold_bearing" => "Gold Bearing", "rooted" => "Rooted", "nurse_crop" => "Nurse Crop",
-            "maple_bearing" => "Maple Bearing", "resin_bearing" => "Resin Bearing", "tar_bearing" => "Tar Bearing",
-            "common_mushroom_bearing" => "Common Mushroom Bearing", "red_mushroom_bearing" => "Red Mushroom Bearing",
-            "purple_mushroom_bearing" => "Purple Mushroom Bearing", "fiddlehead_bearing" => "Fiddlehead Bearing",
-            "birch_water_bearing" => "Birch Water Bearing", "fir_wax_bearing" => "Fir Wax Bearing", _ => Id(token)
+            "maple_bearing" => "Maple Bearing", "resin_bearing" => "Resin Bearing", "tar_bearing" => "Tar Bearing", _ => Id(token)
         };
         return $"{name} {TokenLevel(token)}";
     }

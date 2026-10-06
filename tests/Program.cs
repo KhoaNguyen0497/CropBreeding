@@ -203,8 +203,4 @@ foreach (string id in TraitRules.MaterialDrops.Keys)
             "missing output disables upgrades without deleting inherited trait");
     }
 }
-static bool WithoutSve(string id) => id is not ("birch_water_bearing" or "fir_wax_bearing");
-for (int i = 0; i < 1000; i++)
-    Check(TraitRules.Mutate([], 3, 1, new Random(i), isAvailable: WithoutSve).All(t => WithoutSve(TraitRules.Id(t))),
-        "missing SVE outputs never enter mutation pool");
 Console.WriteLine("Passed material trait availability, inheritance, annual/regrowing mutation and breeding checks.");
