@@ -18,6 +18,7 @@ Coffee beans already act as both produce and seeds, so mutated beans can be repl
 
 | Trait | Effect |
 |---|---|
+| Evergreen | Levels 1–4 are dormant and still occupy a trait slot. Level 5 allows planting and growth in all seasons, including winter, and prevents seasonal death on eligible tilled ground. Regrowing crops keep regrowing; single-harvest crops remain single-harvest. Normal watering and location restrictions still apply. |
 | Fast Growth | Adds 10 percentage points per level to initial-growth speed reduction alongside fertilizer/professions. Total trait speed reduction is capped at 90%. Does not shorten regrowth. |
 | High Yield | 20% chance per level of one extra primary crop per harvest (capped at 100%); extra item preserves that output's quality/color. |
 | Companion | 20% chance per level to produce one chosen companion crop per plant harvest. Adds half the companion's base growth time to initial growth and every regrowth cycle. |

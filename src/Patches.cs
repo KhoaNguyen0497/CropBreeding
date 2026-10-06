@@ -15,6 +15,10 @@ internal static class Patches
     {
         Patch(harmony, typeof(SObject), nameof(SObject.placementAction), nameof(PlacementPrefix), finalizer: nameof(PlacementFinalizer));
         Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.plant), nameof(PlantPrefix), nameof(PlantPostfix));
+        foreach (string name in new[] { nameof(HoeDirtAlias.plant), nameof(HoeDirtAlias.canPlantThisSeedHere) })
+            harmony.Patch(AccessTools.Method(typeof(HoeDirtAlias), name), transpiler: Method(nameof(PlantSeasonTranspiler)));
+        harmony.Patch(AccessTools.Method(typeof(Crop), nameof(Crop.IsInSeason), new[] { typeof(GameLocation) }),
+            postfix: Method(nameof(CropSeasonPostfix)));
         Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.applySpeedIncreases), prefix: nameof(GrowthPrefix), postfix: nameof(GrowthPostfix));
         Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.GetFertilizerSpeedBoost), postfix: nameof(SpeedPostfix));
         harmony.Patch(AccessTools.Method(typeof(Crop), nameof(Crop.harvest)),
@@ -44,6 +48,49 @@ internal static class Patches
         return __exception;
     }
     private sealed record PlantState(string[] Values, string? CompanionId);
+    private static void CropSeasonPostfix(Crop __instance, ref bool __result)
+    {
+        if (!__result && !__instance.dead.Value && __instance.modData.ContainsKey(Traits.Key)
+            && Core.TraitRules.EvergreenActive(Traits.Level(__instance.modData, "evergreen"))
+            && __instance.Dirt is HoeDirtAlias soil && Traits.Eligible(__instance, soil))
+            __result = true;
+    }
+    private static bool PlantIgnoresSeasons(GameLocation location, HoeDirtAlias soil, string itemId, Farmer? who)
+    {
+        if (location.SeedsIgnoreSeasonsHere()) return true;
+        Item? seed = placing?.ItemId == CropCatalog.Raw(itemId) ? placing : (who ?? Game1.player)?.ActiveObject;
+        return seed?.ItemId == CropCatalog.Raw(itemId) && seed.modData.ContainsKey(Traits.Key)
+            && Core.TraitRules.EvergreenActive(Traits.Level(seed.modData, "evergreen"))
+            && CropCatalog.Ground(soil) && CropCatalog.EligibleSeed(itemId);
+    }
+    // Replace only the local seasonal bypass check, not the whole planting method or global crop data.
+    // Vanilla still checks occupied tiles, trellis collision, planting rules and location restrictions.
+    private static IEnumerable<CodeInstruction> PlantSeasonTranspiler(IEnumerable<CodeInstruction> instructions, MethodBase __originalMethod)
+    {
+        MethodInfo original = AccessTools.Method(typeof(GameLocation), nameof(GameLocation.SeedsIgnoreSeasonsHere));
+        MethodInfo replacement = AccessTools.Method(typeof(Patches), nameof(PlantIgnoresSeasons));
+        int count = 0;
+        foreach (CodeInstruction instruction in instructions)
+        {
+            if (instruction.Calls(original))
+            {
+                // Location is already on the stack. Move branch/exception labels to the first added load.
+                var soil = new CodeInstruction(OpCodes.Ldarg_0);
+                soil.labels.AddRange(instruction.labels);
+                soil.blocks.AddRange(instruction.blocks);
+                instruction.labels.Clear();
+                instruction.blocks.Clear();
+                yield return soil;
+                yield return new CodeInstruction(OpCodes.Ldarg_1);
+                yield return new CodeInstruction(__originalMethod.Name == nameof(HoeDirtAlias.plant) ? OpCodes.Ldarg_2 : OpCodes.Ldnull);
+                instruction.opcode = OpCodes.Call;
+                instruction.operand = replacement;
+                count++;
+            }
+            yield return instruction;
+        }
+        if (count != 1) throw new InvalidOperationException($"{__originalMethod.Name} has {count} seasonal bypass sites; expected one.");
+    }
     private static bool PlantPrefix(HoeDirtAlias __instance, string itemId, Farmer who, bool isFertilizer, ref bool __result, out PlantState __state)
     {
         Item? seed = placing?.ItemId == CropCatalog.Raw(itemId) ? placing : who?.ActiveObject;

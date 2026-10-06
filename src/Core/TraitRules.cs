@@ -7,7 +7,8 @@ namespace CropBreeding.Core;
 public static class TraitRules
 {
     public const int MaximumLevel = 5;
-    public static readonly string[] Known = ["fast_growth", "high_yield", "fast_regrowth", "high_quality", "companion"];
+    public static readonly string[] Known = ["fast_growth", "high_yield", "fast_regrowth", "high_quality", "companion", "evergreen"];
+    public static bool EvergreenActive(int level) => level >= MaximumLevel;
     public static string Id(string trait) => trait.Split(':')[0];
     private static int TokenLevel(string token)
     {
@@ -70,8 +71,9 @@ public static class TraitRules
     {
         string name = Id(token) switch
         {
-            "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "fast_regrowth" => "Fast Regrowth", "high_quality" => "High Quality", "companion" => "Companion", _ => Id(token)
+            "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "fast_regrowth" => "Fast Regrowth", "high_quality" => "High Quality", "companion" => "Companion", "evergreen" => "Evergreen", _ => Id(token)
         };
-        return $"{name} {TokenLevel(token)}";
+        string label = $"{name} {TokenLevel(token)}";
+        return Id(token) == "evergreen" ? label + (EvergreenActive(TokenLevel(token)) ? " (all seasons)" : " (dormant until level 5)") : label;
     }
 }

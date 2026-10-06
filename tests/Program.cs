@@ -61,12 +61,20 @@ Breed("companion:5", "companion", 3, null);
 Breed("fast_growth", "companion", 3, "fast_growth,companion");
 Breed("high_quality,fast_growth,high_yield", "companion", 3, null);
 bool sawNew = false, sawUpgrade = false;
+for (int level = 0; level <= 5; level++)
+    Check(TraitRules.EvergreenActive(level) == (level == 5), $"Evergreen activation level {level}");
+Breed("evergreen:4", "evergreen", 3, "evergreen:5");
+Breed("evergreen:5", "evergreen", 3, null);
+Breed("evergreen:5", "", 3, "evergreen:5");
+Check(TraitRules.Label("evergreen:4").Contains("dormant"), "dormant tooltip");
+Check(TraitRules.Label("evergreen:5").Contains("all seasons"), "active tooltip");
+Check(TraitRules.Mutate(T("evergreen:4"), 1, 1, new Random(0)).SequenceEqual(T("evergreen:5")), "Evergreen upgrades at trait cap");
 for (int seed = 0; seed < 1000; seed++) {
     var annual = TraitRules.Mutate(T(""), 3, 1, new Random(seed), canRegrow: false);
     Check(TraitRules.Level(annual, "fast_regrowth") == 0, "single-harvest crops never gain Fast Regrowth");
-    var annualFull = T("fast_growth:5,high_yield:5,high_quality:5,companion:5");
-    Check(TraitRules.Mutate(annualFull, 4, 1, new Random(seed), canRegrow: false).SequenceEqual(annualFull), "non-regrowing pool exhausted");
-    var regrowing = TraitRules.Mutate(annualFull, 5, 1, new Random(seed), canRegrow: true);
+    var annualFull = T("fast_growth:5,high_yield:5,high_quality:5,companion:5,evergreen:5");
+    Check(TraitRules.Mutate(annualFull, 5, 1, new Random(seed), canRegrow: false).SequenceEqual(annualFull), "non-regrowing pool exhausted");
+    var regrowing = TraitRules.Mutate(annualFull, 6, 1, new Random(seed), canRegrow: true);
     Check(TraitRules.Level(regrowing, "fast_regrowth") == 1, "regrowing crops can gain Fast Regrowth");
     var inherited = T("high_yield,fast_regrowth");
     var next = TraitRules.Mutate(inherited, 3, 1, new Random(seed));
