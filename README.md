@@ -1,6 +1,6 @@
 # Crop Breeding
 
-A gameplay-focused SMAPI mod for Stardew Valley 1.6, including Stardew Valley Expanded crops. Development version; no release yet.
+A gameplay-focused SMAPI mod for Stardew Valley 1.6, including Stardew Valley Expanded crops. Development version; no release yet. This mod has never been installed: development targets fresh installs, with no migrations or support for earlier development save/config formats.
 
 ## Breeding loop
 
@@ -8,7 +8,7 @@ Grow crops on ordinary tilled ground. An eligible harvest has a configurable cha
 
 Plain seeds copy the donor crop's traits. Seeds with **exactly one trait at level 1** merge that trait into the donor: an existing trait gains one level, or a different trait is added at level 1. Seeds with multiple traits or a trait above level 1 are rejected. A merge that would exceed the trait-count limit or level 5 is rejected without consuming the seeds or changing the waiting donor.
 
-Examples: `X + Y` donor with `X` seeds gives `X2 + Y`; the same donor with `Z` seeds gives `X + Y + Z`. Each still costs ten seeds and one donor. Matching comes from the loaded `Data/Crops` seed ID and `HarvestItemId`, including Content Patcher/SVE changes; names are never used.
+Examples: `X + Y` donor with `X` seeds gives `X2 + Y`; the same donor with `Z` seeds gives `X + Y + Z`. Each still costs five seeds and five donor crops. Matching comes from the loaded `Data/Crops` seed ID and `HarvestItemId`, including Content Patcher/SVE changes; names are never used.
 
 The machine unlocks at Farming level 5. Its provisional recipe uses 50 wood, 5 iron bars and 1 battery pack. It uses a static 16×32 incubator-inspired wooden machine sprite with a green sprout. Interact to open its two-slot menu (holding an inventory item still opens the UI without depositing or consuming it): put a trait crop on the left and matching seeds on the right, then select **Breed**. Collect the finished seed from the left slot. You can retrieve the donor before breeding. Unused seeds return to your inventory when closing (or drop beside you if full); the donor/completed output stays in the machine. Destroying the machine loses its contents. The menu uses the normal inventory and controller navigation. The Breeding Machine acts as an interactive crafting station: it accepts inputs only through its UI and has no Automate integration. Trait crops can still be used by Automate with other machines through their normal input rules.
 
@@ -34,11 +34,11 @@ Coffee beans already act as both produce and seeds, so mutated beans can be repl
 | Companion | 20% chance per level to produce one chosen companion crop per plant harvest. Adds half the companion's base growth time to initial growth and every regrowth cycle. |
 | High Quality | 5% chance per level (25% at level 5) to upgrade each harvested primary item by one tier after normal quality calculation: normal → silver → gold → iridium. Iridium stays iridium. |
 
-Premium and Hardy are ignored. Legacy Fast Regrowth metadata converts to Fast Growth, keeping the higher level if both were present. `GrowthReductionPerLevel` is the new shared config setting, default 0.05; obsolete `FastGrowthReduction` and `FastRegrowthReduction` keys are ignored. `ExtraYieldChance` remains proportional extra yield per level, default 0.20.
+`GrowthReductionPerLevel` controls initial growth and regrowth reduction, default 0.05. `ExtraYieldPerLevel` controls proportional extra yield per level, default 0.20.
 
 Every primary crop harvested from a trait plant inherits its traits and levels, including every regrowing harvest. These crops can be used as donors to copy the traits into more seeds. A new mutation changes harvested produce, not the standing plant. For example, Fast Growth level 5 changes 7 days to 6; 2 days still rounds up to 2.
 
-Default mutation chance is 5%; default cap is 3 unique traits, each with levels 1–5. Successful mutations choose uniformly among eligible trait types: add a missing type if there is room, or upgrade an existing type below level 5. Upgrades remain possible when the trait-count cap is reached. One mutation roll applies to all primary produce from a harvest. High Quality uses separate rolls for each individual item, including the High Yield bonus, based on the plant's inherited level. A new High Quality mutation does not improve the same harvest; breed and replant it first. Quality rolls run after fertilizer/farming-level quality calculations, without changing those calculations. Mixed-quality outputs are separated into stacks. Hand-harvest extra items drop as ordinary harvest debris; Junimos receive them in the hut. The updated Auto Harvester uses this same vanilla Junimo harvest path: outputs go to its storage, with overflow dropped on the ground. Byproducts such as sunflower seeds and wheat hay do not receive quality upgrades. The new mutation is stored on produce; growth, regrowth, yield and quality effects require replanting. Lowering the cap never deletes existing traits; plain-seed copying preserves them, but merging is blocked while the donor exceeds the count cap. Existing saves with unlevelled traits read as level 1. Traits are stored in save-compatible `modData`; different trait sets or levels cannot stack, and vanilla quality/color distinctions still apply.
+Default mutation chance is 5%; default cap is 3 unique traits, each with levels 1–5. Successful mutations choose uniformly among eligible trait types: add a missing type if there is room, or upgrade an existing type below level 5. Upgrades remain possible when the trait-count cap is reached. One mutation roll applies to all primary produce from a harvest. High Quality uses separate rolls for each individual item, including the High Yield bonus, based on the plant's inherited level. A new High Quality mutation does not improve the same harvest; breed and replant it first. Quality rolls run after fertilizer/farming-level quality calculations, without changing those calculations. Mixed-quality outputs are separated into stacks. Hand-harvest extra items drop as ordinary harvest debris; Junimos receive them in the hut. The updated Auto Harvester uses this same vanilla Junimo harvest path: outputs go to its storage, with overflow dropped on the ground. Byproducts such as sunflower seeds and wheat hay do not receive quality upgrades. The new mutation is stored on produce; growth, regrowth, yield and quality effects require replanting. Lowering the cap never deletes existing traits; plain-seed copying preserves them, but merging is blocked while the donor exceeds the count cap. Traits use one explicit `trait:level` format in `modData`, including level 1; different trait sets or levels cannot stack, and vanilla quality/color distinctions still apply.
 
 ## Special cases
 
@@ -58,10 +58,10 @@ Optional display integration adjusts trait seed previews, planted crop growth/re
 - Normal ground only, including greenhouse/Ginger Island tilled ground. Garden Pots and modded planters using pot soil are excluded; trait seeds are refused there so traits aren't silently discarded. A custom planter implementing actual terrain soil needs an explicit compatibility rule.
 - SVE crops are discovered from their real loaded data. **Ancient Fiber is eligible**; only vanilla Fiber Seeds are excluded.
 - Sunflower bonus seeds copy the original plant traits; only harvested flowers receive the new mutation. Wheat hay remains ordinary.
-- Rice/taro retain normal paddy rules. Hand, scythe and Junimo harvesting use the shared vanilla `Crop.harvest` hooks. The updated `KhoaNguyen0497.AutoHarvester` calls that same method and needs no dedicated integration or dependency. Older versions that bypass vanilla harvesting are no longer supported.
+- Rice/taro retain normal paddy rules. Hand, scythe and Junimo harvesting use the shared vanilla `Crop.harvest` hooks. The updated `KhoaNguyen0497.AutoHarvester` calls that same method and needs no dedicated integration or dependency. Harvesters must call vanilla `Crop.harvest` for these hooks to run.
 - Giant crop formation follows vanilla rules, even when constituent plants have different traits. Breaking the giant crop gives ordinary vanilla output with no traits.
 - Vanilla machine/crafting outputs have no traits. Input quality remains available to their ordinary rules. Other mods that create outputs by copying custom metadata may need separate compatibility patches.
-- Old saves start with ordinary crops. Existing crops from mixed seeds cannot reliably be identified retrospectively once the game has resolved the seed to a crop; newly planted mixed seeds are explicitly marked ineligible.
+- Crops planted before first installing the mod have no traits. Their mixed-seed origin cannot reliably be identified once the game has resolved the seed to a crop; mixed seeds planted with the mod installed are explicitly marked ineligible.
 
 ## Companion selection and timing
 
@@ -80,7 +80,7 @@ Both penalties use the companion's **initial base growth days** from loaded `Dat
 - Fast Growth reduces the Companion portion too. Single-harvest crops remain single-harvest.
 - Recalculating growth first removes this mod's previous phase adjustments, preventing accumulated bonuses or delays.
 
-Regrowing crop mutations are enabled by default (`EnableRegrowingCropMutations=true`). Every successful harvest can mutate its produce at the configured mutation chance; the original plant does not permanently acquire the new mutation. Existing config files explicitly set to `false` must be changed to `true` to enable this.
+Regrowing crop mutations are enabled by default (`EnableRegrowingCropMutations=true`). Every successful harvest can mutate its produce at the configured mutation chance; the original plant does not permanently acquire the new mutation. Set it to `false` to disable mutations on regrowing harvests.
 
 ## Decisions still open
 
@@ -88,7 +88,7 @@ Researcher and Seed Saver settings: `ResearcherMutationBonus=0.05`, `ResearcherG
 
 16. Foraged/shop/drop produce: no new mutations are granted to those sources. An otherwise matching item that already carries trait metadata can currently be used as a donor; no provenance restriction yet.
 
-Seed Maker outputs always have no breeding traits or Companion assignment. There is no inheritance setting; any old `EnableSeedMakerInheritance` config entry is ignored.
+Seed Maker outputs always have no breeding traits or Companion assignment. There is no inheritance setting.
 
 ## Build and test
 

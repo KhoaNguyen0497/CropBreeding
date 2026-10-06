@@ -1,14 +1,18 @@
 using CropBreeding.Core;
 static void Check(bool ok, string name) { if (!ok) throw new Exception(name); }
-static string[] T(string value) => TraitRules.Parse(value);
+// Compact test fixtures expand to the single explicit trait:level storage format.
+static string[] T(string value) => TraitRules.Parse(string.Join(',', value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+    .Select(token => token.Contains(':') ? token : token + ":1")));
 static void Breed(string donor, string seed, int cap, string? expected)
 {
     bool ok = TraitRules.TryBreed(T(donor), T(seed), cap, out var result);
     Check(ok == (expected != null), $"accept/reject {donor} + {seed}");
-    if (ok) Check(TraitRules.Same(TraitRules.Encode(result), expected), $"output {donor} + {seed}");
+    if (ok) Check(result.SequenceEqual(T(expected!)), $"output {donor} + {seed}");
 }
-Check(TraitRules.Same("high_yield,evergreen,high_yield", "evergreen:1,high_yield:1"), "legacy level-one save compatibility");
-Check(!TraitRules.Same("high_yield", "high_yield:2"), "different levels never stack");
+Check(TraitRules.Same("high_yield:1,evergreen:1,high_yield:1", "evergreen:1,high_yield:1"), "trait order and duplicate normalization");
+Check(!TraitRules.Same("high_yield:1", "high_yield:2"), "different levels never stack");
+Check(TraitRules.Encode(T("high_yield")) == "high_yield:1", "level one is explicitly encoded");
+Check(TraitRules.Parse("high_yield").Length == 0, "missing level is invalid metadata");
 Check(TraitRules.Same("high_yield:2,high_yield:4", "high_yield:4"), "duplicate metadata keeps highest level");
 Check(TraitRules.Encode(T("unknown,high_yield:0,evergreen:garbage")) == "", "invalid metadata");
 Check(TraitRules.Level(T("high_yield:99"), "high_yield") == 5, "loaded levels clamped");
@@ -24,7 +28,7 @@ Breed("fast_growth:3,high_yield", "", 3, "fast_growth:3,high_yield");
 Breed("fast_growth:3,high_yield", "", 1, "fast_growth:3,high_yield");
 Breed("fast_growth:3,high_yield", "fast_growth", 1, null);
 Breed("", "high_yield", 3, null);
-Check(TraitRules.Parse("premium:5,hardy:2,fast_growth").SequenceEqual(T("fast_growth")), "removed traits ignored");
+Check(TraitRules.Parse("unknown:5,fast_growth:1").SequenceEqual(T("fast_growth")), "unknown traits ignored");
 Check(TraitRules.RegrowthDays(10, 1, .1) == 9, "level one regrowth");
 Check(TraitRules.RegrowthDays(10, 5, .1) == 5, "level five regrowth");
 Check(TraitRules.RegrowthDays(7, 1, .1) == 7, "fraction rounds up");
@@ -103,12 +107,10 @@ for (int seed = 0; seed < 1000; seed++) {
 }
 Check(sawNew && sawUpgrade, "mutations can add and upgrade");
 Check(TraitRules.Mutate(Array.Empty<string>(), 0, 1, new Random(1)).Length == 0, "zero cap");
-Console.WriteLine("Passed merge examples/rejections, legacy metadata, level-aware stacks and mutation invariants across 1,000 random seeds.");
+Console.WriteLine("Passed merge examples/rejections, explicit trait levels, level-aware stacks and mutation invariants across 1,000 random seeds.");
 
-Check(TraitRules.Same("fast_regrowth:4,fast_growth:2", "fast_growth:4"), "legacy growth merge preserves higher level");
 Check(TraitRules.RegrowthDays(10, 5, .05, 8) == 11, "final reduction covers companion");
 Check(TraitRules.FinalGrowthPhases(new[] { 1, 2, 2, 99999 }, 5, .05, 7).Take(3).Sum() == 7, "initial growth rounds only after combined reduction");
-Check(!TraitRules.Known.Contains("fast_regrowth"), "removed separate trait");
 Check(Math.Abs(TraitRules.MutationRate(.05, 1, .05) - .10) < 1e-9, "Researcher one 10 percent total");
 Check(Math.Abs(TraitRules.MutationRate(.05, 5, .05) - .30) < 1e-9, "Researcher five 30 percent total");
 Check(TraitRules.MutationRate(.9, 5, .1) == 1, "mutation rate capped");

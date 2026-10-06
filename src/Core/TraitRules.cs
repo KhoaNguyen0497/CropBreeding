@@ -78,16 +78,14 @@ public static class TraitRules
         }
         return phases;
     }
-    // Legacy Fast Regrowth merges into Fast Growth; duplicate levels keep the higher one.
-    public static string Id(string trait) => trait.Split(':')[0] is "fast_regrowth" ? "fast_growth" : trait.Split(':')[0];
+    public static string Id(string trait) => trait.Split(':')[0];
     private static int TokenLevel(string token)
     {
         string[] parts = token.Split(':');
-        if (parts.Length == 1) return 1; // Existing saves store bare trait IDs.
         return parts.Length == 2 && int.TryParse(parts[1], out int level) && level > 0
             ? Math.Min(level, MaximumLevel) : 0;
     }
-    private static string Token(string id, int level) => level == 1 ? id : $"{id}:{level}";
+    private static string Token(string id, int level) => $"{id}:{level}";
     public static string[] Parse(string? value) => (value ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries)
         .Where(t => Known.Contains(Id(t)) && TokenLevel(t) > 0)
         .GroupBy(Id).OrderBy(g => g.Key, StringComparer.Ordinal)

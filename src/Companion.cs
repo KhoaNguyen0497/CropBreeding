@@ -44,7 +44,6 @@ internal static class Companion
     }
     internal static string? Merge(ModDataDictionary donor, ModDataDictionary seed)
         => Core.TraitRules.CompanionChoice(Read(donor), Read(seed));
-    private const string AppliedDelayKey = ModEntry.Id + "/AppliedCompanionDelay";
     private const string GrowthDeltaKey = ModEntry.Id + "/GrowthPhaseDeltas";
     internal static void RemoveGrowthDelay(HoeDirtAlias soil)
     {
@@ -57,10 +56,6 @@ internal static class Companion
                     if (int.TryParse(deltas[i], out int delta)) crop.phaseDays[i] = Math.Max(0, crop.phaseDays[i] - delta);
             crop.modData.Remove(GrowthDeltaKey);
         }
-        if (crop.modData.TryGetValue(AppliedDelayKey, out string value) && int.TryParse(value, out int delay)
-            && delay > 0 && crop.phaseDays.Count >= 2)
-            crop.phaseDays[crop.phaseDays.Count - 2] = Math.Max(0, crop.phaseDays[crop.phaseDays.Count - 2] - delay);
-        crop.modData.Remove(AppliedDelayKey);
     }
     internal static void ApplyGrowth(HoeDirtAlias soil)
     {

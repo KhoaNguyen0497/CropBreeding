@@ -172,7 +172,7 @@ internal sealed class HarvestContext
         if (primaryCount == 0 || yieldLevel == 0) return;
         Random random = Traits.RandomFor(Plant, 23);
         int extra = TraitRules.ExtraYieldCount(primaryCount, yieldLevel,
-            ModEntry.Instance.Config.ExtraYieldChance, random.NextDouble());
+            ModEntry.Instance.Config.ExtraYieldPerLevel, random.NextDouble());
         for (int i = 0; i < extra; i++)
         {
             // Sample original output quality/color before High Quality, weighted by item count.

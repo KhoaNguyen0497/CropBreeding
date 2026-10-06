@@ -141,16 +141,6 @@ internal sealed class BreedingMenu : MenuWithInventory
                 if (heldItem.Stack == 0) heldItem = null;
                 Game1.playSound("Ship");
             }
-            else if (!SettingCompanion && !RemovingTrait && !machine.readyForHarvest.Value && heldItem != null
-                && machine.heldObject.Value is Item pending && pending.Stack < Breeder.DonorsRequired
-                && pending.canStackWith(heldItem))
-            {
-                // Allow old saves with a single staged donor to be topped up without losing it.
-                int count = Math.Min(heldItem.Stack, Breeder.DonorsRequired - pending.Stack);
-                pending.Stack += count;
-                heldItem.Stack -= count;
-                if (heldItem.Stack == 0) heldItem = null;
-            }
             else message = RemovingTrait ? "Put a seed with traits in the left slot." : SettingCompanion ? "Put a seed with Companion in the left slot." : "Put a stack of at least 5 matching trait crops in the donor slot.";
             return;
         }
