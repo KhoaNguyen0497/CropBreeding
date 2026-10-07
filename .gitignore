@@ -2,5 +2,6 @@ bin/
 obj/
 .references/
 build/
+artifacts/
 config.json
 *.user

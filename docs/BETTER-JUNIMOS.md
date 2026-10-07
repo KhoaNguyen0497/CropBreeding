@@ -50,3 +50,9 @@ Watering changes soil water state; dead-crop cleanup calls `destroyCrop`. Neithe
 - [FertilizeAbility](https://github.com/hawkfalcon/Stardew-Mods/blob/faa40d440fd75c9f702142a12efef616ab06fc9a/BetterJunimos/Abilities/Base/FertilizeAbility.cs)
 
 Automated checks and the remaining live checklist are in TESTING.md.
+
+## Additional accepted upstream behavior
+
+Better Junimos' copied planting speed formula can reduce an already-zero phase below zero under strong bonuses. This can waste a growth reduction (e.g. Taro with Hyper Speed-Gro, Agriculturist and paddy water), while a later Rooted restart uses vanilla's correct calculation. The user accepted leaving this upstream bug unchanged. This is separate from the fertilizer recalculation integration.
+
+Its seed-availability cache can miss seeds newly deposited by Seed Saver or ordinary harvests until a hut-menu close or day-start refresh. This too is accepted unchanged. Its selected seed determines a replacement crop's traits; it does not preserve the harvested plant's traits unless those are present on the selected seed. Winter/rain work settings also apply when workers are serving a greenhouse from an outdoor hut.

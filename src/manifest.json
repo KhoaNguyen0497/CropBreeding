@@ -1,13 +1,22 @@
 {
   "Name": "Crop Breeding",
   "Author": "KhoaNguyen0497",
-  "Version": "0.1.0",
+  "Version": "1.0.0",
   "Description": "Breed inherited crop traits using matching seeds and harvested produce.",
   "UniqueID": "KhoaNguyen0497.CropBreeding",
   "EntryDll": "CropBreeding.dll",
   "MinimumApiVersion": "4.0.0",
   "Dependencies": [
-    { "UniqueID": "Pathoschild.LookupAnything", "IsRequired": false },
-    { "UniqueID": "spacechase0.GenericModConfigMenu", "IsRequired": false }
+    {
+      "UniqueID": "Pathoschild.LookupAnything",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ],
+  "UpdateKeys": [
+    "GitHub:KhoaNguyen0497/CropBreeding"
   ]
 }
