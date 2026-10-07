@@ -26,6 +26,6 @@ Numbers refer to the 50-item code/gameplay review in this project's chat. Unment
 | 50 | Explanation requested only. Broad cleanup of stale decision labels and obsolete tests is deferred; descriptions of this change's approved fixes were updated. |
 | 3, 7, 9, 12, 33, 34, 35 | Unmentioned: revisit later. This includes Rooted walnuts, destruction edges, stacking optimization, unready harvest work, and remaining randomness concerns. |
 
-Better Junimos compatibility was checked separately on 2026-10-07. Its harvesting path is shared vanilla code. Automatic planting and fertilizer timing limitations are recorded in BETTER-JUNIMOS.md; a Better Junimos-specific compatibility patch has not been requested or added.
+Better Junimos compatibility was checked separately on 2026-10-07. Its harvesting path is shared vanilla code. The user subsequently approved fixing planting trait loss: optional integration now transfers the exact selected seed's traits/Companion and applies initial trait timing. Fertilizer behavior was requested for explanation only and is unchanged. Better Junimos' out-of-season seed filter also remains unchanged; it does not recognize Evergreen. Details are in BETTER-JUNIMOS.md.
 
 The older README's “Decisions still open” and numbered test notes predate this review and must not override these explicit choices. Planned/in-game checks in TESTING.md are not claims that those behaviors were verified.

@@ -4,6 +4,9 @@ using StardewValley;
 
 namespace HarmonyLib
 {
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class HarmonyPriority(int priority) : Attribute { public int Priority = priority; }
+    public static class Priority { public const int Last = 0; }
     public enum HarmonyPatchType { All }
     public sealed class HarmonyMethod(MethodInfo method) { public MethodInfo Method = method; }
     public sealed class Harmony
@@ -23,6 +26,8 @@ namespace HarmonyLib
     }
     public static class AccessTools
     {
+        public static Type? NamedType;
+        public static Type? TypeByName(string name) => NamedType;
         public delegate ref F FieldRef<in T, F>(T instance);
         public static FieldRef<T, F> FieldRefAccess<T, F>(string name)
         {

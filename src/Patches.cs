@@ -162,30 +162,8 @@ internal static class Patches
     }
     private static void PlantPostfix(HoeDirtAlias __instance, string itemId, Farmer who, bool isFertilizer, bool __result, PlantState? __state)
     {
-        CropSnapshot? snapshot = null;
-        try
-        {
-            if (!__result || isFertilizer || __instance.crop == null || __state == null) return;
-            Crop crop = __instance.crop;
-            snapshot = new CropSnapshot(crop);
-            bool eligible = CropCatalog.Ground(__instance) && CropCatalog.EligibleSeed(itemId);
-            crop.modData[Traits.EligibilityKey] = eligible ? "true" : "false";
-            Traits.Write(crop.modData, eligible ? __state.Values : []);
-            Companion.Write(crop.modData, eligible ? __state.CompanionId : null);
-            // Another planting patch may have instantly grown it before seed traits transferred.
-            // The newly planted crop must prepare from its actual inherited traits below.
-            crop.modData.Remove(MutationState.Key);
-            // Reapply vanilla speed calculation after transferring traits. This preserves profession/paddy/fertilizer effects.
-            if (Core.TraitRules.Level(__state.Values, "fast_growth") > 0 || Companion.BaseDays(crop.modData) > 0
-                || Traits.GrowthPenalty(crop.modData) > 0) __instance.applySpeedIncreases(who);
-            // Covers zero-day/instantly grown seeds after their inherited traits are assigned.
-            MutationState.EnsurePrepared(crop);
-        }
-        catch (Exception ex)
-        {
-            if (snapshot != null) ErrorHandler.Try("Restore planted crop", snapshot.Restore);
-            ErrorHandler.Report("PlantPostfix", ex);
-        }
+        if (!__result || isFertilizer || __state == null) return;
+        SeedInheritance.Apply(__instance, itemId, __state.Values, __state.CompanionId, who);
     }
     private static void GrowthPrefix(HoeDirtAlias __instance, out bool __state)
     {

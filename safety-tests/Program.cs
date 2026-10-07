@@ -68,3 +68,4 @@ MutationLifecycleTests.Run();
 LookupDescriptionTests.Run();
 
 ReviewFixTests.Run();
+BetterJunimosPlantingTests.Run();

@@ -16,6 +16,8 @@
     <Compile Include="../src/Core/MenuGeometry.cs" Link="MenuGeometry.cs" />
     <Compile Include="../src/HarvestContext.cs" Link="HarvestContext.cs" />
     <Compile Include="../src/JunimoHarvestOutput.cs" Link="JunimoHarvestOutput.cs" />
+    <Compile Include="../src/SeedInheritance.cs" Link="SeedInheritance.cs" />
+    <Compile Include="../src/Integrations/BetterJunimosIntegration.cs" Link="BetterJunimosIntegration.cs" />
     <Compile Include="../src/PatchInstaller.cs" Link="PatchInstaller.cs" />
     <Compile Include="../src/StationLock.cs" Link="StationLock.cs" />
   </ItemGroup>

@@ -78,7 +78,10 @@ namespace StardewValley
         public Crop? crop;
         public Net<int> state = new(1), nearWaterForPaddy = new(0);
         public Microsoft.Xna.Framework.Vector2 Tile;
-        public void applySpeedIncreases(Farmer who) { }
+        public bool Ground = true;
+        public int SpeedCalls;
+        public Action? OnSpeed;
+        public void applySpeedIncreases(Farmer who) { SpeedCalls++; OnSpeed?.Invoke(); }
         public bool hasPaddyCrop() => false;
         public bool paddyWaterCheck() => false;
         public void updateNeighbors() { }
@@ -123,6 +126,8 @@ namespace CropBreeding
     public sealed class Manifest : StardewModdingAPI.IManifest { }
     public sealed class Registry
     {
+        public readonly HashSet<string> Loaded = [];
+        public bool IsLoaded(string id) => Loaded.Contains(id);
         public object? Api;
         public T? GetApi<T>(string id) where T : class => Api as T;
     }
@@ -150,6 +155,7 @@ namespace CropBreeding
     internal static class Traits
     {
         internal const string Key = "Traits";
+        internal const string EligibilityKey = "Eligible";
         internal static Func<Random> RandomFactory = () => new Random(0);
         internal static int RandomCalls;
         internal static Func<double, Random>? SaltRandomFactory;
@@ -232,7 +238,12 @@ namespace StardewValley.Network
 namespace StardewModdingAPI.Events { public sealed class UpdateTickedEventArgs : EventArgs { } }
 namespace CropBreeding
 {
-    internal static class CropCatalog { internal static string Raw(string id) => id.Replace("(O)", ""); }
+    internal static class CropCatalog
+    {
+        internal static string Raw(string id) => id.Replace("(O)", "");
+        internal static bool Ground(HoeDirt soil) => soil.Ground;
+        internal static bool EligibleSeed(string id) => Raw(id) is not ("885" or "770" or "MixedFlowerSeeds");
+    }
     public sealed class EventsStub { public GameLoopStub GameLoop = new(); }
     public sealed class GameLoopStub
     {
