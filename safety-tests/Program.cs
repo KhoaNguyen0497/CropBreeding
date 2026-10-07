@@ -3,11 +3,13 @@ using CropBreeding.Integrations;
 using StardewValley;
 
 static void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
+Check(new ModConfig().ShowErrorsInChat, "chat errors enabled by default");
+ModEntry.Instance.Config.ShowErrorsInChat = false;
 int calls = 0;
 Check(!ErrorHandler.Try("Injected failure", () => { calls++; throw new InvalidOperationException("test exception"); }), "failure caught");
 Check(calls == 1 && ModEntry.Instance.Monitor.Messages.Count == 1, "action executed once and full error logged");
 Check(ErrorHandler.Try("Next independent action", () => calls++), "next action still runs");
-Check(calls == 2 && Game1.chatBox!.Messages.Count == 0, "chat disabled by default");
+Check(calls == 2 && Game1.chatBox!.Messages.Count == 0, "chat can be disabled");
 ModEntry.Instance.Config.ShowErrorsInChat = true;
 ErrorHandler.Report("Repeat", new Exception("first"));
 ErrorHandler.Report("Repeat", new Exception("first"));
@@ -35,24 +37,27 @@ Check(crop.currentPhase.Value == 2 && crop.dayOfCurrentPhase.Value == 1 && crop.
 Check(!crop.fullyGrown.Value && crop.raisedSeeds.Value && crop.indexOfHarvest.Value == "24", "crop flags and output restored");
 Check(crop.Dirt.state.Value == 1 && crop.Dirt.nearWaterForPaddy.Value == 0 && crop.DrawUpdates == 1, "soil and drawing refreshed");
 
-var config = new ModConfig { MutationChance = double.NaN, GrowthReductionPerLevel = double.PositiveInfinity,
-    ExtraYieldPerLevel = -100, RootedChance = 50, MaximumTraits = int.MaxValue };
+var config = new ModConfig { MutationChance = double.NaN, BreedingCost = int.MaxValue, MaximumTraits = int.MaxValue };
 config.Normalize();
-Check(config.MutationChance == .05 && config.GrowthReductionPerLevel == .05, "nonfinite settings replaced");
-Check(config.ExtraYieldPerLevel == 0 && config.RootedChance == 1 && config.MaximumTraits == CropBreeding.Core.TraitRules.Known.Length, "settings bounded");
+Check(config.MutationChance == .05, "nonfinite mutation setting replaced");
+Check(config.BreedingCost == 999 && config.MaximumTraits == CropBreeding.Core.TraitRules.Known.Length, "settings bounded");
+config.BreedingCost = 0; config.Normalize();
+Check(config.BreedingCost == 1, "breeding never accepts a free or negative cost");
 
 var api = new ConfigApi();
 ModEntry.Instance.Helper.ModRegistry.Api = api;
 GenericModConfigMenuIntegration.Register();
 var fields = api.Numbers.Keys.Concat(api.Booleans.Keys).ToHashSet();
-Check(typeof(ModConfig).GetProperties().All(p => fields.Contains(p.Name)) && fields.Count == 12, "every config setting appears in GMCM");
+Check(typeof(ModConfig).GetProperties().All(p => fields.Contains(p.Name)) && fields.Count == 5, "every config setting appears in GMCM");
 api.Numbers[nameof(ModConfig.MutationChance)].Set(25);
 Check(ModEntry.Instance.Config.MutationChance == .25, "GMCM percentages convert correctly");
+api.Numbers[nameof(ModConfig.BreedingCost)].Set(5);
+Check(ModEntry.Instance.Config.BreedingCost == 5, "GMCM breeding cost changes both ingredient amounts");
 api.Booleans[nameof(ModConfig.ShowErrorsInChat)].Set(true);
 api.Save();
 Check(ModEntry.Instance.Helper.Saves == 1 && ModEntry.Instance.Config.ShowErrorsInChat, "GMCM save persists settings");
 api.Reset();
-Check(api.Numbers[nameof(ModConfig.MutationChance)].Get() == 5 && !api.Booleans[nameof(ModConfig.ShowErrorsInChat)].Get(), "callbacks use reset config");
+Check(api.Numbers[nameof(ModConfig.MutationChance)].Get() == 5 && api.Booleans[nameof(ModConfig.ShowErrorsInChat)].Get() && api.Numbers[nameof(ModConfig.BreedingCost)].Get() == 1, "callbacks use reset config");
 ModEntry.Instance.Helper.Throw = true;
 api.Save(); // file-write error must not escape into GMCM.
 ModEntry.Instance.Helper.Throw = false;
@@ -71,3 +76,5 @@ ReviewFixTests.Run();
 BetterJunimosPlantingTests.Run();
 BetterJunimosFertilizerTests.Run();
 RootedWalnutTests.Run();
+
+BreedingCostTests.Run();

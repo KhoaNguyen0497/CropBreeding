@@ -34,7 +34,20 @@ namespace StardewValley
             return copy;
         }
     }
-    public sealed class Object : Item { public Microsoft.Xna.Framework.Vector2 TileLocation; }
+    public sealed class Object : Item
+    {
+        public Microsoft.Xna.Framework.Vector2 TileLocation;
+        public string QualifiedItemId => "(BC)" + ItemId;
+        public Net<Object?> heldObject = new(null);
+        public Net<bool> readyForHarvest = new(false), showNextIndex = new(false);
+        public int MinutesUntilReady;
+        public override Item getOne()
+        {
+            var copy = new Object { ItemId = ItemId, Quality = Quality };
+            foreach (var pair in modData) copy.modData[pair.Key] = pair.Value;
+            return copy;
+        }
+    }
     public static class ItemRegistry
     {
         public static Func<string, int, int, Item>? Factory;
@@ -175,6 +188,7 @@ namespace CropBreeding
         internal static bool Eligible(Crop crop, HoeDirt soil) => crop.Eligible;
         internal static void Write(Metadata data, IEnumerable<string> values) => data[Key] = Core.TraitRules.Encode(values);
         internal static int Level(Metadata data, string id) => Core.TraitRules.Level(Read(data), id);
+        internal static bool Has(Metadata data, string id) => Level(data, id) > 0;
         internal static double GrowthPenalty(Metadata data) => 0;
     }
     internal static class Companion
@@ -186,6 +200,8 @@ namespace CropBreeding
         internal static void RemoveGrowthDelay(HoeDirt soil) { }
         internal static string? Read(Metadata data) => data.GetValueOrDefault("Companion");
         internal static string Label(Metadata data) => Read(data) ?? "unassigned";
+        internal static bool Valid(Item item) => item.ItemId == "24";
+        internal static string? Merge(Metadata donor, Metadata seed) => Read(donor) ?? Read(seed);
     }
     public sealed class ConfigApi : IGenericModConfigMenuApi
     {
@@ -252,6 +268,8 @@ namespace CropBreeding
     internal static class CropCatalog
     {
         internal static string Raw(string id) => id.Replace("(O)", "");
+        internal static bool IsProduce(Item item) => Companion.Valid(item);
+        internal static bool Matches(Item donor, Item seed) => donor.ItemId == "24" && seed.ItemId == "472";
         internal static bool Ground(HoeDirt soil) => soil.Ground;
         internal static bool EligibleSeed(string id) => Raw(id) is not ("885" or "770" or "MixedFlowerSeeds");
     }

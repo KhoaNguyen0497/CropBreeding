@@ -81,7 +81,7 @@ internal static class Companion
             try
             {
                 int[] original = crop.phaseDays.ToArray();
-                int[] adjusted = Core.TraitRules.FinalGrowthPhases(original, level, ModEntry.Instance.Config.GrowthReductionPerLevel, days, penalty);
+                int[] adjusted = Core.TraitRules.FinalGrowthPhases(original, level, CropBreeding.Core.TraitRules.GrowthReductionPerLevel, days, penalty);
                 crop.modData[GrowthDeltaKey] = string.Join(",", adjusted.Select((value, i) => value - original[i]));
                 for (int i = 0; i < adjusted.Length; i++) crop.phaseDays[i] = adjusted[i];
             }

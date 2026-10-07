@@ -7,6 +7,16 @@ namespace CropBreeding.Core;
 public static class TraitRules
 {
     public const int MaximumLevel = 5;
+    // Fixed gameplay balance; only the base mutation chance is configurable.
+    public const double GrowthReductionPerLevel = .05;
+    public const double ExtraYieldPerLevel = .20;
+    public const double CompanionChance = .20;
+    public const double QualityUpgradeChance = .05;
+    public const double SeedSaverChance = .10;
+    public const double RootedChance = .10;
+    public const double ResearcherMutationBonus = .05;
+    public const double ResearcherGrowthPenalty = .10;
+
     public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver", "copper_bearing", "iron_bearing", "gold_bearing", "rooted", "nurse_crop",
         "maple_bearing", "resin_bearing", "tar_bearing"];
     // Exact object IDs, with independent stable rolls.

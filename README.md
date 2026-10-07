@@ -13,7 +13,7 @@ Optional: **Generic Mod Config Menu** for settings and **Lookup Anything** for t
 1. Grow crops on tilled ground. When a crop becomes ready, it has a **5% mutation chance** by default. A purple star marks a successful mutation.
 2. Harvest it. All primary produce from that harvest receives the same traits and mutation.
 3. Craft a **Breeding Machine** at Farming level 5: **50 Wood, 5 Iron Bars and 1 Battery Pack**.
-4. Open its two-slot menu and combine **5 trait crops + 5 matching seeds → 1 bred seed**. Each group must come from one matching stack.
+4. Open its two-slot menu and combine **1 trait crop + 1 matching seed → 1 bred seed** by default. Each group must come from one matching stack.
 5. Plant the bred seed to use its traits. New harvest mutations affect the produce, not the standing plant.
 
 Seeds are matched to crops using actual game data, including SVE crops. Default limits are **3 traits per seed**, each up to **level 5**.
@@ -24,9 +24,11 @@ Empty both slots before switching modes.
 
 | Mode | Inputs | Result |
 |---|---|---|
-| Breed | 5 trait crops + 5 matching seeds | One seed with the donor crop's traits. |
+| Breed | 1 trait crop + 1 matching seed by default | One seed with the donor crop's traits. |
 | Set Companion | 1 seed with Companion + 1 eligible crop | Assigns or replaces that seed's companion crop; consumes the crop. |
 | Remove Trait | 1 seed with traits | Removes one selected trait for free. |
+
+**Breeding cost:** configurable from 1 to 999. A value of `x` requires `x` seeds and `x` donor crops, producing one seed. Retrieve and reinsert stored donor crops after changing the cost. Set Companion and Remove Trait keep their one-seed costs.
 
 **Merging:** plain seeds copy the donor. A seed with exactly **one level-1 trait** can merge it into the donor's traits: matching traits gain one level; a different trait is added. Merges exceeding either limit are rejected.
 
@@ -36,7 +38,7 @@ The station uses a controller-friendly menu. It has no automatic processing or A
 
 ## Traits
 
-Values below are the defaults, per level unless stated otherwise.
+Trait percentages are fixed, per level unless stated otherwise.
 
 | Trait | Effect |
 |---|---|
@@ -64,7 +66,7 @@ Mutation rolls choose from all eligible traits. Picking a maxed trait, or a new 
 - **Better Junimos** transfers the actual selected seed's traits and preserves trait timing when fertilizing. Its existing seasonal selection, winter work settings and inventory-cache limitations still apply. [Details](docs/BETTER-JUNIMOS.md).
 - Full Junimo-hut overflow can lose traits. Giant crops yield ordinary, untraited produce.
 - Processing and crafting outputs, including Seed Maker seeds, do not inherit traits. Trait produce can be consumed normally by recipes and other machines.
-- Settings support Generic Mod Config Menu. Errors are logged to SMAPI; optional `ShowErrorsInChat` also displays them in chat.
+- Settings support Generic Mod Config Menu: mutation chance, maximum traits, regrowing mutations, breeding cost, and chat errors. Chat errors are enabled by default.
 
 Build and automated checks are covered; live gameplay, controller and end-to-end mod integration testing remain outstanding. See [testing notes](docs/TESTING.md).
 

@@ -79,7 +79,7 @@ internal static class ReviewFixTests
 
     private static void CheckHarvestIsolation()
     {
-        ModEntry.Instance.Config = new ModConfig { MutationChance = 0, MaximumTraits = 15, SeedSaverChance = 1, CompanionChance = 1, QualityUpgradeChance = 1 };
+        ModEntry.Instance.Config = new ModConfig { MutationChance = 0, MaximumTraits = 15 };
         foreach (var material in TraitRules.MaterialDrops.Values) Game1.objectData[material.ItemId] = new();
         foreach (string failure in new[] { "copper", "seed", "companion", "quality" })
         {

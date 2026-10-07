@@ -29,9 +29,11 @@ internal static class LookupDescriptionTests
         foreach (string id in TraitRules.MaterialDrops.Keys)
             Check(TraitDescriptions.Describe(id + ":5", config).Contains("25%")
                 && TraitDescriptions.Describe(id + ":5", config).Contains("initial growth even on regrowers"), "material growth formula and regrowth rule");
-        config.GrowthReductionPerLevel = .08; config.ExtraYieldPerLevel = .8;
-        Check(TraitDescriptions.Describe("fast_growth:2", config).Contains("16%")
-            && TraitDescriptions.Describe("high_yield:5", config).Contains("100%"), "live config and yield cap reflected");
+        config.MutationChance = .20;
+        Check(TraitDescriptions.Describe("fast_growth:2", config).Contains("10%")
+            && TraitDescriptions.Describe("high_yield:5", config).Contains("100%"), "trait rates stay fixed when mutation config changes");
+
+        Check(TraitDescriptions.Describe("researcher:5", config).Contains("45% total"), "Researcher total uses configurable base chance");
 
         var harmony = new Harmony();
         LookupTraitDescriptions.Register(harmony, typeof(LookupSubject), ModEntry.Instance.Monitor);

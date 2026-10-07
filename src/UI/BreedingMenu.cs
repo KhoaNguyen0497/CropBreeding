@@ -27,10 +27,10 @@ internal sealed class BreedingMenu : MenuWithInventory
     private string wrappedMessage = "";
     private readonly record struct EligibilityState(Item? Donor, int DonorCount, string? DonorTraits, string? DonorCompanion,
         Item? Seeds, int SeedCount, string? SeedTraits, string? SeedCompanion, bool Ready, bool CompanionMode,
-        bool RemoveMode, int Selection, int TraitLimit, int CatalogRevision);
+        bool RemoveMode, int Selection, int TraitLimit, int Cost, int CatalogRevision);
     private ClickableComponent donorSlot = null!, seedSlot = null!, breedButton = null!, modeButton = null!;
     private Item? hover;
-    private string message = "5 donor crops + 5 matching seeds = 1 bred seed";
+    private string message = "";
 
     // Snapshot references and counts for our slot/button transactions only. No cloning,
     // world scanning or per-frame inventory snapshots.
@@ -191,7 +191,16 @@ internal sealed class BreedingMenu : MenuWithInventory
     private bool RemovingTrait => Breeder.RemoveMode(machine);
     private string[] RemovalTraits => removalTraits;
     private string? SelectedTrait => removalTraits.Length > 0 ? removalTraits[selectedTrait % removalTraits.Length] : null;
-    private string ModeHint => RemovingTrait ? "Insert 1 seed, choose a trait, then select Remove." : SettingCompanion ? "1 Companion seed + 1 chosen crop" : "5 donor crops + 5 matching seeds = 1 bred seed";
+    private string ModeHint => RemovingTrait ? "Insert 1 seed, choose a trait, then select Remove." : SettingCompanion ? "1 Companion seed + 1 chosen crop" : BreedingHint;
+    private static string BreedingHint
+    {
+        get
+        {
+            int cost = Breeder.IngredientsRequired;
+            return cost == 1 ? "1 donor crop + 1 matching seed = 1 bred seed"
+                : $"{cost} donor crops + {cost} matching seeds = 1 bred seed";
+        }
+    }
     private bool CanBreed => canBreed;
     private static string? Metadata(Item? item, string key) => item != null && item.modData.TryGetValue(key, out string value) ? value : null;
     private void RefreshEligibility()
@@ -199,13 +208,13 @@ internal sealed class BreedingMenu : MenuWithInventory
         Item? donor = machine.heldObject.Value;
         var state = new EligibilityState(donor, donor?.Stack ?? 0, Metadata(donor, Traits.Key), Metadata(donor, Companion.Key),
             seeds, seeds?.Stack ?? 0, Metadata(seeds, Traits.Key), Metadata(seeds, Companion.Key), machine.readyForHarvest.Value,
-            SettingCompanion, RemovingTrait, selectedTrait, ModEntry.Instance.Config.MaximumTraits, Companion.Revision);
+            SettingCompanion, RemovingTrait, selectedTrait, ModEntry.Instance.Config.MaximumTraits, Breeder.IngredientsRequired, Companion.Revision);
         if (lastEligibility == state) return;
         removalTraits = donor != null && !state.Ready ? Traits.Read(donor.modData) : [];
         selectedTraitLabel = SelectedTrait is string trait ? TraitRules.Label(trait) : "No trait selected";
         canBreed = !state.Ready && donor != null && (state.RemoveMode ? Breeder.CanRemoveFrom(donor) && SelectedTrait != null
             : seeds != null && (state.CompanionMode ? seeds.Stack >= 1 && Breeder.CanAssign(donor, seeds)
-            : seeds.Stack >= Breeder.SeedsRequired && Breeder.CanBreed(donor, seeds, out _)));
+            : seeds.Stack >= Breeder.IngredientsRequired && Breeder.CanBreed(donor, seeds, out _)));
         lastEligibility = state;
     }
 
@@ -257,12 +266,12 @@ internal sealed class BreedingMenu : MenuWithInventory
                 }
                 else if (heldItem != null && machine.heldObject.Value == null && Breeder.Insert(machine, heldItem, false))
                 {
-                    heldItem.Stack -= SettingCompanion || RemovingTrait ? 1 : Breeder.DonorsRequired;
+                    heldItem.Stack -= SettingCompanion || RemovingTrait ? 1 : Breeder.IngredientsRequired;
                     selectedTrait = 0;
                     if (heldItem.Stack == 0) heldItem = null;
                     Game1.playSound("Ship");
                 }
-                else message = RemovingTrait ? "Put a seed with traits in the left slot." : SettingCompanion ? "Put a seed with Companion in the left slot." : "Put a stack of at least 5 matching trait crops in the donor slot.";
+                else message = RemovingTrait ? "Put a seed with traits in the left slot." : SettingCompanion ? "Put a seed with Companion in the left slot." : $"Put at least {Breeder.IngredientsRequired} matching trait crops in the donor slot.";
                 return;
             }
             if (seedSlot.containsPoint(x, y))
@@ -299,12 +308,12 @@ internal sealed class BreedingMenu : MenuWithInventory
                 }
                 if (CanBreed && Breeder.Insert(machine, seeds!, false))
                 {
-                    seeds!.Stack -= SettingCompanion ? 1 : Breeder.SeedsRequired;
+                    seeds!.Stack -= SettingCompanion ? 1 : Breeder.IngredientsRequired;
                     if (seeds.Stack == 0) seeds = null;
                     message = "Ready! Collect your bred seed from the left slot.";
                     Game1.playSound("coin");
                 }
-                else message = SettingCompanion ? "Choose a different eligible companion crop." : "Need 5 matching donor crops and 5 compatible seeds.";
+                else message = SettingCompanion ? "Choose a different eligible companion crop." : $"Need {Breeder.IngredientsRequired} donor crops and {Breeder.IngredientsRequired} compatible seeds. If the cost changed, retrieve and reinsert the donor crops.";
                 return;
             }
             base.receiveLeftClick(x, y, playSound);

@@ -39,3 +39,7 @@ README.md describes current behavior and accepted limitations. TESTING.md separa
 ## Follow-up compatibility review and 1.0.0
 
 The user accepted leaving Better Junimos' copied planting-speed formula and stale seed-inventory cache unchanged. Normal seed selection is expected behavior: replanting inherits only the selected seed, while Rooted retains the original plant. Mutation preparation at harvest is accepted as a fallback when another mod directly advances crop fields without a supported growth hook. Existing overflow and Evergreen boundaries remain unchanged. The user subsequently authorized simplifying the README and publishing the first 1.0.0 release; live validation remains outstanding.
+
+## Version 1.0.1
+
+The user has still not installed the mod and explicitly requested no compatibility/migration work. Trait effect percentage settings are removed and fixed at their previous defaults; base mutation chance remains configurable. Chat errors default to enabled. Breeding now defaults to one seed plus one donor crop, with one `BreedingCost` setting controlling both quantities (1–999). This supersedes earlier fixed-five-input cost and configurable-trait-rate decisions.

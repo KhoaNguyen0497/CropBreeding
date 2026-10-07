@@ -4,13 +4,14 @@ Updated 2026-10-07. Gameplay rules are described in [README](../README.md); fina
 
 ## What has been checked
 
-The implementation compiled against Stardew Valley/SMAPI reference assemblies. The pure trait-rule suite and linked-code safety suites passed during development. This documentation-only cleanup does not change executable code or tests.
+The implementation compiled against Stardew Valley/SMAPI reference assemblies. The pure trait-rule suite and linked-code safety suites passed during development. Version 1.0.1 also checks fixed trait rates, five GMCM settings and configurable breeding batches.
 
 | Check | Coverage | Limit |
 | --- | --- | --- |
 | Game-reference compilation | Production types, method calls and signatures compile. | Does not execute the game or install live Harmony patches. |
-| `tests/TraitRules.Tests.csproj` | Trait parsing/levels, merges and rejections, full-pool mutation selection, caps, growth/quality/yield formulas, Companion timing, material availability/overflow and Nurse Crop limits. | Pure rules; sample tests can intentionally pass non-default settings. |
+| `tests/TraitRules.Tests.csproj` | Trait parsing/levels, merges and rejections, full-pool mutation selection, caps, growth/quality/yield formulas, Companion timing, material availability/overflow and Nurse Crop limits. | Pure rules; formula tests can intentionally pass non-default arguments. |
 | `safety-tests/Safety.Tests.csproj` — general | Error reporting/throttling, crop rollback, GMCM fields/save/reset, patch rollback isolation, menu geometry and deferred station-lock cleanup. | Uses test doubles; no controller input, rendering or actual game locks. |
+| Breeding costs | Linked station logic at cost 1/5/999, insufficient inputs, probes, stored-cost changes, merging and secondary modes. | Uses test doubles; inventory/controller UI needs live validation. |
 | Mutation lifecycle | Stored success/failure, waiting/reload state, blocked picks, readiness/fallback, regrowth/Rooted cycle clearing and preparation failures. | Simulates state; no real save serialization, overnight event order or game RNG execution. |
 | Harvest preparation | Independent bonus failures preserve inherited/mutated output and unrelated effects. | No end-to-end vanilla harvest or real inventory/chest behavior. |
 | Lookup descriptions | All 15 trait descriptions, levels/settings, field construction, source precedence and failure fallback. | No live Lookup Anything UI or Harmony detours. |
@@ -44,7 +45,7 @@ Use a copied save with the actual installed SVE, Better Junimos, updated Auto Ha
 - [ ] Reach every inventory row, input slot, mode/trait selector, action and close button with stick/D-pad; A activates the selected control. Test PC and Steam Deck, UI scales, resize and long messages.
 - [ ] Press/hold B with an empty cursor, held item, staged inputs and completed output. It closes once without breeding, inventory reopening or a world action. A fresh B press after release works normally.
 - [ ] Holding an ordinary inventory item opens the UI without depositing or consuming it. Direct machine-input probes reject deposits. Axe/pickaxe use follows the normal removal path.
-- [ ] Breeding consumes exactly five crops from one donor stack and five seeds from one matching stack, producing one seed. Test stacks of 4/5/10, surplus, full inventory, wrong crop/seed IDs, and trait/level/quality/Companion stack differences.
+- [ ] Breeding consumes the configured x crops and x seeds from matching stacks, producing one seed. Default x is 1. Test cost 1/5/999, insufficient/surplus inputs, full inventory, wrong crop/seed IDs, and trait/level/quality/Companion stack differences. Changing cost with stored donors must require retrieval/reinsertion when counts differ.
 - [ ] Plain seeds copy donor traits. A single level-1 seed trait merges into the donor: X,Y + X gives X2,Y; X,Y + Z gives X,Y,Z. Multi-trait seeds, level-2-or-higher seeds and over-cap merges reject without consuming the staged inputs. Lowering the cap does not erase traits or prevent plain-seed copying.
 - [ ] Set Companion uses one seed with Companion and one eligible crop. Same choice rejects, different choice replaces, and choosing its own crop is allowed. Donor crop traits/quality do not transfer. In breeding, an assigned donor choice wins; otherwise use the seed's choice.
 - [ ] Remove Trait consumes/stages one eligible trait seed, removes only the selected trait and requires no extra ingredient. Removing Companion clears its choice; removing the final trait leaves a plain seed. Coffee is accepted here; ordinary produce is not. Completed output cannot be processed twice.
@@ -100,10 +101,10 @@ Run applicable cases through hand, scythe/Iridium Scythe, vanilla Junimo, Better
 
 ### 6. Lookup Anything, settings and recovery
 
-- [ ] Lookup Anything shows all 15 inherited traits with current configured percentages. A planted crop describes its inherited traits, not its pending mutation. Check Companion assignment, Evergreen 4/5, overflow odds and long controller-visible text. Plain items remain ordinary.
+- [ ] Lookup Anything shows all 15 inherited traits with fixed trait percentages and current base mutation chance. A planted crop describes its inherited traits, not its pending mutation. Check Companion assignment, Evergreen 4/5, overflow odds and long controller-visible text. Plain items remain ordinary.
 - [ ] Seed previews show Fast Growth/Companion/Researcher and current Agriculturist without assumed fertilizer/paddy adjacency. Actual crop views use stored phase durations/countdowns. Compare regrowth summaries and next-harvest dates immediately after harvest and later. Yield/quality forecasts remain Lookup Anything's base calculations.
 - [ ] Opening lookup repeatedly does not change crops or roll mutations. Missing/changed Lookup Anything contracts or failed field writes preserve ordinary lookup behavior. Test without the optional mod.
-- [ ] All 12 GMCM settings support save/reset, percentage conversion and bounds/default fallback. Mutation settings affect only future rolls; growth changes affect future planting/recalculation/Rooted or the next regrowth interval, not existing countdowns; harvest chance changes affect the next harvest. Material/Nurse odds and level cap are fixed rules. Confirm timing help reflects this.
+- [ ] All five GMCM settings support save/reset and bounds. Mutation settings affect only future rolls. Breeding cost defaults to 1 and consumes equal seed/crop counts; changing it refreshes menu eligibility. Chat errors default to on. Trait effect percentages cannot be edited in config or GMCM.
 - [ ] Inject errors in our preparation, growth, output decoration and menu transactions. Restore the original action/result/state where possible, keep unrelated bonuses operational, do not replay harvests or duplicate delivered items, and let later actions work. Do not suppress arbitrary original-game/other-mod exceptions.
 - [ ] Check SMAPI first-error logs/repeat summaries and optional local chat notices, with no per-frame spam or reporting timer. Chat defaults off. Test missing texture/patch target, malformed config and unavailable optional APIs.
 - [ ] Menu transaction errors close safely, release the lock and return undelivered items; test full inventory/overflow and Lost and Found fallback. Failed patch registration must preserve previously installed unrelated patches.

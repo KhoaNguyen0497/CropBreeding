@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1
+
+- Breeding now costs 1 matching seed and 1 trait crop by default. New `BreedingCost` setting applies the same quantity to both inputs, including merging.
+- Removed trait percentage settings; effects retain their previous default rates. Base mutation chance remains configurable.
+- Enabled error messages in local chat by default.
+- Updated the station UI, Lookup Anything descriptions, GMCM and documentation to match. Stored donor batches must match the current cost, preventing accidental extra consumption after a setting change.
+
+Build, trait-rule and safety checks pass, including configurable breeding costs. Live game/controller testing remains pending.
+
 ## 1.0.0
 
 Initial release.

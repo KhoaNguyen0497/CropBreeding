@@ -61,7 +61,7 @@ internal sealed class HarvestContext
         }
         try
         {
-            if (Traits.RandomFor(crop, 71).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "seed_saver") * ModEntry.Instance.Config.SeedSaverChance, 0, 1))
+            if (Traits.RandomFor(crop, 71).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "seed_saver") * CropBreeding.Core.TraitRules.SeedSaverChance, 0, 1))
             {
                 Item seed = ItemRegistry.Create("(O)" + CropCatalog.Raw(crop.netSeedIndex.Value), 1, 0);
                 Traits.Write(seed.modData, Inherited);
@@ -73,7 +73,7 @@ internal sealed class HarvestContext
         try
         {
             if (companionId != null && Companion.BaseDays(crop.modData) > 0
-                && Traits.RandomFor(crop, 53).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "companion") * ModEntry.Instance.Config.CompanionChance, 0, 1))
+                && Traits.RandomFor(crop, 53).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "companion") * CropBreeding.Core.TraitRules.CompanionChance, 0, 1))
                 PendingExtras.Add(ItemRegistry.Create("(O)" + companionId, 1, 0));
         }
         catch (Exception ex) { ErrorHandler.Report("Prepare Companion output", ex); }
@@ -124,7 +124,7 @@ internal sealed class HarvestContext
         var data = Plant.GetData();
         if (!WasReady || Plant.dead.Value || data == null || Plant.Dirt is not HoeDirtAlias soil
             || !ReferenceEquals(soil.crop, Plant) || !Traits.Eligible(Plant, soil)
-            || !TraitRules.RootedTriggers(TraitRules.Level(Inherited, "rooted"), ModEntry.Instance.Config.RootedChance,
+            || !TraitRules.RootedTriggers(TraitRules.Level(Inherited, "rooted"), CropBreeding.Core.TraitRules.RootedChance,
                 data.RegrowDays > 0, Traits.RandomFor(Plant, 107).NextDouble())) return false;
 
         var snapshot = new CropSnapshot(Plant);
@@ -166,7 +166,7 @@ internal sealed class HarvestContext
             || !crop.fullyGrown.Value || crop.dayOfCurrentPhase.Value <= 0
             || crop.GetData()?.RegrowDays is not > 0) return;
         crop.dayOfCurrentPhase.Value = TraitRules.RegrowthDays(crop.dayOfCurrentPhase.Value,
-            Traits.Level(crop.modData, "fast_growth"), ModEntry.Instance.Config.GrowthReductionPerLevel, Companion.BaseDays(crop.modData), Traits.GrowthPenalty(crop.modData));
+            Traits.Level(crop.modData, "fast_growth"), CropBreeding.Core.TraitRules.GrowthReductionPerLevel, Companion.BaseDays(crop.modData), Traits.GrowthPenalty(crop.modData));
     }
 
     internal List<Item> Decorate(Item item)
@@ -190,7 +190,7 @@ internal sealed class HarvestContext
         for (int i = 0; i < item.Stack; i++)
         {
             int quality = TraitRules.HarvestQuality(baseQuality, qualityLevel,
-                ModEntry.Instance.Config.QualityUpgradeChance, qualityRandom.NextDouble());
+                CropBreeding.Core.TraitRules.QualityUpgradeChance, qualityRandom.NextDouble());
             if (quality != baseQuality) { upgraded++; upgradedQuality = quality; }
         }
         if (upgraded == 0) return [item];
@@ -207,7 +207,7 @@ internal sealed class HarvestContext
         if (primaryCount == 0 || yieldLevel == 0) return;
         Random random = Traits.RandomFor(Plant, 23);
         int extra = TraitRules.ExtraYieldCount(primaryCount, yieldLevel,
-            ModEntry.Instance.Config.ExtraYieldPerLevel, random.NextDouble());
+            CropBreeding.Core.TraitRules.ExtraYieldPerLevel, random.NextDouble());
         for (int i = 0; i < extra; i++)
         {
             // Sample original output quality/color before High Quality, weighted by item count.

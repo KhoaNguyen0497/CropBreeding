@@ -14,6 +14,7 @@
     <Compile Include="../src/Integrations/GenericModConfigMenuIntegration.cs" Link="GenericModConfigMenuIntegration.cs" />
     <Compile Include="../src/Core/ErrorThrottle.cs" Link="ErrorThrottle.cs" />
     <Compile Include="../src/Core/MenuGeometry.cs" Link="MenuGeometry.cs" />
+    <Compile Include="../src/Breeder.cs" Link="Breeder.cs" />
     <Compile Include="../src/HarvestContext.cs" Link="HarvestContext.cs" />
     <Compile Include="../src/JunimoHarvestOutput.cs" Link="JunimoHarvestOutput.cs" />
     <Compile Include="../src/RootedWalnuts.cs" Link="RootedWalnuts.cs" />

@@ -11,7 +11,7 @@ internal static class JunimoHarvestTests
     internal static void Run()
     {
         JunimoHarvestOutput.Initialize();
-        ModEntry.Instance.Config = new ModConfig { MutationChance = 0, QualityUpgradeChance = 1, RootedChance = 1 };
+        ModEntry.Instance.Config = new ModConfig { MutationChance = 0 };
         Traits.SaltRandomFactory = _ => new ZeroRandom();
         try
         {

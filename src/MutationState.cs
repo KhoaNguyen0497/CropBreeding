@@ -32,7 +32,7 @@ internal static class MutationState
             var config = ModEntry.Instance.Config;
             bool regrows = data.RegrowDays > 0;
             double chance = regrows && !config.EnableRegrowingCropMutations ? 0
-                : TraitRules.MutationRate(config.MutationChance, TraitRules.Level(inherited, "researcher"), config.ResearcherMutationBonus);
+                : TraitRules.MutationRate(config.MutationChance, TraitRules.Level(inherited, "researcher"), CropBreeding.Core.TraitRules.ResearcherMutationBonus);
             string[] result = TraitRules.Mutate(inherited, config.MaximumTraits, chance, Traits.RandomFor(crop, 11),
                 canRegrow: regrows, isAvailable: TraitAvailable);
             // Publish only after the complete roll succeeds. Failure/blocked picks need an explicit
