@@ -12,19 +12,22 @@ internal static class TraitBadgeTests
     private static void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
     internal static void Run()
     {
-        var content = ModEntry.Instance.Helper.ModContent;
         var batch = new SpriteBatch();
         var item = new SObject { ItemId = "472", Quality = 4, Stack = 99 };
         item.modData[Traits.Key] = "fast_growth:2";
         void Render(Item? subject = null, float scale = 1, float opacity = 1, byte alpha = 255, float depth = .5f)
             => TraitBadge.InventoryPostfix(subject ?? item, batch, new(100, 200), scale, opacity, depth, new Color(alpha));
 
-        content.Throw = true; TraitBadge.Load(); Render();
+        ItemRegistry.ThrowData = true; TraitBadge.Load(); Render();
         Check(batch.Calls.Count == 0, "missing badge asset leaves original rendering alone");
-        content.Throw = false; content.Texture.Width = 64; TraitBadge.Load(); Render();
+        ItemRegistry.ThrowData = false; ItemRegistry.MissingData = true; TraitBadge.Load(); Render();
+        Check(batch.Calls.Count == 0, "missing Qi Gem data leaves original rendering alone");
+        ItemRegistry.MissingData = false; ItemRegistry.Gem.Source = new Rectangle(0, 0, 64, 64); TraitBadge.Load(); Render();
         Check(batch.Calls.Count == 0, "invalid badge dimensions are rejected");
-        content.Texture.Width = 9; TraitBadge.Load();
-        int loads = content.Loads, rolls = Traits.RandomCalls;
+        ItemRegistry.Gem.Source = new Rectangle(380, 620, 16, 16); TraitBadge.Load(); Render();
+        Check(batch.Calls.Count == 0, "out-of-texture sprite is rejected");
+        ItemRegistry.Gem.Source = new Rectangle(288, 560, 16, 16); TraitBadge.Load();
+        int loads = ItemRegistry.DataLoads, rolls = Traits.RandomCalls;
         var harmony = new Harmony(); TraitBadge.Register(harmony);
         Check(harmony.Installed.Count == 1 && harmony.Postfix?.Name == "InventoryPostfix", "one shared vanilla overlay hook");
         var failed = new Harmony { ThrowOnPatch = true }; TraitBadge.Register(failed);
@@ -32,11 +35,11 @@ internal static class TraitBadgeTests
 
         Render();
         var badge = batch.Calls.Single();
-        Check(badge.Position == new Vector2(146, 200) && badge.Source == new Rectangle(0, 0, 9, 9)
+        Check(badge.Position == new Vector2(132, 200) && badge.Source == new Rectangle(288, 560, 16, 16)
             && badge.Scale == 2 && badge.Color.A == 255 && badge.Depth > .5f,
-            "18x18 sparkle in top right, away from bottom quality and stack overlays");
+            "32x32 native Qi Gem in top right, away from bottom quality and stack overlays");
         batch.Calls.Clear(); Render(scale: .5f, opacity: .5f, alpha: 128, depth: 1f);
-        Check(batch.Calls.Single().Position == new Vector2(139, 216) && batch.Calls[0].Scale == 1
+        Check(batch.Calls.Single().Position == new Vector2(132, 216) && batch.Calls[0].Scale == 1
             && batch.Calls[0].Color.A == 64 && batch.Calls[0].Depth == 1f, "badge follows scale, combined opacity and bounded depth");
         foreach (float scale in new[] { 0f, -1f, float.NaN, float.PositiveInfinity })
         { batch.Calls.Clear(); Render(scale: scale); Check(batch.Calls.Count == 0, "invalid or hidden size has no badge"); }
@@ -52,7 +55,7 @@ internal static class TraitBadgeTests
         batch.Calls.Clear(); batch.FailBadge = true; Render();
         Check(batch.Calls.Count == 0, "badge draw failure does not escape into game UI");
         batch.FailBadge = false; Render();
-        Check(batch.Calls.Count == 1 && content.Loads == loads, "later draw recovers without per-frame asset loads");
+        Check(batch.Calls.Count == 1 && ItemRegistry.DataLoads == loads, "later draw recovers without per-frame asset loads");
         Check(Traits.RandomCalls == rolls && item.modData[Traits.Key] == "fast_growth:2"
             && item.Stack == 99 && item.Quality == 4, "drawing preserves traits, quantity, quality and RNG");
         Console.WriteLine("Passed trait badge asset failures, optional-free registration, metadata gating, placement, scale/opacity/depth and error isolation. Uses draw doubles, not an in-game render.");

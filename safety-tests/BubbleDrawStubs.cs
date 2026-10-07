@@ -5,12 +5,16 @@ using Microsoft.Xna.Framework;
 
 namespace Microsoft.Xna.Framework
 {
-    public readonly record struct Rectangle(int X, int Y, int Width, int Height);
+    public readonly record struct Rectangle(int X, int Y, int Width, int Height)
+    {
+        public int Right => X + Width;
+        public int Bottom => Y + Height;
+    }
 }
 namespace Microsoft.Xna.Framework.Graphics
 {
     public enum SpriteEffects { None }
-    public sealed class Texture2D { public int Width = 9, Height = 9; }
+    public sealed class Texture2D { public int Width = 384, Height = 624; }
     public sealed class SpriteBatch
     {
         public readonly record struct DrawCall(Texture2D Texture, Vector2 Position, Rectangle? Source,
@@ -20,7 +24,7 @@ namespace Microsoft.Xna.Framework.Graphics
         public void Draw(Texture2D texture, Vector2 position, Rectangle? source, Color color, float rotation,
             Vector2 origin, float scale, SpriteEffects effects, float depth)
         {
-            if (FailBadge && ReferenceEquals(texture, CropBreeding.ModEntry.Instance.Helper.ModContent.Texture))
+            if (FailBadge && ReferenceEquals(texture, StardewValley.ItemRegistry.Gem.Texture))
                 throw new InvalidOperationException("injected badge draw failure");
             Calls.Add(new(texture, position, source, color, rotation, origin, scale, effects, depth));
         }
@@ -28,7 +32,13 @@ namespace Microsoft.Xna.Framework.Graphics
 }
 namespace StardewValley.ItemTypeDefinitions
 {
-    public sealed class ParsedItemData { public Rectangle GetSourceRect() => new(0, 0, 16, 16); }
+    public sealed class ParsedItemData
+    {
+        public Microsoft.Xna.Framework.Graphics.Texture2D Texture = new();
+        public Rectangle Source = new(288, 560, 16, 16);
+        public Rectangle GetSourceRect() => Source;
+        public Microsoft.Xna.Framework.Graphics.Texture2D GetTexture() => Texture;
+    }
 }
 namespace HarmonyLib
 {

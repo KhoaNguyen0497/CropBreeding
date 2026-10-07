@@ -84,7 +84,7 @@ internal static class CropHarvestBubblesIntegration
             if (coloredLayer != crop.programColored.Value || !MutationState.HasMutation(crop)
                 || source is not Rectangle rect || scale <= 0 || !float.IsFinite(scale) || color.A == 0
                 || rotation != 0 || effects != SpriteEffects.None) return;
-            // Same native 9x9 gold sparkle as inventory items: 18x18 at normal bubble size.
+            // Same native 16x16 Qi Gem as inventory items: 32x32 at normal bubble size.
             TraitBadge.Draw(batch, position.X + (rect.Width - origin.X) * scale,
                 position.Y - origin.Y * scale, scale / 2f, color.A / 255f, depth);
         }

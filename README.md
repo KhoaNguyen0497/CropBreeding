@@ -10,7 +10,7 @@ Optional: **Generic Mod Config Menu** for settings, **Lookup Anything** for trai
 
 ## Start breeding
 
-1. Grow crops on tilled ground. When a crop becomes ready, it has a **5% mutation chance** by default. With Crop Harvest Bubbles installed, a small gold sparkle on its crop icon marks a prepared mutation.
+1. Grow crops on tilled ground. When a crop becomes ready, it has a **5% mutation chance** by default. With Crop Harvest Bubbles installed, a Qi Gem badge on its crop icon marks a prepared mutation.
 2. Harvest it. All primary produce from that harvest receives the same traits and mutation.
 3. Craft a **Breeding Machine** at Farming level 5: **50 Wood, 5 Iron Bars and 1 Battery Pack**.
 4. Open its two-slot menu and combine **3 trait crops + 3 matching seeds → 1 bred seed** by default. Each group must come from one matching stack.
@@ -18,7 +18,7 @@ Optional: **Generic Mod Config Menu** for settings, **Lookup Anything** for trai
 
 Seeds are matched to crops using actual game data, including SVE crops. Default limits are **3 traits per seed**, each up to **level 5**.
 
-Trait-bearing crops and seeds also show the gold sparkle in inventory and item menus, with no bubble mod required. The wooden biology station has direct mode tabs and supports expanded backpacks with controller-friendly paging.
+Trait-bearing crops and seeds also show the Qi Gem badge in inventory and item menus, with no bubble mod required. The wooden biology station has direct mode tabs and supports expanded backpacks with controller-friendly paging.
 
 ## Machine modes
 

@@ -10,19 +10,24 @@ namespace CropBreeding.UI;
 // Rendering only reads metadata; it never scans inventories or prepares mutation rolls.
 internal static class TraitBadge
 {
-    internal static readonly Rectangle Source = new(0, 0, 9, 9);
+    private static Rectangle source;
     private static Texture2D? texture;
 
     internal static void Load()
     {
         try
         {
-            var loaded = ModEntry.Instance.Helper.ModContent.Load<Texture2D>("assets/trait-sparkle.png");
-            if (loaded.Width != Source.Width || loaded.Height != Source.Height)
-                throw new InvalidOperationException("Trait sparkle must be a 9x9 sprite.");
+            var gem = ItemRegistry.GetData("(O)858")
+                ?? throw new InvalidOperationException("Qi Gem item data was not found.");
+            var loaded = gem.GetTexture();
+            var rect = gem.GetSourceRect();
+            if (rect.Width != 16 || rect.Height != 16 || rect.X < 0 || rect.Y < 0
+                || rect.Right > loaded.Width || rect.Bottom > loaded.Height)
+                throw new InvalidOperationException("Qi Gem badge requires a valid native 16x16 sprite.");
+            source = rect;
             texture = loaded;
         }
-        catch (Exception ex) { ErrorHandler.Report("Load trait sparkle", ex); }
+        catch (Exception ex) { ErrorHandler.Report("Load Qi Gem badge", ex); }
     }
 
     internal static void Register(Harmony harmony)
@@ -51,10 +56,11 @@ internal static class TraitBadge
             || !float.IsFinite(right) || !float.IsFinite(top) || !float.IsFinite(depth)) return;
         try
         {
-            batch.Draw(texture, new Vector2(right - Source.Width * scale, top), Source,
+            // Native pixels at 2x on a normal item icon: no resampling or generated replacement.
+            batch.Draw(texture, new Vector2(right - source.Width * scale, top), source,
                 Color.White * Math.Clamp(alpha, 0f, 1f), 0f, Vector2.Zero, scale,
                 SpriteEffects.None, Math.Clamp(depth + .00004f, 0f, 1f));
         }
-        catch (Exception ex) { ErrorHandler.Report("Draw trait sparkle", ex); }
+        catch (Exception ex) { ErrorHandler.Report("Draw Qi Gem badge", ex); }
     }
 }

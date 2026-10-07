@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.4
+
+- Replaced the gold sparkle with the vanilla Qi Gem in trait-bearing item icons and Crop Harvest Bubbles mutation icons.
+- Increased the badge from 18×18 to 32×32 at normal UI size, using exact 2× native pixels.
+- Removed the unused custom sparkle assets.
+
 ## 1.0.3
 
 - Replaced the incubator-style machine sprite with a static wooden biology workbench.

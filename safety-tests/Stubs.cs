@@ -61,6 +61,16 @@ namespace StardewValley
     }
     public static class ItemRegistry
     {
+        public static ItemTypeDefinitions.ParsedItemData Gem = new();
+        public static bool ThrowData, MissingData;
+        public static int DataLoads;
+        public static ItemTypeDefinitions.ParsedItemData? GetData(string id)
+        {
+            DataLoads++;
+            if (ThrowData) throw new InvalidOperationException("injected item-data load failure");
+            if (id != "(O)858") throw new Exception("Unexpected badge item ID");
+            return MissingData ? null : Gem;
+        }
         public static Func<string, int, int, Item>? Factory;
         public static Item Create(string id, int stack, int quality) => Factory?.Invoke(id, stack, quality)
             ?? new Item { ItemId = id.Replace("(O)", ""), Stack = stack, Quality = quality };
@@ -169,7 +179,6 @@ namespace CropBreeding
     }
     public sealed class HelperStub
     {
-        public ContentStub ModContent = new();
         public Registry ModRegistry = new();
         public EventsStub Events = new();
         public int Saves;
@@ -178,19 +187,6 @@ namespace CropBreeding
         {
             if (Throw) throw new Exception("disk unavailable");
             Saves++;
-        }
-    }
-    public sealed class ContentStub
-    {
-        public Microsoft.Xna.Framework.Graphics.Texture2D Texture = new();
-        public int Loads;
-        public bool Throw;
-        public T Load<T>(string path) where T : class
-        {
-            Loads++;
-            if (Throw) throw new InvalidOperationException("injected asset load failure");
-            if (path != "assets/trait-sparkle.png") throw new Exception("Unexpected sprite path");
-            return (T)(object)Texture;
         }
     }
     public sealed class ModEntry
