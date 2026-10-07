@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Increased the default breeding cost to 3 matching seeds and 3 trait crops per resulting seed. The accepted breeding cost range is now 1–10, including GMCM.
+
 ## 1.0.1
 
 - Breeding now costs 1 matching seed and 1 trait crop by default. New `BreedingCost` setting applies the same quantity to both inputs, including merging.

@@ -43,3 +43,7 @@ The user accepted leaving Better Junimos' copied planting-speed formula and stal
 ## Version 1.0.1
 
 The user has still not installed the mod and explicitly requested no compatibility/migration work. Trait effect percentage settings are removed and fixed at their previous defaults; base mutation chance remains configurable. Chat errors default to enabled. Breeding now defaults to one seed plus one donor crop, with one `BreedingCost` setting controlling both quantities (1–999). This supersedes earlier fixed-five-input cost and configurable-trait-rate decisions.
+
+## Unreleased breeding cost adjustment
+
+The default `BreedingCost` is now 3: each breeding or merge consumes three matching seeds and three matching donor crops, producing one seed. The accepted range is 1–10 in GMCM and config validation. The user will adjust their installed config; no build or release is requested.

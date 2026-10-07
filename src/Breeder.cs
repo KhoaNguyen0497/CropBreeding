@@ -9,7 +9,7 @@ internal static class Breeder
     internal const string RemoveModeKey = ModEntry.Id + "/RemoveTraitMode";
     internal static bool RemoveMode(SObject machine) => machine.modData.ContainsKey(RemoveModeKey);
     internal static bool CompanionMode(SObject machine) => machine.modData.ContainsKey(ModeKey);
-    internal static int IngredientsRequired => Math.Clamp(ModEntry.Instance.Config.BreedingCost, 1, 999);
+    internal static int IngredientsRequired => Math.Clamp(ModEntry.Instance.Config.BreedingCost, 1, 10);
     internal const string MachineId = ModEntry.Id + "_Breeder";
     internal static StationLock MenuMutex(SObject machine, GameLocation location) => new(machine, location);
     internal static bool IsMachine(SObject machine) => machine.QualifiedItemId == "(BC)" + MachineId;

@@ -30,9 +30,9 @@ internal static class GenericModConfigMenuIntegration
             Percent(nameof(ModConfig.MutationChance), "Mutation chance", "Rolled once when each harvest becomes ready, before Researcher. Already stored outcomes are unchanged by settings edits.", c => c.MutationChance, (c, v) => c.MutationChance = v);
             api.AddBoolOption(mod.ModManifest, () => mod.Config.EnableRegrowingCropMutations, value => mod.Config.EnableRegrowingCropMutations = value,
                 () => "Mutations on regrowing crops", () => "Affects future readiness rolls, not outcomes already stored on ready plants.", fieldId: nameof(ModConfig.EnableRegrowingCropMutations));
-            api.AddNumberOption(mod.ModManifest, () => mod.Config.BreedingCost, value => mod.Config.BreedingCost = Math.Clamp(value, 1, 999),
-                () => "Breeding cost", () => "Each breeding or merge consumes this many matching seeds AND donor crops and produces one seed. Default: 1 each. Each input must be one matching stack. If changed with crops stored in a station, retrieve and reinsert them. Companion assignment and trait removal are unchanged.",
-                1, 999, 1, fieldId: nameof(ModConfig.BreedingCost));
+            api.AddNumberOption(mod.ModManifest, () => mod.Config.BreedingCost, value => mod.Config.BreedingCost = Math.Clamp(value, 1, 10),
+                () => "Breeding cost", () => "Each breeding or merge consumes this many matching seeds AND donor crops and produces one seed. Default: 3 each. Each input must be one matching stack. If changed with crops stored in a station, retrieve and reinsert them. Companion assignment and trait removal are unchanged.",
+                1, 10, 1, fieldId: nameof(ModConfig.BreedingCost));
             api.AddSectionTitle(mod.ModManifest, () => "Error reporting");
             api.AddBoolOption(mod.ModManifest, () => mod.Config.ShowErrorsInChat, value => mod.Config.ShowErrorsInChat = value,
                 () => "Show errors in chat", () => "Takes effect immediately. Local chat notices are limited to once per action every 10 seconds. SMAPI logs each new error in full and summarizes identical repeats.", fieldId: nameof(ModConfig.ShowErrorsInChat));

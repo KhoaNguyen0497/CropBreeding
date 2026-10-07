@@ -40,7 +40,7 @@ Check(crop.Dirt.state.Value == 1 && crop.Dirt.nearWaterForPaddy.Value == 0 && cr
 var config = new ModConfig { MutationChance = double.NaN, BreedingCost = int.MaxValue, MaximumTraits = int.MaxValue };
 config.Normalize();
 Check(config.MutationChance == .05, "nonfinite mutation setting replaced");
-Check(config.BreedingCost == 999 && config.MaximumTraits == CropBreeding.Core.TraitRules.Known.Length, "settings bounded");
+Check(config.BreedingCost == 10 && config.MaximumTraits == CropBreeding.Core.TraitRules.Known.Length, "settings bounded");
 config.BreedingCost = 0; config.Normalize();
 Check(config.BreedingCost == 1, "breeding never accepts a free or negative cost");
 
@@ -57,7 +57,7 @@ api.Booleans[nameof(ModConfig.ShowErrorsInChat)].Set(true);
 api.Save();
 Check(ModEntry.Instance.Helper.Saves == 1 && ModEntry.Instance.Config.ShowErrorsInChat, "GMCM save persists settings");
 api.Reset();
-Check(api.Numbers[nameof(ModConfig.MutationChance)].Get() == 5 && api.Booleans[nameof(ModConfig.ShowErrorsInChat)].Get() && api.Numbers[nameof(ModConfig.BreedingCost)].Get() == 1, "callbacks use reset config");
+Check(api.Numbers[nameof(ModConfig.MutationChance)].Get() == 5 && api.Booleans[nameof(ModConfig.ShowErrorsInChat)].Get() && api.Numbers[nameof(ModConfig.BreedingCost)].Get() == 3, "callbacks use reset config");
 ModEntry.Instance.Helper.Throw = true;
 api.Save(); // file-write error must not escape into GMCM.
 ModEntry.Instance.Helper.Throw = false;

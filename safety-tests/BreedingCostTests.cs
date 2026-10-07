@@ -9,7 +9,7 @@ internal static class BreedingCostTests
 
     internal static void Run()
     {
-        foreach (int cost in new[] { 1, 5, 999 })
+        foreach (int cost in new[] { 1, 3, 5, 10 })
         {
             ModEntry.Instance.Config = new ModConfig { BreedingCost = cost };
             var donor = new SObject { ItemId = "24", Stack = cost };

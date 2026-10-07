@@ -4,7 +4,7 @@ A gameplay-focused SMAPI mod for Stardew Valley 1.6, including Stardew Valley Ex
 
 ## Breeding loop
 
-Grow crops on ordinary tilled ground. When an eligible crop becomes harvest-ready, it rolls a configurable chance to add one new level-1 trait or increase one existing trait by one level on its produce. The saved outcome stays fixed until harvested. Existing traits stay intact. Open the Breeding Machine UI and place **1 trait crop and 1 matching seed by default** in its slots; it consumes the inputs and produces **one bred seed**. Each input comes from a single stack of at least the configured breeding cost: the seeds must match each other, and the donor crops must match each other (traits, levels, Companion choice, quality and normal stacking rules). The `BreedingCost` setting defaults to 1; a value of x consumes x crops and x seeds. The result is always one seed.
+Grow crops on ordinary tilled ground. When an eligible crop becomes harvest-ready, it rolls a configurable chance to add one new level-1 trait or increase one existing trait by one level on its produce. The saved outcome stays fixed until harvested. Existing traits stay intact. Open the Breeding Machine UI and place **3 trait crops and 3 matching seeds by default** in its slots; it consumes the inputs and produces **one bred seed**. Each input comes from a single stack of at least the configured breeding cost: the seeds must match each other, and the donor crops must match each other (traits, levels, Companion choice, quality and normal stacking rules). The `BreedingCost` setting defaults to 3; a value of x consumes x crops and x seeds. The result is always one seed.
 
 Plain seeds copy the donor crop's traits. Seeds with **exactly one trait at level 1** merge that trait into the donor: an existing trait gains one level, or a different trait is added at level 1. Seeds with multiple traits or a trait above level 1 are rejected. A merge that would exceed the trait-count limit or level 5 is rejected without consuming the seeds or changing the waiting donor.
 
@@ -124,7 +124,7 @@ No restart is needed. Saving settings does not scan/rewrite existing crops. GMCM
 | --- | --- |
 | Mutation chance and regrowing mutation toggle | Next readiness roll. Already stored success/failure outcomes stay fixed. |
 | Maximum traits | Next breeding operation or new mutation roll. Existing traits are not removed. |
-| Breeding cost | Next input/breeding action. Retrieve and reinsert donor crops if the stored count differs from the new cost. Range 1–999; default 1 of each ingredient. |
+| Breeding cost | Next input/breeding action. Retrieve and reinsert donor crops if the stored count differs from the new cost. Range 1–10; default 3 of each ingredient. |
 | Show errors in chat | Immediately; enabled by default. |
 
 Trait percentages, material/Nurse odds and the level cap are fixed gameplay rules. Lookup Anything uses these same fixed values and the configured base mutation chance for Researcher's total.

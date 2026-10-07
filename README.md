@@ -13,7 +13,7 @@ Optional: **Generic Mod Config Menu** for settings and **Lookup Anything** for t
 1. Grow crops on tilled ground. When a crop becomes ready, it has a **5% mutation chance** by default. A purple star marks a successful mutation.
 2. Harvest it. All primary produce from that harvest receives the same traits and mutation.
 3. Craft a **Breeding Machine** at Farming level 5: **50 Wood, 5 Iron Bars and 1 Battery Pack**.
-4. Open its two-slot menu and combine **1 trait crop + 1 matching seed → 1 bred seed** by default. Each group must come from one matching stack.
+4. Open its two-slot menu and combine **3 trait crops + 3 matching seeds → 1 bred seed** by default. Each group must come from one matching stack.
 5. Plant the bred seed to use its traits. New harvest mutations affect the produce, not the standing plant.
 
 Seeds are matched to crops using actual game data, including SVE crops. Default limits are **3 traits per seed**, each up to **level 5**.
@@ -24,11 +24,11 @@ Empty both slots before switching modes.
 
 | Mode | Inputs | Result |
 |---|---|---|
-| Breed | 1 trait crop + 1 matching seed by default | One seed with the donor crop's traits. |
+| Breed | 3 trait crops + 3 matching seeds by default | One seed with the donor crop's traits. |
 | Set Companion | 1 seed with Companion + 1 eligible crop | Assigns or replaces that seed's companion crop; consumes the crop. |
 | Remove Trait | 1 seed with traits | Removes one selected trait for free. |
 
-**Breeding cost:** configurable from 1 to 999. A value of `x` requires `x` seeds and `x` donor crops, producing one seed. Retrieve and reinsert stored donor crops after changing the cost. Set Companion and Remove Trait keep their one-seed costs.
+**Breeding cost:** configurable from 1 to 10. A value of `x` requires `x` seeds and `x` donor crops, producing one seed. Retrieve and reinsert stored donor crops after changing the cost. Set Companion and Remove Trait keep their one-seed costs.
 
 **Merging:** plain seeds copy the donor. A seed with exactly **one level-1 trait** can merge it into the donor's traits: matching traits gain one level; a different trait is added. Merges exceeding either limit are rejected.
 
