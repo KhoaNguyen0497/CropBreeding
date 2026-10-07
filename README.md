@@ -25,7 +25,7 @@ Empty both slots before switching modes.
 | Mode | Inputs | Result |
 |---|---|---|
 | Breed | 3 trait crops + 3 matching seeds by default | One seed with the donor crop's traits. |
-| Set Companion | 1 seed with Companion + 1 eligible crop | Assigns or replaces that seed's companion crop; consumes the crop. |
+| Set Companion | 1 seed with Companion + 1 eligible crop | Assigns a different crop as companion; consumes the crop. Cannot choose the seed's own crop. |
 | Remove Trait | 1 seed with traits | Removes one selected trait for free. |
 
 **Breeding cost:** configurable from 1 to 10. A value of `x` requires `x` seeds and `x` donor crops, producing one seed. Retrieve and reinsert stored donor crops after changing the cost. Set Companion and Remove Trait keep their one-seed costs.

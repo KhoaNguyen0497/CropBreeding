@@ -200,7 +200,7 @@ namespace CropBreeding
         internal static void RemoveGrowthDelay(HoeDirt soil) { }
         internal static string? Read(Metadata data) => data.GetValueOrDefault("Companion");
         internal static string Label(Metadata data) => Read(data) ?? "unassigned";
-        internal static bool Valid(Item item) => item.ItemId == "24";
+        internal static bool Valid(Item item) => item.ItemId is "24" or "192";
         internal static string? Merge(Metadata donor, Metadata seed) => Read(donor) ?? Read(seed);
     }
     public sealed class ConfigApi : IGenericModConfigMenuApi

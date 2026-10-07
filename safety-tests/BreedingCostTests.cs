@@ -57,8 +57,17 @@ internal static class BreedingCostTests
         var companion = new SObject();
         companion.modData[Breeder.ModeKey] = "true";
         Traits.Write(single.modData, ["companion:1"]);
-        Check(Breeder.Insert(companion, single, false) && Breeder.Insert(companion, new SObject { ItemId = "24" }, false),
-            "Companion assignment still uses one seed and crop regardless of breeding cost");
+        Check(Breeder.Insert(companion, single, false), "Companion stages one seed regardless of breeding cost");
+        var ownCrop = new SObject { ItemId = "24", Stack = 5 };
+        var originalSeed = companion.heldObject.Value;
+        Check(!Breeder.CanAssign(single, ownCrop) && !Breeder.Insert(companion, ownCrop, true)
+            && !Breeder.Insert(companion, ownCrop, false), "parsnip cannot be its own Companion in preview or commit");
+        Check(ReferenceEquals(companion.heldObject.Value, originalSeed) && !companion.readyForHarvest.Value
+            && Companion.Read(originalSeed!.modData) == null && ownCrop.Stack == 5,
+            "rejection preserves staged seed, assignment and crop stack");
+        Check(Breeder.Insert(companion, new SObject { ItemId = "192" }, false)
+            && Companion.Read(companion.heldObject.Value!.modData) == "192",
+            "parsnip can select potato; assignment still costs one seed and crop");
         Console.WriteLine("Passed configurable breeding costs, insufficient stacks, probe behavior, staged-cost changes, merging and unchanged secondary modes. Uses test doubles; UI input remains a live check.");
     }
 }

@@ -401,7 +401,7 @@ internal sealed class BreedingMenu : MenuWithInventory
                     message = "Ready! Collect your bred seed from the left slot.";
                     Game1.playSound("coin");
                 }
-                else message = SettingCompanion ? "Choose a different eligible companion crop." : $"Need {Breeder.IngredientsRequired} donor crops and {Breeder.IngredientsRequired} compatible seeds. If the cost changed, retrieve and reinsert the donor crops.";
+                else message = SettingCompanion ? "Choose a different eligible crop; a seed cannot use its own crop as Companion." : $"Need {Breeder.IngredientsRequired} donor crops and {Breeder.IngredientsRequired} compatible seeds. If the cost changed, retrieve and reinsert the donor crops.";
                 return;
             }
             base.receiveLeftClick(x, y, playSound);

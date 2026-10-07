@@ -57,6 +57,7 @@ internal static class Breeder
     }
     internal static bool CanAssign(Item seed, Item crop) => CropCatalog.EligibleSeed(seed.ItemId)
         && Traits.Has(seed.modData, "companion") && Companion.Valid(crop)
+        && !CropCatalog.Matches(crop, seed)
         && Companion.Read(seed.modData) != crop.ItemId;
     internal static bool CanRemoveFrom(Item seed) => seed is SObject && seed.Stack > 0
         && CropCatalog.EligibleSeed(seed.ItemId) && Traits.Read(seed.modData).Length > 0;
