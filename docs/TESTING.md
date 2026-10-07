@@ -1,3 +1,11 @@
+## Junimo raisins and Better Junimos — 2026-10-07
+
+Review item 2 is now fixed. Production code builds against game references. Linked-code tests cover mutation/Companion metadata and High Quality on the copied crop; sunflower seed, wheat hay and same-ID Companion exclusion; restoring the primary target after a delivery failure while subsequent bonuses continue; preserving the existing target if no primary was captured; and keeping annual Rooted/Nurse Crop effects separate from item duplication. Natural regrowers still reject those two annual-only effects. These tests use doubles, not actual Harmony detours, chest AI, rendered item colors or Better Junimos runtime.
+
+Live checks still required: with raisins active, hand-plant trait parsnips, sunflowers, wheat, potatoes, colored flowers and regrowers. Compare normal Junimos with Better Junimos. A successful vanilla raisin roll should add one main item with the selected primary item's traits/quality/color, never hay, seeds, bars or Companion produce. The copied item must not trigger additional Rooted/Nurse Crop/Seed Saver/material rolls. Test a same-ID Companion and different qualities in a multi-yield harvest. Check full huts retain the already-accepted vanilla overflow behavior. Auto Harvester still calls the shared harvest hooks but does not gain a raisin roll merely by using a Junimo collector.
+
+Known Better Junimos planting/fertilizing limitations and exact reviewed source are in BETTER-JUNIMOS.md. No claim of complete compatibility or live validation is made.
+
 ## Approved review fixes — 2026-10-07
 
 Scope: review items 4, 5, 6, 10, 11, 13, 14 and 47. Item 15 is a controller validation task: source/geometry checks are possible here, but actual PC/Steam Deck input and rendering still need the game. Multiplayer is out of scope. Unmentioned review items remain deferred; accepted balance rules are unchanged. Items 48 and 50 were requests for explanation, not broad exclusion/documentation changes.

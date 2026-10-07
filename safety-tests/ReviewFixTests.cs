@@ -36,6 +36,7 @@ internal static class ReviewFixTests
 
         CheckLocks();
         CheckHarvestIsolation();
+        JunimoHarvestTests.Run();
         Console.WriteLine("Passed repeated-error throttling, patch rollback isolation, small-viewport geometry, deferred station-lock cleanup and injected harvest-preparation failures. Uses test doubles; live controller/rendering remains untested.");
     }
     private static void Target() { }

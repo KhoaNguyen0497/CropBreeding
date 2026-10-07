@@ -15,6 +15,7 @@ internal static class Patches
     [ThreadStatic] private static SObject? placing;
     internal static void Apply(Harmony harmony)
     {
+        JunimoHarvestOutput.Initialize();
         Patch(harmony, typeof(SObject), nameof(SObject.placementAction), nameof(PlacementPrefix), finalizer: nameof(PlacementFinalizer));
         Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.plant), nameof(PlantPrefix), nameof(PlantPostfix));
         foreach (string name in new[] { nameof(HoeDirtAlias.plant), nameof(HoeDirtAlias.canPlantThisSeedHere) })
@@ -246,13 +247,14 @@ internal static class Patches
                 try { current.GrowNearbyTrees(); }
                 catch (Exception ex) { ErrorHandler.Report("Nurse Crop", ex); }
             }
-            if (succeeded)
+            if (succeeded && junimoHarvester != null)
+                JunimoHarvestOutput.DeliverExtras(junimoHarvester, current.PendingExtras, current.LastPrimaryOutput);
+            else if (succeeded)
                 foreach (Item extra in current.PendingExtras)
                 {
                     try
                     {
-                        if (junimoHarvester != null) junimoHarvester.tryToAddItemToHut(extra);
-                        else Game1.createItemDebris(extra, current.Plant.Dirt!.Tile * 64f + new Microsoft.Xna.Framework.Vector2(32),
+                        Game1.createItemDebris(extra, current.Plant.Dirt!.Tile * 64f + new Microsoft.Xna.Framework.Vector2(32),
                             -1, current.Plant.currentLocation);
                     }
                     catch (Exception ex) { ErrorHandler.Report("Deliver harvest bonus", ex); }

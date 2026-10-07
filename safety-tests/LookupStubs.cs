@@ -23,6 +23,14 @@ namespace HarmonyLib
     }
     public static class AccessTools
     {
+        public delegate ref F FieldRef<in T, F>(T instance);
+        public static FieldRef<T, F> FieldRefAccess<T, F>(string name)
+        {
+            if (typeof(T) != typeof(StardewValley.Characters.JunimoHarvester) || typeof(F) != typeof(Item) || name != "lastItemHarvested")
+                throw new MissingFieldException(name);
+            return (FieldRef<T, F>)(object)new FieldRef<StardewValley.Characters.JunimoHarvester, Item?>(JunimoItem);
+        }
+        private static ref Item? JunimoItem(StardewValley.Characters.JunimoHarvester junimo) => ref junimo.LastItem;
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
         public static MethodInfo Method(Type type, string name, Type[]? parameters = null)
             => (parameters == null ? type.GetMethod(name, Flags) : type.GetMethod(name, Flags, null, parameters, null))!;

@@ -200,6 +200,21 @@ namespace StardewValley.TerrainFeatures
         public StardewValley.Net<int> growthStage = new(0);
     }
 }
+namespace StardewValley.Characters
+{
+    public sealed class JunimoHarvester
+    {
+        public Item? LastItem;
+        public readonly List<Item> Delivered = [];
+        public string? FailItem;
+        public void tryToAddItemToHut(Item item)
+        {
+            LastItem = item;
+            if (item.ItemId == FailItem) throw new Exception("injected hut delivery failure");
+            Delivered.Add(item);
+        }
+    }
+}
 namespace StardewValley.Network
 {
     public sealed class NetMutex

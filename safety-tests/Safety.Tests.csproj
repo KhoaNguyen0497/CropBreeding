@@ -15,6 +15,7 @@
     <Compile Include="../src/Core/ErrorThrottle.cs" Link="ErrorThrottle.cs" />
     <Compile Include="../src/Core/MenuGeometry.cs" Link="MenuGeometry.cs" />
     <Compile Include="../src/HarvestContext.cs" Link="HarvestContext.cs" />
+    <Compile Include="../src/JunimoHarvestOutput.cs" Link="JunimoHarvestOutput.cs" />
     <Compile Include="../src/PatchInstaller.cs" Link="PatchInstaller.cs" />
     <Compile Include="../src/StationLock.cs" Link="StationLock.cs" />
   </ItemGroup>

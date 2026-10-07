@@ -20,6 +20,9 @@ internal sealed class HarvestContext
     private readonly Random? qualityRandom;
     private readonly int qualityLevel;
     internal readonly List<Item> PendingExtras = [];
+    // Keep the actual outgoing main-crop item, including mutation, quality and color.
+    // Byproducts and later bonus delivery must not become the Junimo's raisin target.
+    internal Item? LastPrimaryOutput { get; private set; }
 
     internal HarvestContext(Crop crop)
     {
@@ -259,6 +262,7 @@ internal sealed class HarvestContext
                 Current.PendingExtras.Add(extra);
             }
             Current.PendingExtras.AddRange(outputs.Skip(1));
+            if (copy.ItemId == context.HarvestId) context.LastPrimaryOutput = outputs[0];
             return outputs[0];
         }
         catch (Exception ex)
