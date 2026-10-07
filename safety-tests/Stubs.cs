@@ -26,10 +26,14 @@ namespace StardewModdingAPI
 }
 namespace StardewValley
 {
+    public enum StackDrawType { Hide, Draw, Draw_OneInclusive, HideButShowQuality }
     public sealed class Net<T>(T value) { public T Value = value; }
     public sealed class Metadata : Dictionary<string, string> { public IEnumerable<KeyValuePair<string, string>> Pairs => this; }
     public class Item
     {
+        public bool IsRecipe;
+        public virtual void DrawMenuIcons(Microsoft.Xna.Framework.Graphics.SpriteBatch sb, Microsoft.Xna.Framework.Vector2 location,
+            float scale_size, float transparency, float layer_depth, StackDrawType drawStackNumber, Microsoft.Xna.Framework.Color color) { }
         public Metadata modData = new();
         public string ItemId = "24";
         public int Stack = 1, Quality;
@@ -42,6 +46,7 @@ namespace StardewValley
     }
     public sealed class Object : Item
     {
+        public Net<bool> bigCraftable = new(false);
         public Microsoft.Xna.Framework.Vector2 TileLocation;
         public string QualifiedItemId => "(BC)" + ItemId;
         public Net<Object?> heldObject = new(null);
@@ -164,6 +169,7 @@ namespace CropBreeding
     }
     public sealed class HelperStub
     {
+        public ContentStub ModContent = new();
         public Registry ModRegistry = new();
         public EventsStub Events = new();
         public int Saves;
@@ -172,6 +178,19 @@ namespace CropBreeding
         {
             if (Throw) throw new Exception("disk unavailable");
             Saves++;
+        }
+    }
+    public sealed class ContentStub
+    {
+        public Microsoft.Xna.Framework.Graphics.Texture2D Texture = new();
+        public int Loads;
+        public bool Throw;
+        public T Load<T>(string path) where T : class
+        {
+            Loads++;
+            if (Throw) throw new InvalidOperationException("injected asset load failure");
+            if (path != "assets/trait-sparkle.png") throw new Exception("Unexpected sprite path");
+            return (T)(object)Texture;
         }
     }
     public sealed class ModEntry

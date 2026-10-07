@@ -10,7 +10,7 @@ namespace Microsoft.Xna.Framework
 namespace Microsoft.Xna.Framework.Graphics
 {
     public enum SpriteEffects { None }
-    public sealed class Texture2D { }
+    public sealed class Texture2D { public int Width = 9, Height = 9; }
     public sealed class SpriteBatch
     {
         public readonly record struct DrawCall(Texture2D Texture, Vector2 Position, Rectangle? Source,
@@ -20,15 +20,11 @@ namespace Microsoft.Xna.Framework.Graphics
         public void Draw(Texture2D texture, Vector2 position, Rectangle? source, Color color, float rotation,
             Vector2 origin, float scale, SpriteEffects effects, float depth)
         {
-            if (FailBadge && ReferenceEquals(texture, StardewValley.Game1.mouseCursors))
+            if (FailBadge && ReferenceEquals(texture, CropBreeding.ModEntry.Instance.Helper.ModContent.Texture))
                 throw new InvalidOperationException("injected badge draw failure");
             Calls.Add(new(texture, position, source, color, rotation, origin, scale, effects, depth));
         }
     }
-}
-namespace StardewValley.Menus
-{
-    public static class OptionsPlusMinus { public static Rectangle plusButtonSource = new(184, 345, 7, 8); }
 }
 namespace StardewValley.ItemTypeDefinitions
 {

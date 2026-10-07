@@ -22,6 +22,7 @@
     <Compile Include="../src/Integrations/BetterJunimosIntegration.cs" Link="BetterJunimosIntegration.cs" />
     <Compile Include="../src/Integrations/BetterJunimosFertilizerIntegration.cs" Link="BetterJunimosFertilizerIntegration.cs" />
     <Compile Include="../src/Integrations/CropHarvestBubblesIntegration.cs" Link="CropHarvestBubblesIntegration.cs" />
+    <Compile Include="../src/UI/TraitBadge.cs" Link="TraitBadge.cs" />
     <Compile Include="../src/PatchInstaller.cs" Link="PatchInstaller.cs" />
     <Compile Include="../src/StationLock.cs" Link="StationLock.cs" />
   </ItemGroup>

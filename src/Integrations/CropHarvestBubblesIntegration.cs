@@ -4,7 +4,7 @@ using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
-using StardewValley.Menus;
+using CropBreeding.UI;
 
 namespace CropBreeding.Integrations;
 
@@ -84,14 +84,9 @@ internal static class CropHarvestBubblesIntegration
             if (coloredLayer != crop.programColored.Value || !MutationState.HasMutation(crop)
                 || source is not Rectangle rect || scale <= 0 || !float.IsFinite(scale) || color.A == 0
                 || rotation != 0 || effects != SpriteEffects.None) return;
-            // Native 7x8 plus symbol from the options controls, not an item-quality star.
-            // At the normal 64px crop-icon size this is just 14x16px in its upper-right corner.
-            Rectangle badge = OptionsPlusMinus.plusButtonSource;
-            float badgeScale = scale / 2f;
-            Vector2 corner = new(position.X + (rect.Width - origin.X) * scale - badge.Width * badgeScale,
-                position.Y - origin.Y * scale);
-            batch.Draw(Game1.mouseCursors, corner, badge, Color.White * (color.A / 255f),
-                0f, Vector2.Zero, badgeScale, SpriteEffects.None, Math.Clamp(depth + .00002f, 0f, 1f));
+            // Same native 9x9 gold sparkle as inventory items: 18x18 at normal bubble size.
+            TraitBadge.Draw(batch, position.X + (rect.Width - origin.X) * scale,
+                position.Y - origin.Y * scale, scale / 2f, color.A / 255f, depth);
         }
         catch (Exception ex) { ErrorHandler.Report("Draw Crop Harvest Bubbles mutation badge", ex); }
     }

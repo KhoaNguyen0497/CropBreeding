@@ -1,5 +1,6 @@
 """Validate and package the release output without game binaries or user settings."""
 import json
+import struct
 from pathlib import Path
 import xml.etree.ElementTree as ET
 import zipfile
@@ -15,8 +16,13 @@ if json.loads((output / "manifest.json").read_text()) != manifest:
     raise SystemExit("Build output manifest is stale; rebuild before packaging.")
 files = [Path(manifest["EntryDll"]), Path("manifest.json")]
 files += sorted(p.relative_to(output) for p in (output / "assets").rglob("*") if p.is_file())
-if Path("assets/breeding-machine.png") not in files:
-    raise SystemExit("Missing machine sprite.")
+for name, size in {"breeding-machine.png": (16, 32), "trait-sparkle.png": (9, 9)}.items():
+    sprite = Path("assets") / name
+    if sprite not in files:
+        raise SystemExit(f"Missing sprite: {name}")
+    data = (output / sprite).read_bytes()
+    if data[:8] != b"\x89PNG\r\n\x1a\n" or len(data) < 24 or struct.unpack(">II", data[16:24]) != size:
+        raise SystemExit(f"Invalid sprite dimensions: {name}; expected {size}")
 for file in files:
     if not (output / file).is_file() or not (output / file).stat().st_size:
         raise SystemExit(f"Missing or empty release file: {file}")

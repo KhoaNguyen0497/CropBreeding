@@ -69,13 +69,13 @@ internal static class CropHarvestBubblesTests
                 && primary.Color.A == 191 && primary.Scale == 4 && primary.Depth == .5f, "original crop draw preserved exactly");
         }
         var badge = batch.Calls[1];
-        Check(badge.Source == new Rectangle(184, 345, 7, 8) && badge.Position == new Vector2(118, 168)
-            && badge.Scale == 2 && badge.Color.A == 191 && badge.Depth > .5f, "native small plus in upper right with inherited opacity and higher depth");
+        Check(badge.Source == new Rectangle(0, 0, 9, 9) && badge.Position == new Vector2(114, 168)
+            && badge.Scale == 2 && badge.Color.A == 191 && badge.Depth > .5f, "native gold sparkle in upper right with inherited opacity and higher depth");
         batch.Calls.Clear(); Render(scale: 2, alpha: 128);
-        Check(batch.Calls[1].Position == new Vector2(109, 184) && batch.Calls[1].Scale == 1
+        Check(batch.Calls[1].Position == new Vector2(107, 184) && batch.Calls[1].Scale == 1
             && batch.Calls[1].Color.A == 128, "half-size bubble scales badge and placement together");
         batch.Calls.Clear(); crop.programColored.Value = true; Render(); Render(overlay: true);
-        Check(batch.Calls.Count == 3 && ReferenceEquals(batch.Calls[^1].Texture, Game1.mouseCursors), "one badge after both colored-crop layers");
+        Check(batch.Calls.Count == 3 && ReferenceEquals(batch.Calls[^1].Texture, ModEntry.Instance.Helper.ModContent.Texture), "one badge after both colored-crop layers");
         crop.programColored.Value = false;
         foreach (bool dead in new[] { false, true })
         {

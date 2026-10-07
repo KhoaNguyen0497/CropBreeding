@@ -1,8 +1,13 @@
 # Changelog
 
-## Unreleased
+## 1.0.3
 
-- Removed the standalone mutation star. Added an optional Crop Harvest Bubbles integration: a small vanilla plus badge marks prepared mutations in the bubble's crop icon, following its visibility, size and opacity.
+- Replaced the incubator-style machine sprite with a static wooden biology workbench.
+- Added a small gold sparkle to trait-bearing crops and seeds in inventory/item menus. Quality stars and stack counts keep their usual positions.
+
+- Shortened Lookup Anything trait descriptions and removed the outdated settings-timing row.
+
+- Removed the standalone mutation star. Added an optional Crop Harvest Bubbles integration: the same gold sparkle marks prepared mutations in the bubble's crop icon, following its visibility, size and opacity.
 
 - Set Companion now rejects the seed's own harvest crop, using the actual seed-to-crop mapping.
 

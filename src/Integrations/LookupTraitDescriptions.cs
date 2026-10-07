@@ -63,10 +63,8 @@ internal static class LookupTraitDescriptions
                 ? Companion.Label(metadata) : null;
             var additions = new List<T>();
             Add("Breeding traits", crop == null
-                ? "Effects apply to plants grown with these inherited traits, not to processing this item."
-                : "Inherited plant effects. A pending mutation changes harvested produce, not this plant's bonuses.");
-            if (crop != null)
-                Add("Settings timing", "Trait percentages use current settings. Existing growth/countdowns keep their stored timing until recalculated; regrowth settings apply after the next harvest. Ready crops keep their saved mutation roll.");
+                ? "Plant effects; processing ignores traits."
+                : "New mutations affect harvested crops, not this plant's bonuses.");
             foreach (string token in traits)
             {
                 string description = TraitDescriptions.Describe(token, ModEntry.Instance.Config, companion);

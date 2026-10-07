@@ -14,7 +14,7 @@ internal static class LookupDescriptionTests
         var config = new ModConfig();
         foreach (string id in TraitRules.Known)
             for (int level = 1; level <= 5; level++)
-                Check(TraitDescriptions.Describe($"{id}:{level}", config).Length > 30, $"description for {id} {level}");
+                Check(!string.IsNullOrWhiteSpace(TraitDescriptions.Describe($"{id}:{level}", config)), $"description for {id} {level}");
         Check(TraitDescriptions.Describe("unknown:1", config) == "", "unknown trait has no invented description");
         Check(TraitDescriptions.Describe("fast_growth:5", config).Contains("25%"), "default growth percentage");
         Check(TraitDescriptions.Describe("high_yield:5", config).Contains("100%"), "default yield percentage");
@@ -28,7 +28,7 @@ internal static class LookupDescriptionTests
         Check(TraitDescriptions.Describe("nurse_crop:5", config).Contains("150%"), "Nurse Crop overflow shown");
         foreach (string id in TraitRules.MaterialDrops.Keys)
             Check(TraitDescriptions.Describe(id + ":5", config).Contains("25%")
-                && TraitDescriptions.Describe(id + ":5", config).Contains("initial growth even on regrowers"), "material growth formula and regrowth rule");
+                && TraitDescriptions.Describe(id + ":5", config).Contains("per full 5 base growth days"), "material base growth formula");
         config.MutationChance = .20;
         Check(TraitDescriptions.Describe("fast_growth:2", config).Contains("10%")
             && TraitDescriptions.Describe("high_yield:5", config).Contains("100%"), "trait rates stay fixed when mutation config changes");
@@ -63,8 +63,7 @@ internal static class LookupDescriptionTests
             && fields.Any(f => f.Label == "Companion 2" && f.Value.Contains("Parsnip")), "seed/produce trait rows contain current level and companion");
         var crop = new Crop(); crop.modData[Traits.Key] = "rooted:4";
         fields = Apply(new LookupSubject(item, crop), []).ToArray();
-        Check(fields.Length == 3 && fields[2].Label == "Rooted 4" && fields[2].Value.Contains("40%")
-            && fields[1].Label == "Settings timing" && fields[1].Value.Contains("saved mutation roll"), "planted crop metadata takes priority over sample item");
+        Check(fields.Length == 2 && fields[1].Label == "Rooted 4" && fields[1].Value.Contains("40%"), "planted crop metadata takes priority over sample item");
         Check(!crop.modData.ContainsKey(MutationState.Key) && crop.modData[Traits.Key] == "rooted:4", "lookup never prepares mutations or changes traits");
         var plain = new Item();
         Check(ReferenceEquals(Apply(new LookupSubject(plain), original), original), "plain items unchanged");

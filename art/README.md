@@ -1,7 +1,16 @@
-# Breeding Machine sprite
+# Crop Breeding artwork
 
-`../src/assets/breeding-machine.png` is the production 16×32 RGBA PNG: one static frame, transparent outside the silhouette, no baked ground shadow. The game uses its normal big-craftable rendering. `breeding-machine-preview.png` is a 10× nearest-neighbor preview.
+Both assets are static RGBA PNGs with binary transparency and no baked ground shadow. The game retains normal big-craftable rendering. Enlarged previews use nearest-neighbor scaling.
 
-Style reference: vanilla Incubator from the Craftables sprite sheet, inspected at native 16×32 resolution (reference retrieved from https://media.githubusercontent.com/media/juliaramosguedes/stardew-data/main/sprites/bigcraftables/incubator.png). Reference art is not shipped with the mod.
+| Asset | Native size | Preview |
+|---|---|---|
+| `../src/assets/breeding-machine.png` | 16×32 | `breeding-machine-preview.png`, 10× |
+| `../src/assets/trait-sparkle.png` | 9×9 | `trait-sparkle-preview.png`, 16× |
 
-Created with the built-in image-generation tool, then exported to the native grid using nearest-neighbor sampling and a limited 24-color palette. Prompt: “Single static Stardew Valley crop Breeding Machine; vanilla Incubator silhouette and pixel style; narrow rounded wooden barrel cabinet, frontal slightly top-down view, dark one-pixel outline, amber wooden planks; replace egg with green sprout from tan seed, small front leaf emblem; 16×32 logical pixel grid; transparent background; no animation, glow, smooth detail or ground shadow.”
+Created with the built-in image-generation tool from the user-approved designs, then exported to native grids using nearest-neighbor sampling and limited palettes (up to 24 colors for the machine, 5 including transparency for the badge). The user-supplied vanilla workbench was a style reference, not a shipped asset.
+
+Machine prompt: “A Stardew Valley crop-breeding biology station based on the vanilla wooden workbench. Keep its narrow amber wooden base, drawer and feet. Add a pale blue flask with green liquid, a tiny potted seedling and cream seed specimen tray. Frontal slightly top-down pixel art, limited palette, dark outline, transparent background, no animation, glow or ground shadow.”
+
+Badge prompt: “Single tiny four-point gold sparkle, 9×9 logical pixels, dark brown outline, gold body and pale center. Hard stepped pixels, transparent background, no enclosing button, additional sparkles, glow or animation.”
+
+The badge is drawn at 18×18 pixels on a normal 64-pixel inventory/crop icon. Inventory badges mean inherited item traits; Crop Harvest Bubbles badges mean a saved successful mutation waiting to be harvested.

@@ -36,6 +36,8 @@ public sealed class ModEntry : Mod
         });
         helper.Events.GameLoop.GameLaunched += (_, _) =>
         {
+            UI.TraitBadge.Load();
+            ErrorHandler.Try("Register inventory trait badge", () => UI.TraitBadge.Register(harmony));
             ErrorHandler.Try("Register Better Junimos planting", () => Integrations.BetterJunimosIntegration.Register(harmony));
             ErrorHandler.Try("Register Better Junimos fertilizing", () => Integrations.BetterJunimosFertilizerIntegration.Register(harmony));
             ErrorHandler.Try("Register Crop Harvest Bubbles", () => Integrations.CropHarvestBubblesIntegration.Register(harmony));
