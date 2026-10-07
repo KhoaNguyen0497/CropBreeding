@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.8
 
 - Researcher is now a single-level trait with no mutation-chance bonus or growth penalty. Existing Researcher 1 crops and seeds retain their saved traits.
 - Added a Research Machine: one Researcher seed becomes one seed with two successful trait increases the next morning. Researcher is removed first, and each roll respects crop eligibility, trait slots and level caps.
