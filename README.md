@@ -1,6 +1,6 @@
 # Crop Breeding
 
-A gameplay-focused SMAPI mod for Stardew Valley 1.6, including Stardew Valley Expanded crops. Development version; no release yet. This mod has never been installed: development targets fresh installs, with no migrations or support for earlier development save/config formats.
+A gameplay-focused SMAPI mod for Stardew Valley 1.6, including Stardew Valley Expanded crops. Development version; no release yet. **Single-player only; multiplayer is unsupported.** This mod has never been installed: development targets fresh installs, with no migrations or support for earlier development save/config formats.
 
 ## Breeding loop
 
@@ -10,11 +10,11 @@ Plain seeds copy the donor crop's traits. Seeds with **exactly one trait at leve
 
 Examples: `X + Y` donor with `X` seeds gives `X2 + Y`; the same donor with `Z` seeds gives `X + Y + Z`. Each still costs five seeds and five donor crops. Matching comes from the loaded `Data/Crops` seed ID and `HarvestItemId`, including Content Patcher/SVE changes; names are never used.
 
-The machine unlocks at Farming level 5. Its provisional recipe uses 50 wood, 5 iron bars and 1 battery pack. It uses a static 16×32 incubator-inspired wooden machine sprite with a green sprout. Interact to open its two-slot menu (holding an inventory item still opens the UI without depositing or consuming it): put a trait crop on the left and matching seeds on the right, then select **Breed**. Collect the finished seed from the left slot. You can retrieve the donor before breeding. Unused seeds return to your inventory when closing (or drop beside you if full); the donor/completed output stays in the machine. Destroying the machine loses its contents. The menu uses normal inventory input handling and controller navigation. Its controls, item icons, and hitboxes scale together to fit the UI viewport; status text wraps, and controller focus survives resizing. Breeding eligibility and removal labels refresh when inputs/settings change instead of being reparsed during drawing. Station locks are removed on a single deferred update after closing, rather than accumulating at old tile positions. The Breeding Machine acts as an interactive crafting station: it accepts inputs only through its UI and has no Automate integration. Trait crops can still be used by Automate with other machines through their normal input rules.
+The machine unlocks at Farming level 5. Its recipe uses 50 wood, 5 iron bars and 1 battery pack. It uses a static 16×32 incubator-inspired wooden machine sprite with a green sprout. Interact to open its two-slot menu (holding an inventory item still opens the UI without depositing or consuming it): put a trait crop on the left and matching seeds on the right, then select **Breed**. Collect the finished seed from the left slot. You can retrieve the donor before breeding. Unused seeds return to your inventory when closing (or drop beside you if full); the donor/completed output stays in the machine. Destroying the machine loses its contents. The menu uses normal inventory input handling and controller navigation. Its controls, item icons, and hitboxes scale together to fit the UI viewport; status text wraps, and controller focus survives resizing. Breeding eligibility and removal labels refresh when inputs/settings change instead of being reparsed during drawing. Station locks are removed on a single deferred update after closing, rather than accumulating at old tile positions. The Breeding Machine acts as an interactive crafting station: it accepts inputs only through its UI and has no Automate integration. Trait crops can still be used by Automate with other machines through their normal input rules.
 
-Coffee beans already act as both produce and seeds, so mutated beans can be replanted directly. They do not need the breeding machine.
+Coffee beans already act as both produce and seeds, so mutated beans can be replanted directly. **Coffee remains blocked from breeding and merging** because beans already carry their traits as plantable seeds. Coffee can still use Set Companion and Remove Trait modes.
 
-## Provisional traits and balance
+## Traits and default balance
 
 | Trait | Effect |
 |---|---|
@@ -36,7 +36,7 @@ Coffee beans already act as both produce and seeds, so mutated beans can be repl
 
 `GrowthReductionPerLevel` controls initial growth and regrowth reduction, default 0.05. `ExtraYieldPerLevel` controls proportional extra yield per level, default 0.20.
 
-Every primary crop harvested from a trait plant inherits its traits and levels, including every regrowing harvest. These crops can be used as donors to copy the traits into more seeds. A new mutation changes harvested produce, not the standing plant. For example, Fast Growth level 5 changes 7 days to 6; 2 days still rounds up to 2.
+Every primary crop harvested from a trait plant inherits its traits and levels, including every regrowing harvest. Eligible donor crops can copy traits into matching seeds; coffee is the direct-replanting exception. A new mutation changes harvested produce, not the standing plant. For example, Fast Growth level 5 changes 7 days to 6; 2 days still rounds up to 2.
 
 Default mutation chance is 5%; default cap is 3 unique traits, each with levels 1–5. A successful chance roll chooses uniformly from ALL crop-eligible trait types, before checking owned traits, levels or free slots. Only intrinsic eligibility filters the pool (for example, natural regrowers cannot roll Rooted or Nurse Crop, and unavailable material outputs are excluded). The selected trait upgrades if below level 5, or is added at level 1 if a slot is free. Selecting a maxed trait or a missing trait with no free slot does nothing: no reroll. Thus X5/Y5/Z4 only upgrades when Z itself is selected; with N eligible traits its base per-harvest upgrade chance is 5% / N. Researcher increases the initial chance, not the odds of selecting any particular trait. One mutation roll applies to all primary produce from a harvest. High Quality uses separate rolls for each individual item, including the High Yield bonus, based on the plant's inherited level. A new High Quality mutation does not improve the same harvest; breed and replant it first. Quality rolls run after fertilizer/farming-level quality calculations, without changing those calculations. Mixed-quality outputs are separated into stacks. Hand-harvest extra items drop as ordinary harvest debris; Junimos receive them in the hut. The updated Auto Harvester uses this same vanilla Junimo harvest path: outputs go to its storage, with overflow dropped on the ground. Byproducts such as sunflower seeds and wheat hay do not receive quality upgrades. The new mutation is stored on produce; growth, regrowth, yield and quality effects require replanting. Lowering the cap never deletes existing traits; plain-seed copying preserves them, but merging is blocked while the donor exceeds the count cap. Traits use one explicit `trait:level` format in `modData`, including level 1; different trait sets or levels cannot stack, and vanilla quality/color distinctions still apply.
 
@@ -46,9 +46,9 @@ Mutation is decided once when an eligible plant becomes harvest-ready, not rerol
 
 A small static **vanilla purple star** appears above a ready plant with an actual new/upgraded trait. This reuses the iridium-quality star in `Game1.mouseCursors`, but indicates mutation, **not harvest quality**. Drawing only reads the outcome/readiness and draws a visible icon; it does not roll, parse traits, spawn particles or scan the farm. No new texture or animation is needed.
 
-The host checks readiness after vanilla's existing `Crop.newDay` and `Crop.growCompletely` calls (including the crop fairy). Normal overnight preparation precedes our Auto Harvester's `DayStarted` harvest and daytime Junimos. Already stored results are skipped. Newly planted instant-ready crops are handled after seed traits are assigned. The vanilla harvest hook also prepares a missing result, including locally performed farmhand harvests, so mods that directly advance phases without either growth method still receive mutation results; their icon may not appear before harvest. Future in-mod crop-growth effects should call `MutationState.EnsurePrepared` after changing growth. Harvesters bypassing vanilla `Crop.harvest` are not covered.
+Readiness is checked after vanilla's existing `Crop.newDay` and `Crop.growCompletely` calls (including the crop fairy). Normal overnight preparation precedes our Auto Harvester's `DayStarted` harvest and daytime Junimos. Already stored results are skipped. Newly planted instant-ready crops are handled after seed traits are assigned. The vanilla harvest hook also prepares a missing result, so mods that directly advance phases without either growth method still receive mutation results; their icon may not appear before harvest. Future in-mod crop-growth effects should call `MutationState.EnsurePrepared` after changing growth. Harvesters bypassing vanilla `Crop.harvest` are not covered.
 
-Failed/full-inventory harvests retain the outcome. Successful harvests clear it; regrowers and Rooted plants roll once again when their next harvest becomes ready. Rooted still resets the existing crop to seed stage rather than constructing a replacement. Save/network crop metadata carries the outcome; items receive only the ordinary harvested traits, not pending state. High Quality, High Yield's fractional bonus, Companion, material drops, Seed Saver, Nurse Crop and Rooted rolls remain at harvest time using inherited levels. Mutation-related config changes apply to future readiness rolls, including re-enabling mutations after a disabled cycle was already recorded.
+Failed/full-inventory harvests retain the outcome. Successful harvests clear it; regrowers and Rooted plants roll once again when their next harvest becomes ready. Rooted still resets the existing crop to seed stage rather than constructing a replacement. Saved crop metadata carries the outcome; items receive only the ordinary harvested traits, not pending state. High Quality, High Yield's fractional bonus, Companion, material drops, Seed Saver, Nurse Crop and Rooted rolls remain at harvest time using inherited levels. Mutation-related config changes apply to future readiness rolls, including re-enabling mutations after a disabled cycle was already recorded.
 
 ## Special cases
 
@@ -66,7 +66,7 @@ Lookup pages for trait seeds, harvested produce and planted crops include a sepa
 
 Optional display integration adjusts trait seed previews, planted crop growth/regrowth summaries and next-harvest countdowns. Evergreen 5 displays all four seasons and avoids false out-of-season harvest warnings. Seed previews include Fast Growth, Companion and the current player's Agriculturist profession, without assuming fertilizer or paddy adjacency. Planted crops use their existing phase durations and countdowns. This does not change shared crop data or actual plants, and runs only during lookups. Harvest yield/quality probability fields remain Lookup Anything's base calculations, not breeding-trait forecasts. If Lookup Anything's internal API changes, the integration logs a warning and disables itself; gameplay does not depend on it.
 
-- Excluded: Mixed Seeds, Mixed Flower Seeds, spring/summer/fall/winter forage seeds, vanilla Fiber Seeds, Qi Beans, tea saplings, trees and grass.
+- Ineligible seed inputs: Mixed Seeds, Mixed Flower Seeds, seasonal forage seeds, vanilla Fiber Seeds, Qi Beans, tea saplings, trees and grass. Mixed seed packets cannot be bred or given traits; once vanilla resolves them into a known eligible crop, that crop follows its actual seed/crop rules. Forage/fiber/Qi crops remain excluded. This distinction is intentional.
 - Normal ground only, including greenhouse/Ginger Island tilled ground. Garden Pots and modded planters using pot soil are excluded; trait seeds are refused there so traits aren't silently discarded. A custom planter implementing actual terrain soil needs an explicit compatibility rule.
 - SVE crops are discovered from their real loaded data. **Ancient Fiber is eligible**; only vanilla Fiber Seeds are excluded.
 - Sunflower bonus seeds copy the original plant traits; only harvested flowers receive the new mutation. Wheat hay remains ordinary.
@@ -75,7 +75,7 @@ Optional display integration adjusts trait seed previews, planted crop growth/re
 - Better Junimos harvesting uses this vanilla path. An optional planting integration transfers traits and Companion choice from the exact seed stack it selects, then reapplies initial trait growth timing; Better Junimos still owns seed selection/consumption. An optional fertilizer integration limits Better Junimos to empty soil or phase-0 crops and uses normal growth recalculation, preserving trait timing. Its out-of-season filter still does not recognize Evergreen; that limitation is accepted for now. See [the compatibility notes](docs/BETTER-JUNIMOS.md).
 - Giant crop formation follows vanilla rules, even when constituent plants have different traits. Breaking the giant crop gives ordinary vanilla output with no traits.
 - Vanilla machine/crafting outputs have no traits. Input quality remains available to their ordinary rules. Other mods that create outputs by copying custom metadata may need separate compatibility patches.
-- Crops planted before first installing the mod have no traits. Their mixed-seed origin cannot reliably be identified once the game has resolved the seed to a crop; mixed seeds planted with the mod installed are explicitly marked ineligible.
+- Matching uses actual loaded seed/harvest IDs. SVE Ancient Fiber remains eligible; there is no general category filter excluding every crop that produces a resource. Ordinary crops on a fresh installation begin without inherited traits and can gain mutations when eligible.
 
 ## Companion selection and timing
 
@@ -96,11 +96,17 @@ Both penalties use the companion's **initial base growth days** from loaded `Dat
 
 Regrowing crop mutations are enabled by default (`EnableRegrowingCropMutations=true`). Every harvest cycle gets one readiness roll at the configured mutation chance; the original plant does not permanently acquire the new mutation. Set it to `false` to disable future regrowing readiness rolls. Already stored outcomes remain unchanged.
 
-## Decisions still open
+## Accepted gameplay rules and limitations
 
 Researcher and Seed Saver settings: `ResearcherMutationBonus=0.05`, `ResearcherGrowthPenalty=0.10`, `SeedSaverChance=0.10`, all per level. Researcher does not bypass disabled regrowing mutations or trait/level caps. Seed Saver returns one seed at most per plant harvest, regardless of primary yield. Neither trait scans the world. Remove Trait mode can remove Researcher or any other selected trait from a seed.
 
-16. Foraged/shop/drop produce: no new mutations are granted to those sources. An otherwise matching item that already carries trait metadata can currently be used as a donor; no provenance restriction yet.
+- Foraged/shop/drop produce receives no new mutation from this mod. A matching item that already carries valid traits may be used as a donor (except coffee); there is no provenance restriction.
+- Ordinary processing, crafting and building requirements may consume trait crops normally. Traits provide no protection or special benefit in those uses; normal item quality rules still apply.
+- Station contents are intended to be lost on destruction. Two accepted edges remain: an axe/pickaxe action can clear them before removal is confirmed, and closing the UI immediately after the station disappears can return staged seeds before its next update. Neither is an identified crash issue.
+- Trait-aware stacking and bonus preparation on an unready harvest attempt remain unchanged. They run when called, with no dedicated continuous scan; repeated calls from other mods can still add work. No measured performance claim is made.
+- Changing harvest time may change bonus rolls. Changing when a crop first becomes ready may change its initial mutation roll; this is accepted. Stored mutation results, including failures, stay fixed. Same-tile cycles within the same 10-minute interval can still repeat.
+- Better Junimos' out-of-season selection may reject Evergreen seeds. This is accepted for now; its seed inheritance and phase-0 fertilizer timing are integrated.
+- Vanilla hut overflow behavior is retained; the object-debris fallback can lose custom trait/color data. Custom harvesters that bypass `Crop.harvest` are outside the shared integration.
 
 Seed Maker outputs always have no breeding traits or Companion assignment. There is no inheritance setting.
 
@@ -108,7 +114,7 @@ Seed Maker outputs always have no breeding traits or Companion assignment. There
 
 Each gameplay patch catches its own breeding errors. New errors are reported in full to SMAPI; identical repeats for an action are summarized at most once every ten seconds while the error continues. A failed prefix lets the original action run; a failed result/tooltip patch preserves the original result. Crop growth/planting/Rooted and lookup changes restore captured state where possible. Harvest output decoration restores the original clone if it fails. Material item creation, Seed Saver, Companion output, and quality/yield preparation are isolated so a failed bonus does not discard the harvest context or its other prepared effects. Shared core-state failures still fall back to vanilla. An error does not permanently disable later actions or the whole mod. A harvest is never replayed, and an already-delivered item is never deliberately awarded again. Exceptions raised by vanilla or another mod's original code are not globally suppressed.
 
-Breeding-menu slot/button transactions restore their inputs on failure, then close safely and release the multiplayer lock. Items return through normal inventory/overflow handling; if that return fails, an undelivered remainder is sent to the Lost and Found when possible. A failed patch installation removes only that attempt's additions, preserving earlier successful patches on the same target, and continues installing unrelated patches. This is best-effort recovery from mod errors, not a guarantee against process-level failures, broken game state or another mod failing after irreversible side effects.
+Breeding-menu slot/button transactions restore their inputs on failure, then close safely and release the station lock. Items return through normal inventory/overflow handling; if that return fails, an undelivered remainder is sent to the Lost and Found when possible. A failed patch installation removes only that attempt's additions, preserving earlier successful patches on the same target, and continues installing unrelated patches. This is best-effort recovery from mod errors, not a guarantee against process-level failures, broken game state or another mod failing after irreversible side effects.
 
 Optional **Generic Mod Config Menu** support exposes all 12 settings with save/reset controls and percentage labels. `ShowErrorsInChat` defaults to `false`; enabling it adds local chat notices as well as full SMAPI errors. It does not send network chat or execute chat commands. Identical-action chat notices are limited to one per ten seconds. SMAPI logs new errors in full and summarizes identical repeats at most once per ten seconds while failures continue; it does not format/log every repeated exception or run a reporting timer. Malformed config loading falls back to defaults; numeric settings are bounded and non-finite rates are replaced with defaults.
 
@@ -134,9 +140,13 @@ dotnet run --project tests/TraitRules.Tests.csproj
 dotnet run --project safety-tests/Safety.Tests.csproj
 ```
 
-Copy `CropBreeding.dll`, `manifest.json` and the `assets` directory from the build output into `Mods/CropBreeding`. Install on all multiplayer clients. No game binaries are included in this repository.
+Copy `CropBreeding.dll`, `manifest.json` and the `assets` directory from the build output into `Mods/CropBreeding`. Multiplayer is unsupported. No game binaries are included in this repository.
 
-Compile and pure trait-rule checks are automated locally; interactive game validation is still required. See [manual checks](docs/TESTING.md), particularly harvest integrations and controller interactions.
+## Validation status
+
+The latest implementation compiled against game reference assemblies, and the existing trait-rule/safety suites passed during development. Safety tests use linked production code and test doubles. **No live game, Steam Deck/controller, rendering or end-to-end mod integration validation has been completed.** A successful build is not proof of those behaviors.
+
+See [validation coverage and the pending in-game checklist](docs/TESTING.md), [final review decisions](docs/REVIEW-DECISIONS.md), and [Better Junimos implementation notes](docs/BETTER-JUNIMOS.md). Gameplay decisions from this review are settled; the live single-player checks remain pending. Multiplayer and old-development-save migrations are outside the current scope.
 
 ## Commands and uninstalling
 
