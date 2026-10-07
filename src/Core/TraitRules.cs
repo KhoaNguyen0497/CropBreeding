@@ -133,6 +133,14 @@ public static class TraitRules
         result = Parse(Encode(result.Where(t => Id(t) != id).Append(Token(id, level + 1))));
         return true;
     }
+    public static double CompanionOutputChance(int level, int baseGrowthDays, int baseRegrowDays)
+    {
+        // Main crop's unmodified data, independent of the companion's growth penalty.
+        double factor = baseRegrowDays > 0
+            ? Math.Min(1, baseRegrowDays / 10.0)
+            : Math.Clamp(baseGrowthDays / 7.0, 0, 1);
+        return CompanionChance * Math.Clamp(level, 0, MaximumLevel) * factor;
+    }
     public static int CompanionDelay(int baseDays) => (int)Math.Ceiling(Math.Max(0, baseDays) * .5);
     public static string? CompanionChoice(string? donor, string? seed) => !string.IsNullOrEmpty(donor) ? donor : seed;
     public static int HarvestQuality(int quality, int inheritedLevel, double chancePerLevel, double roll)

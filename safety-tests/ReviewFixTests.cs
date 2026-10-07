@@ -58,6 +58,7 @@ internal static class ReviewFixTests
 
         CheckLocks();
         CheckHarvestIsolation();
+        CheckCompanionHarvestChance();
         JunimoHarvestTests.Run();
         Console.WriteLine("Passed repeated-error throttling, patch rollback isolation, small-viewport geometry, deferred station-lock cleanup and injected harvest-preparation failures. Uses test doubles; live controller/rendering remains untested.");
     }
@@ -141,6 +142,40 @@ internal static class ReviewFixTests
                 HarvestContext.Current = null; ItemRegistry.Factory = null; Traits.SaltRandomFactory = null; Companion.ThrowBaseDays = false;
             }
         }
+    }
+    private static void CheckCompanionHarvestChance()
+    {
+        // Exercise the real harvest path with altered planted phases/countdowns and saved mutation.
+        foreach (var sample in new[] { (Growth: 10, Regrow: 2, Chance: .20), (Growth: 28, Regrow: 7, Chance: .70),
+            (Growth: 4, Regrow: -1, Chance: 4 / 7.0), (Growth: 7, Regrow: -1, Chance: 1.0) })
+        foreach (bool repeated in new[] { false, true })
+        foreach (bool succeeds in new[] { false, true })
+        {
+            var plant = new Crop { Dirt = new HoeDirt(), Data = new CropData { DaysInPhase = [sample.Growth], RegrowDays = sample.Regrow } };
+            plant.Dirt.crop = plant;
+            plant.phaseDays = [1, 99999]; // Speed and other adjustments must not affect the probability.
+            plant.currentPhase.Value = 1; plant.dayOfCurrentPhase.Value = 0;
+            plant.fullyGrown.Value = repeated && sample.Regrow > 0;
+            Traits.Write(plant.modData, ["companion:5", "fast_growth:5"]);
+            plant.modData[Companion.Key] = "gold_carrot";
+            plant.modData[MutationState.Key] = "companion:5,fast_growth:5,high_yield:1";
+            double roll = succeeds ? sample.Chance - .000001 : sample.Chance;
+            Traits.SaltRandomFactory = salt => new FixedCompanionRandom(salt == 53 ? roll : .999999);
+            try
+            {
+                var context = new HarvestContext(plant);
+                var extras = context.PendingExtras.Where(item => item.ItemId == "gold_carrot").ToArray();
+                Check(extras.Length == (succeeds ? 1 : 0), "Companion harvest uses main crop base time on first and repeat harvests");
+                if (succeeds) Check(extras[0].Stack == 1 && extras[0].Quality == 0 && extras[0].modData.Count == 0,
+                    "Companion remains one plain item without inherited or newly mutated traits");
+            }
+            finally { Traits.SaltRandomFactory = null; }
+        }
+        Console.WriteLine("Passed Companion base growth/regrowth chances through the harvest path, including modified phases and first/repeat harvests. Uses test doubles.");
+    }
+    private sealed class FixedCompanionRandom(double value) : Random
+    {
+        public override double NextDouble() => value;
     }
     private sealed class ZeroRandom : Random
     {

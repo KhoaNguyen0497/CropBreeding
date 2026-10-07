@@ -72,9 +72,17 @@ internal sealed class HarvestContext
         catch (Exception ex) { ErrorHandler.Report("Prepare Seed Saver", ex); }
         try
         {
-            if (companionId != null && Companion.BaseDays(crop.modData) > 0
-                && Traits.RandomFor(crop, 53).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "companion") * CropBreeding.Core.TraitRules.CompanionChance, 0, 1))
-                PendingExtras.Add(ItemRegistry.Create("(O)" + companionId, 1, 0));
+            if (companionId != null && Companion.BaseDays(crop.modData) > 0)
+            {
+                var data = crop.GetData()!;
+                // Use natural regrowth even for the first harvest. Never use adjusted phases/countdowns.
+                if (data.RegrowDays <= 0)
+                    baseGrowthDays ??= data.DaysInPhase.Sum(days => Math.Max(0, days));
+                double chance = TraitRules.CompanionOutputChance(TraitRules.Level(Inherited, "companion"),
+                    baseGrowthDays.GetValueOrDefault(), data.RegrowDays);
+                if (Traits.RandomFor(crop, 53).NextDouble() < chance)
+                    PendingExtras.Add(ItemRegistry.Create("(O)" + companionId, 1, 0));
+            }
         }
         catch (Exception ex) { ErrorHandler.Report("Prepare Companion output", ex); }
     }

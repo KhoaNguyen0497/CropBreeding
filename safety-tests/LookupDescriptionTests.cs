@@ -24,7 +24,9 @@ internal static class LookupDescriptionTests
         Check(TraitDescriptions.Describe("evergreen:4", config).Contains("Dormant")
             && !TraitDescriptions.Describe("evergreen:5", config).Contains("Dormant"), "Evergreen activation level");
         Check(TraitDescriptions.Describe("companion:2", config).Contains("Unassigned")
-            && TraitDescriptions.Describe("companion:2", config, "Parsnip").Contains("Companion: Parsnip. 40%"), "Companion choice and odds");
+            && TraitDescriptions.Describe("companion:2", config, "Parsnip").Contains("Companion: Parsnip. Up to 40%"), "Companion choice and maximum odds");
+        Check(TraitDescriptions.Describe("companion:5", config).Contains("base regrowth days / 10")
+            && TraitDescriptions.Describe("companion:5", config).Contains("base growth days / 7"), "Companion explains both base-time thresholds");
         Check(TraitDescriptions.Describe("nurse_crop:5", config).Contains("150%"), "Nurse Crop overflow shown");
         foreach (string id in TraitRules.MaterialDrops.Keys)
             Check(TraitDescriptions.Describe(id + ":5", config).Contains("25%")

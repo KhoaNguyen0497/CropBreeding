@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.5
+
+- Balanced Companion output: its 20% chance per level is multiplied by the main crop's base regrowth days / 10, or base growth days / 7 for single-harvest crops, capped at full chance.
+- Regrowing crops use their natural regrowth interval for every harvest, including the first. Fertilizer, traits and Companion's delay do not affect this chance.
+- Kept the existing growth and regrowth penalty: half the companion crop's base growth time.
+- Updated Lookup Anything descriptions and the README to explain the new chance.
+
 ## 1.0.4
 
 - Replaced the gold sparkle with the vanilla Qi Gem in trait-bearing item icons and Crop Harvest Bubbles mutation icons.

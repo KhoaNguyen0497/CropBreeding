@@ -47,7 +47,7 @@ Trait percentages are fixed, per level unless stated otherwise.
 | Fast Growth | 5% shorter growth and natural regrowth, applied after other timing adjustments. |
 | High Yield | 20% more primary produce; whole extras are guaranteed, with a roll for the fractional remainder. |
 | High Quality | 5% chance per primary item to upgrade its normal harvest quality by one tier. |
-| Companion | 20% chance for one chosen, plain companion crop. Adds half that companion's base growth time to growth and regrowth. |
+| Companion | Up to 20% chance for one chosen, plain companion crop. Chance scales with the main crop's base regrowth days / 10, or base growth days / 7 for single-harvest crops, capped at full chance. Adds half the companion's base growth time to growth and regrowth. |
 | Evergreen | Level 5 allows all-season planting and survival, including winter. Levels 1–4 are dormant. |
 | Researcher | Adds 5 percentage points to mutation chance, but increases growth and regrowth time by 10%. |
 | Seed Saver | 10% chance to return one matching seed with the parent's original traits. |

@@ -57,6 +57,20 @@ Check(TraitRules.RegrowthDays(4, 5, .05, 7) == 6, "speed applies after companion
 Check(TraitRules.RegrowthDays(7, 1, .05, 7) == 10, "do not round intermediate shortened regrowth");
 Check(TraitRules.RegrowthDays(-1, 5, .1, 7) == -1, "companion never creates regrowth");
 Check(TraitRules.CompanionDelay(0) == 0, "unassigned companion no penalty");
+foreach (int level in Enumerable.Range(1, 5))
+{
+    Check(Math.Abs(TraitRules.CompanionOutputChance(level, 10, 2) - .04 * level) < 1e-12, "coffee uses 2-day regrowth at every level");
+    Check(Math.Abs(TraitRules.CompanionOutputChance(level, 28, 7) - .14 * level) < 1e-12, "ancient fruit uses 7-day regrowth");
+    Check(Math.Abs(TraitRules.CompanionOutputChance(level, 4, -1) - .2 * level * 4 / 7) < 1e-12, "parsnip scales initial growth");
+    Check(Math.Abs(TraitRules.CompanionOutputChance(level, 6, -1) - .2 * level * 6 / 7) < 1e-12, "six-day single-harvest crop keeps fractional chance");
+    Check(Math.Abs(TraitRules.CompanionOutputChance(level, 7, -1) - .2 * level) < 1e-12, "single-harvest threshold is seven days");
+    Check(Math.Abs(TraitRules.CompanionOutputChance(level, 1, 10) - .2 * level) < 1e-12, "regrowth threshold is ten days");
+}
+Check(TraitRules.CompanionOutputChance(5, 13, -1) == 1, "long single harvest capped at full chance");
+Check(TraitRules.CompanionOutputChance(5, 28, 20) == 1, "long regrowth capped at full chance");
+Check(TraitRules.CompanionOutputChance(0, 28, 7) == 0, "no inherited Companion no output");
+Check(TraitRules.CompanionOutputChance(5, 0, -1) == 0, "zero growth gives zero chance");
+Check(TraitRules.CompanionOutputChance(5, -1, 0) == 0, "invalid growth safely gives zero chance");
 Check(TraitRules.CompanionChoice("strawberry", "blueberry") == "strawberry", "donor companion wins");
 Check(TraitRules.CompanionChoice(null, "blueberry") == "blueberry", "unassigned donor keeps seed choice");
 Check(TraitRules.CompanionChoice(null, null) == null, "both unassigned stays unassigned");

@@ -25,9 +25,9 @@ internal static class TraitDescriptions
             "high_yield" => $"{Chance(CropBreeding.Core.TraitRules.ExtraYieldPerLevel)} more main crops per harvest.",
             "high_quality" => $"{Chance(CropBreeding.Core.TraitRules.QualityUpgradeChance)} chance per main crop to improve quality by one tier, up to iridium.",
             "companion" => (companionName == null
-                ? $"Unassigned: choose a crop in the Breeding Machine to activate. {Chance(CropBreeding.Core.TraitRules.CompanionChance)} chance per harvest for 1 plain companion crop."
-                : $"Companion: {companionName}. {Chance(CropBreeding.Core.TraitRules.CompanionChance)} chance per harvest for 1 plain companion crop.")
-                + " When assigned, adds half its base growth days to growth and regrowth. Bonus crop has no traits or quality/yield bonuses.",
+                ? $"Unassigned: choose a crop in the Breeding Machine to activate. Up to {Chance(CropBreeding.Core.TraitRules.CompanionChance)} chance per harvest for 1 plain companion crop."
+                : $"Companion: {companionName}. Up to {Chance(CropBreeding.Core.TraitRules.CompanionChance)} chance per harvest for 1 plain companion crop.")
+                + " Chance scales with the main crop's base regrowth days / 10, or base growth days / 7 for single-harvest crops, capped at full chance. Adds half the companion's base growth days to growth and regrowth. Bonus crop has no traits or quality/yield bonuses.",
             "evergreen" => level < TraitRules.MaximumLevel
                 ? "Dormant until level 5: allows planting and growing in all seasons."
                 : "Allows planting and growing in all seasons.",
