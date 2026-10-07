@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.GameData.Machines;
 using StardewValley.Tools;
@@ -25,8 +24,6 @@ internal static class Patches
         Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.applySpeedIncreases), prefix: nameof(GrowthPrefix), postfix: nameof(GrowthPostfix));
         Patch(harmony, typeof(Crop), nameof(Crop.newDay), postfix: nameof(CropReadyPostfix));
         Patch(harmony, typeof(Crop), nameof(Crop.growCompletely), postfix: nameof(CropReadyPostfix));
-        Patch(harmony, typeof(Crop), nameof(Crop.draw), postfix: nameof(CropDrawPostfix),
-            parameters: [typeof(SpriteBatch), typeof(Vector2), typeof(Color), typeof(float)]);
         Patch(harmony, typeof(Crop), nameof(Crop.harvest), prefix: nameof(HarvestPrefix),
             transpiler: nameof(HarvestTranspiler), finalizer: nameof(HarvestFinalizer));
         Patch(harmony, typeof(Item), nameof(Item.canStackWith), postfix: nameof(StackPostfix));
@@ -59,22 +56,6 @@ internal static class Patches
     {
         try { MutationState.AfterGrowth(__instance); }
         catch (Exception ex) { ErrorHandler.Report("Crop readiness", ex); }
-    }
-    private static void CropDrawPostfix(Crop __instance, SpriteBatch b, Vector2 tileLocation, Color toTint)
-    {
-        try
-        {
-            if (!MutationState.HasMutation(__instance)) return;
-            Vector2 position = Game1.GlobalToLocal(Game1.viewport, tileLocation * 64f + new Vector2(32, -24));
-            if (position.X < -16 || position.Y < -16 || position.X > Game1.viewport.Width + 16
-                || position.Y > Game1.viewport.Height + 16) return;
-            // Vanilla iridium-quality star from Item.DrawMenuIcons. A static 16px marker, not a
-            // quality forecast: it indicates a new/upgraded trait in the pending harvest only.
-            b.Draw(Game1.mouseCursors, position, new Rectangle(346, 392, 8, 8), toTint,
-                0f, new Vector2(4), 2f, SpriteEffects.None,
-                Math.Clamp((tileLocation.Y * 64f + 64f) / 10000f + .0001f, 0f, 1f));
-        }
-        catch (Exception ex) { ErrorHandler.Report("Draw mutation icon", ex); }
     }
     private static void CropSeasonPostfix(Crop __instance, ref bool __result)
     {

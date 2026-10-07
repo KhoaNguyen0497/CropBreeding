@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Removed the standalone mutation star. Added an optional Crop Harvest Bubbles integration: a small vanilla plus badge marks prepared mutations in the bubble's crop icon, following its visibility, size and opacity.
+
 - Set Companion now rejects the seed's own harvest crop, using the actual seed-to-crop mapping.
 
 - Redesigned the breeding menu with Stardew Profit-style panels, direct mode tabs, item summaries and controller hints.

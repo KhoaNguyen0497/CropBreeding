@@ -5,9 +5,15 @@ using StardewValley;
 
 namespace Microsoft.Xna.Framework
 {
-    public struct Color { public static Color OrangeRed => new(); }
+    public readonly record struct Color(byte A)
+    {
+        public static Color OrangeRed => new(255);
+        public static Color White => new(255);
+        public static Color operator *(Color color, float alpha) => new((byte)Math.Clamp((int)(color.A * alpha), 0, 255));
+    }
     public readonly record struct Vector2(float X, float Y)
     {
+        public static Vector2 Zero => new(0, 0);
         public static Vector2 operator +(Vector2 a, Vector2 b) => new(a.X + b.X, a.Y + b.Y);
     }
 }
@@ -82,7 +88,7 @@ namespace StardewValley
         public Metadata modData = new();
         public Net<int> currentPhase = new(2), dayOfCurrentPhase = new(1), phaseToShow = new(-1);
         public Net<bool> fullyGrown = new(false), raisedSeeds = new(true);
-        public Net<bool> dead = new(false);
+        public Net<bool> dead = new(false), programColored = new(false);
         public Net<string> indexOfHarvest = new("24"), netSeedIndex = new("472");
         public GameLocation currentLocation = new();
         public CropData? Data = new();
@@ -128,6 +134,7 @@ namespace StardewValley
     }
     public static class Game1
     {
+        public static Microsoft.Xna.Framework.Graphics.Texture2D mouseCursors = new();
         public static Random random = new();
         public static Chat? chatBox = new();
         public static Farmer player = new();

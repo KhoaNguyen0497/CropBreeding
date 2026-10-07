@@ -78,3 +78,5 @@ BetterJunimosFertilizerTests.Run();
 RootedWalnutTests.Run();
 
 BreedingCostTests.Run();
+
+CropHarvestBubblesTests.Run();

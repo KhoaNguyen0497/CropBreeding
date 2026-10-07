@@ -6,11 +6,11 @@ Grow crops with inheritable traits, then breed their produce into matching seeds
 
 Download the installable ZIP from [Releases](https://github.com/KhoaNguyen0497/CropBreeding/releases/latest), extract it into your game's `Mods` folder, and launch through SMAPI.
 
-Optional: **Generic Mod Config Menu** for settings and **Lookup Anything** for trait descriptions and growth information.
+Optional: **Generic Mod Config Menu** for settings, **Lookup Anything** for trait descriptions and growth information, and [**Crop Harvest Bubbles**](https://www.nexusmods.com/stardewvalley/mods/17761) for mutation badges.
 
 ## Start breeding
 
-1. Grow crops on tilled ground. When a crop becomes ready, it has a **5% mutation chance** by default. A purple star marks a successful mutation.
+1. Grow crops on tilled ground. When a crop becomes ready, it has a **5% mutation chance** by default. With Crop Harvest Bubbles installed, a small plus badge on its crop icon marks a prepared mutation.
 2. Harvest it. All primary produce from that harvest receives the same traits and mutation.
 3. Craft a **Breeding Machine** at Farming level 5: **50 Wood, 5 Iron Bars and 1 Battery Pack**.
 4. Open its two-slot menu and combine **3 trait crops + 3 matching seeds → 1 bred seed** by default. Each group must come from one matching stack.

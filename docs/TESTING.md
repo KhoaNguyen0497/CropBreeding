@@ -58,7 +58,7 @@ Station destruction has accepted exceptions: contents may clear on an axe/pickax
 - [ ] Set mutation chance to 1 before readiness; an eligible free-slot crop gains one trait shared by every primary output. At cap, the full eligible pool is still selected: blocked/maxed picks produce a stored failure, not a retry. Researcher increases the chance roll only.
 - [ ] Set chance to 0 before another readiness event. Its no-change marker remains fixed through waiting, repeated growth calls, config edits and save/reload. Stored successful outcomes also remain fixed. Changes to mutation settings affect the next unprepared cycle only.
 - [ ] Check overnight growth before Auto Harvester and daytime Junimos, crop fairy/`growCompletely`, zero-day plants and other instant-growth effects. A mod that directly changes phases without a supported growth hook may show no icon until harvest, but the fallback must prepare the outcome before output decoration.
-- [ ] The static vanilla purple star appears only over a ready plant with an actual mutation. Test zoom, trellises, colored flowers, dense rows and screen edges. It indicates mutation, not quality. Dead plants and failed mutations show no icon.
+- [ ] No standalone star remains. With Crop Harvest Bubbles 0.6.2 (Nexus 17761), a small plus badge appears in the crop icon's top right only for a saved successful mutation. Check mod absent/disabled, key-held/toggle visibility, ignored flowers, opacity, size, zoom, trellises, colored flowers, dense rows and screen edges. One badge on colored crops; none for dead plants, regrowing countdowns or failed/unprepared mutations. No rendering path prepares a mutation.
 - [ ] Failed harvest/full-inventory attempts retain the result. Successful regrowing/Rooted harvests clear it; the next readiness cycle gets one new outcome. Pending mutation data stays on the plant, not harvested items or Seed Saver outputs.
 - [ ] New cycles rolled at different 10-minute clock times use different inputs. Identical inputs can repeat, and different inputs can coincidentally yield the same outcome. Waiting after a stored roll never changes that mutation; later harvest time may change bonus rolls.
 - [ ] Regrowing mutations are enabled by default; disabling them prevents future mutations without stripping inherited traits or changing a stored result. The standing plant never acquires its produce's new mutation automatically.
@@ -123,3 +123,9 @@ Automated layout checks cover 12–241 backpack slots, page boundaries and viewp
 - [ ] D-pad navigation reaches every visible slot, all mode tabs, both page arrows and the close button. LB/RB preserve the relative slot position when possible. Hidden slots must never receive focus or clicks.
 - [ ] Tabs reject switching while inputs or a held item remain. Test Breed, Set Companion and Remove Trait, including ready output and changed breeding cost.
 - [ ] Check native borders, fonts, item counts/quality icons, hover tooltips and controller hints on Steam Deck. B closes once without opening another menu.
+
+## Crop Harvest Bubbles badge checks
+
+The linked integration passed automated tests for optional registration, failed-registration rollback, preserving original/early-return IL, rejecting unknown draw layouts, saved mutation gating, exact crop draw arguments, badge size/opacity/top-right placement, colored-layer deduplication and isolated drawing errors. These use draw-call and IL instruction doubles, not live Harmony detouring or a rendered game. Production code compiles against the game references.
+
+Upstream reviewed: `aedenthorn/StardewValleyMods`, CropHarvestBubbles 0.6.2, `CodePatches.cs` at `c3c174cc9ac7b28d09af28e00f1be3a956d61a28`.
