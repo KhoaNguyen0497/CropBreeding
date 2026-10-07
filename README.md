@@ -34,7 +34,7 @@ Empty both slots before switching modes.
 
 Coffee beans can inherit traits and be replanted directly. They cannot be breeding donors, but support Set Companion and Remove Trait.
 
-The station uses a controller-friendly menu. It has no automatic processing or Automate input support. **Breaking it destroys stored contents.**
+The station uses a controller-friendly menu with tabs for each mode. Expanded backpacks display up to four rows, with page buttons, mouse wheel and LB/RB for larger inventories. It has no automatic processing or Automate input support. **Breaking it destroys stored contents.**
 
 ## Traits
 

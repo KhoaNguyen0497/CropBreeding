@@ -24,14 +24,36 @@ internal static class ReviewFixTests
         PatchInstaller.Apply(harmony, typeof(ReviewFixTests), typeof(ReviewFixTests), nameof(Target), transpiler: nameof(Failing));
         Check(harmony.Installed.Count == 1 && harmony.Installed.Contains(original), "failed addition does not erase existing prefix");
 
-        foreach (var viewport in new[] { (1280, 800), (1024, 640), (864, 640), (800, 500), (640, 480), (480, 360) })
+        foreach (int capacity in new[] { 12, 24, 36, 48, 60, 72, 96, 120, 241 })
         {
-            var g = new MenuGeometry(viewport.Item1, viewport.Item2);
-            Check(g.Left >= 0 && g.Top >= 0 && g.Left + g.Width <= viewport.Item1 && g.Top + g.Height <= viewport.Item2, "menu fits viewport");
-            Check(g.X(824) <= g.Left + g.Width && g.Y(592) <= g.Top + g.Height, "close button and final inventory row fit");
-            Check(g.Y(372) < g.Y(384), "wrapped status area stays above inventory");
-            for (int col = 0; col < 11; col++)
-                Check(g.X(48 + col * 64) + g.Size(64) <= g.X(48 + (col + 1) * 64) + 1, "scaled inventory cells don't materially overlap");
+            var first = new MenuInventoryLayout(capacity, 0);
+            var seen = new HashSet<int>();
+            for (int page = 0; page < first.PageCount; page++)
+            {
+                var backpack = new MenuInventoryLayout(capacity, page);
+                Check(backpack.End - backpack.Start <= 48, "only four rows drawn per page");
+                Check(!backpack.IsVisible(backpack.Start - 1) && !backpack.IsVisible(backpack.End), "hidden slots cannot be hit");
+                for (int i = backpack.Start; i < backpack.End; i++)
+                    Check(seen.Add(i), "paging never duplicates an inventory index");
+                foreach (var viewport in new[] { (1920, 1080), (1280, 800), (1280, 720), (1024, 640), (800, 500), (640, 480), (480, 360) })
+                {
+                    var g = new MenuGeometry(viewport.Item1, viewport.Item2, backpack.VisibleRows);
+                    Check(g.Left >= 0 && g.Top >= 0 && g.Left + g.Width <= viewport.Item1 && g.Top + g.Height <= viewport.Item2, "menu fits viewport");
+                    Check(g.Y(g.InventoryBottom + 52) < g.Top + g.Height, "footer fits below inventory");
+                    for (int i = backpack.Start; i < backpack.End; i++)
+                    {
+                        int cell = i - backpack.Start;
+                        int x = g.X(MenuGeometry.InventoryLeft + cell % 12 * MenuGeometry.SlotPitch);
+                        int y = g.Y(MenuGeometry.InventoryTop + cell / 12 * MenuGeometry.SlotPitch);
+                        Check(x >= g.X(28) && x + g.Size(64) <= g.X(980), "slot fits inside inventory panel horizontally");
+                        Check(y >= g.Y(384) && y + g.Size(64) <= g.Y(g.InventoryBottom), "all backpack rows fit inside inventory panel");
+                        Check(g.Y(324) < y, "status stays clear of inventory");
+                    }
+                }
+            }
+            Check(seen.SetEquals(Enumerable.Range(0, first.Capacity)), "all expanded backpack slots reachable exactly once");
+            Check(new MenuInventoryLayout(capacity, -1).PageIndex == 0
+                && new MenuInventoryLayout(capacity, 999).PageIndex == first.PageCount - 1, "paging clamps at both ends");
         }
 
         CheckLocks();

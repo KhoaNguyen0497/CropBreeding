@@ -113,3 +113,13 @@ Run applicable cases through hand, scythe/Iridium Scythe, vanilla Junimo, Better
 ## Scope and remaining work
 
 The review's gameplay decisions are settled. In-game checks above, especially Steam Deck input, rendered UI, actual event order and installed-mod interaction, remain pending. No multiplayer acceptance checklist or backward-compatibility migration work is currently required. Accepted behavior is not a promise that crashes or lag are impossible; report reproducible failures with SMAPI logs before choosing further changes.
+
+## Pending menu redesign validation
+
+Automated layout checks cover 12–241 backpack slots, page boundaries and viewport sizes including 1280×800 and 1280×720. The production source compiles against the game references. Live checks still needed:
+
+- [ ] Open with the inventory expansion mod: four rows fit completely; 60/72/96-slot backpacks expose every real item once across pages.
+- [ ] Pick/place and split stacks on later pages. Switch pages while holding an item, resize, and close; verify quantities, quality and traits are preserved.
+- [ ] D-pad navigation reaches every visible slot, all mode tabs, both page arrows and the close button. LB/RB preserve the relative slot position when possible. Hidden slots must never receive focus or clicks.
+- [ ] Tabs reject switching while inputs or a held item remain. Test Breed, Set Companion and Remove Trait, including ready output and changed breeding cost.
+- [ ] Check native borders, fonts, item counts/quality icons, hover tooltips and controller hints on Steam Deck. B closes once without opening another menu.

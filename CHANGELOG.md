@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Redesigned the breeding menu with Stardew Profit-style panels, direct mode tabs, item summaries and controller hints.
+- Expanded backpacks fit up to four rows; larger inventories use page buttons, mouse wheel or controller LB/RB without moving or copying items.
+- Fixed input labels to display the configured breeding cost instead of a hardcoded five.
+
 - Increased the default breeding cost to 3 matching seeds and 3 trait crops per resulting seed. The accepted breeding cost range is now 1–10, including GMCM.
 
 ## 1.0.1

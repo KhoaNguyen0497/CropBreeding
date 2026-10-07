@@ -19,6 +19,16 @@ internal sealed class BreedingMenu : MenuWithInventory
     private bool recovering;
     private int selectedTrait;
     private MenuGeometry geometry;
+    private MenuInventoryLayout backpack;
+    private int inventoryPage, observedMaxItems;
+    private const int InventoryId = 10000;
+    private static readonly Color Ink = new(86, 47, 24);
+    private static readonly Color Muted = new(132, 98, 60);
+    private static readonly Color Green = new(55, 112, 65);
+    private string donorName = "Empty", seedName = "Empty";
+    private string donorTraits = "", seedTraits = "";
+    private string donorLabel = "", seedLabel = "";
+    private string costHint = "", currentModeHint = "", pageLabel = "";
     private bool canBreed;
     private string[] removalTraits = [];
     private string selectedTraitLabel = "No trait selected";
@@ -29,6 +39,8 @@ internal sealed class BreedingMenu : MenuWithInventory
         Item? Seeds, int SeedCount, string? SeedTraits, string? SeedCompanion, bool Ready, bool CompanionMode,
         bool RemoveMode, int Selection, int TraitLimit, int Cost, int CatalogRevision);
     private ClickableComponent donorSlot = null!, seedSlot = null!, breedButton = null!, modeButton = null!;
+    private ClickableComponent companionButton = null!, removalButton = null!;
+    private ClickableComponent previousPage = null!, nextPage = null!;
     private Item? hover;
     private string message = "";
 
@@ -88,48 +100,98 @@ internal sealed class BreedingMenu : MenuWithInventory
         if (recovering) throw new InvalidOperationException("The breeding menu could not initialize.");
     }
     private Rectangle Bounds(int x, int y, int w, int h) => new(geometry.X(x), geometry.Y(y), geometry.Size(w), geometry.Size(h));
-    private void Layout()
+    private void Layout(int? focus = null)
     {
-        int previousFocus = currentlySnappedComponent?.myID ?? 1000;
-        geometry = new(Game1.uiViewport.Width, Game1.uiViewport.Height);
+        int previousFocus = focus ?? currentlySnappedComponent?.myID ?? 1000;
+        observedMaxItems = Game1.player.MaxItems;
+        backpack = new(Math.Max(observedMaxItems, inventory.inventory.Count), inventoryPage);
+        inventoryPage = backpack.PageIndex;
+        pageLabel = $"{inventoryPage + 1}/{backpack.PageCount}";
+        geometry = new(Game1.uiViewport.Width, Game1.uiViewport.Height, backpack.VisibleRows);
         width = geometry.Width; height = geometry.Height;
         xPositionOnScreen = geometry.Left; yPositionOnScreen = geometry.Top;
-        inventory.xPositionOnScreen = geometry.X(48);
-        inventory.yPositionOnScreen = geometry.Y(384);
-        inventory.width = geometry.Size(768);
-        inventory.height = geometry.Size(208);
+        // Some backpack mods expand InventoryMenu; others only expand the farmer's capacity.
+        // Keep the original inventory and its handlers, and add missing hitboxes if necessary.
+        while (inventory.inventory.Count < backpack.Capacity)
+            inventory.inventory.Add(new ClickableComponent(Rectangle.Empty, inventory.inventory.Count.ToString()));
+        inventory.capacity = backpack.Capacity;
+        inventory.rows = backpack.Capacity / MenuInventoryLayout.Columns;
+        inventory.xPositionOnScreen = geometry.X(MenuGeometry.InventoryLeft);
+        inventory.yPositionOnScreen = geometry.Y(MenuGeometry.InventoryTop);
+        inventory.width = geometry.Size(856);
+        inventory.height = geometry.Size(backpack.VisibleRows * MenuGeometry.SlotPitch);
         for (int i = 0; i < inventory.inventory.Count; i++)
         {
             var slot = inventory.inventory[i];
-            slot.bounds = Bounds(48 + i % 12 * 64, 384 + i / 12 * 72, 64, 64);
-            slot.leftNeighborID = i % 12 > 0 ? inventory.inventory[i - 1].myID : -1;
-            slot.rightNeighborID = i % 12 < 11 && i + 1 < inventory.inventory.Count ? inventory.inventory[i + 1].myID : -1;
-            slot.upNeighborID = i >= 12 ? inventory.inventory[i - 12].myID : 1002;
-            slot.downNeighborID = i + 12 < inventory.inventory.Count ? inventory.inventory[i + 12].myID : -1;
+            int cell = i - backpack.Start;
+            slot.name = i.ToString(); // Vanilla inventory clicks use this real item index.
+            slot.myID = InventoryId + i;
+            slot.visible = backpack.IsVisible(i);
+            slot.bounds = slot.visible ? Bounds(MenuGeometry.InventoryLeft + cell % 12 * MenuGeometry.SlotPitch,
+                MenuGeometry.InventoryTop + cell / 12 * MenuGeometry.SlotPitch, 64, 64) : Rectangle.Empty;
+            slot.fullyImmutable = true;
+            slot.leftNeighborID = cell % 12 > 0 ? InventoryId + i - 1 : -1;
+            slot.rightNeighborID = cell % 12 < 11 && i + 1 < backpack.End ? InventoryId + i + 1 : -1;
+            slot.upNeighborID = cell >= 12 ? InventoryId + i - 12
+                : cell < 4 ? 1000 : cell < 8 ? 1001 : backpack.PageCount > 1 ? 1007 : 1002;
+            slot.downNeighborID = i + 12 < backpack.End ? InventoryId + i + 12 : -1;
         }
-        donorSlot = new(Bounds(240, 128, 64, 64), "Donor")
-            { myID = 1000, rightNeighborID = 1001, upNeighborID = 1003, downNeighborID = 1002 };
-        seedSlot = new(RemovingTrait ? Bounds(440, 128, 340, 64) : Bounds(528, 128, 64, 64), "Seeds")
-            { myID = 1001, leftNeighborID = 1000, upNeighborID = 1003, downNeighborID = 1002 };
-        breedButton = new(Bounds(352, 224, 160, 64), "Breed")
-            { myID = 1002, upNeighborID = 1000, downNeighborID = inventory.inventory[0].myID };
-        modeButton = new(Bounds(448, 24, 304, 48), "Mode")
-            { myID = 1003, rightNeighborID = 1004, downNeighborID = 1001 };
+        donorSlot = new(Bounds(48, 196, 64, 64), "Donor")
+            { myID = 1000, rightNeighborID = 1001, upNeighborID = 1003, downNeighborID = InventoryId + backpack.Start, fullyImmutable = true };
+        seedSlot = new(RemovingTrait ? Bounds(384, 192, 276, 68) : Bounds(384, 196, 64, 64), "Seeds")
+            { myID = 1001, leftNeighborID = 1000, rightNeighborID = 1002, upNeighborID = 1005, downNeighborID = InventoryId + backpack.Start + 4, fullyImmutable = true };
+        breedButton = new(Bounds(720, 204, 240, 48), "Breed")
+            { myID = 1002, leftNeighborID = 1001, upNeighborID = 1006, downNeighborID = backpack.PageCount > 1 ? 1007 : InventoryId + backpack.Start + 9, fullyImmutable = true };
+        modeButton = new(Bounds(28, 80, 316, 44), "Breeding")
+            { myID = 1003, rightNeighborID = 1005, upNeighborID = 1004, downNeighborID = 1000, fullyImmutable = true };
+        companionButton = new(Bounds(364, 80, 316, 44), "Set Companion")
+            { myID = 1005, leftNeighborID = 1003, rightNeighborID = 1006, upNeighborID = 1004, downNeighborID = 1001, fullyImmutable = true };
+        removalButton = new(Bounds(700, 80, 280, 44), "Remove Trait")
+            { myID = 1006, leftNeighborID = 1005, rightNeighborID = 1004, upNeighborID = 1004, downNeighborID = 1002, fullyImmutable = true };
+        previousPage = new(Bounds(800, 340, 44, 32), "Previous page")
+            { myID = 1007, rightNeighborID = 1008, upNeighborID = 1002, downNeighborID = InventoryId + backpack.Start + 10, visible = backpack.PageCount > 1, fullyImmutable = true };
+        nextPage = new(Bounds(920, 340, 44, 32), "Next page")
+            { myID = 1008, leftNeighborID = 1007, upNeighborID = 1002, downNeighborID = InventoryId + backpack.Start + 11, visible = backpack.PageCount > 1, fullyImmutable = true };
         initializeUpperRightCloseButton();
         if (upperRightCloseButton != null)
         {
-            upperRightCloseButton.bounds = Bounds(776, 24, 48, 48);
+            upperRightCloseButton.bounds = Bounds(936, 20, 44, 44);
             upperRightCloseButton.myID = 1004;
-            upperRightCloseButton.leftNeighborID = 1003;
-            upperRightCloseButton.downNeighborID = 1001;
+            upperRightCloseButton.leftNeighborID = 1006;
+            upperRightCloseButton.downNeighborID = 1006;
+            upperRightCloseButton.fullyImmutable = true;
         }
         lastMessage = null;
+        hover = null;
         populateClickableComponentList();
         if (Game1.options.SnappyMenus)
         {
             currentlySnappedComponent = allClickableComponents.FirstOrDefault(c => c.myID == previousFocus) ?? donorSlot;
             snapCursorToCurrentSnappedComponent();
         }
+    }
+    private void ChangePage(int direction)
+    {
+        int page = Math.Clamp(inventoryPage + direction, 0, backpack.PageCount - 1);
+        if (page == inventoryPage) return;
+        int focus = currentlySnappedComponent?.myID ?? 1000;
+        if (focus >= InventoryId && backpack.IsVisible(focus - InventoryId))
+        {
+            int cell = focus - InventoryId - backpack.Start;
+            focus = InventoryId + Math.Min(page * MenuInventoryLayout.PageSize + cell, backpack.Capacity - 1);
+        }
+        inventoryPage = page;
+        Layout(focus);
+        Game1.playSound("shiny4");
+    }
+    public override void receiveScrollWheelAction(int direction)
+    {
+        try
+        {
+            if (Bounds(28, 332, 952, geometry.InventoryBottom - 332).Contains(Game1.getOldMouseX(), Game1.getOldMouseY()))
+                ChangePage(direction > 0 ? -1 : 1);
+        }
+        catch (Exception ex) { Failed("Inventory page", ex); }
     }
     public override void snapToDefaultClickableComponent()
     {
@@ -148,9 +210,9 @@ internal sealed class BreedingMenu : MenuWithInventory
         try
         {
             // Vanilla's reflection-based discovery omits these private controls when rebuilding focus.
-            allClickableComponents = inventory == null ? new() : new(inventory.inventory);
-            foreach (var component in new[] { donorSlot, seedSlot, breedButton, modeButton })
-                if (component != null) allClickableComponents.Add(component);
+            allClickableComponents = inventory == null ? new() : new(inventory.inventory.Where(slot => slot.visible));
+            foreach (var component in new[] { donorSlot, seedSlot, breedButton, modeButton, companionButton, removalButton, previousPage, nextPage })
+                if (component?.visible == true) allClickableComponents.Add(component);
             if (upperRightCloseButton != null) allClickableComponents.Add(upperRightCloseButton);
         }
         catch (Exception ex)
@@ -166,6 +228,11 @@ internal sealed class BreedingMenu : MenuWithInventory
             {
                 ModEntry.Instance.Helper.Input.Suppress(SButton.ControllerB);
                 exitThisMenu();
+                return;
+            }
+            if (button is Buttons.LeftShoulder or Buttons.RightShoulder)
+            {
+                ChangePage(button == Buttons.LeftShoulder ? -1 : 1);
                 return;
             }
             base.receiveGamePadButton(button);
@@ -215,7 +282,44 @@ internal sealed class BreedingMenu : MenuWithInventory
         canBreed = !state.Ready && donor != null && (state.RemoveMode ? Breeder.CanRemoveFrom(donor) && SelectedTrait != null
             : seeds != null && (state.CompanionMode ? seeds.Stack >= 1 && Breeder.CanAssign(donor, seeds)
             : seeds.Stack >= Breeder.IngredientsRequired && Breeder.CanBreed(donor, seeds, out _)));
+        donorName = donor?.DisplayName ?? "Empty";
+        seedName = seeds?.DisplayName ?? "Empty";
+        donorTraits = Summary(donor);
+        seedTraits = Summary(seeds);
+        donorLabel = state.Ready ? "Collect seed" : state.RemoveMode ? "Seed (1)"
+            : state.CompanionMode ? "Companion seed (1)" : $"Donor crops ({state.Cost})";
+        seedLabel = state.RemoveMode ? "Trait to remove" : state.CompanionMode ? "Chosen crop (1)" : $"Matching seeds ({state.Cost})";
+        currentModeHint = ModeHint;
+        costHint = state.RemoveMode ? "Remove one trait for free" : state.CompanionMode ? "1 seed + 1 crop" : $"{state.Cost} seeds + {state.Cost} crops = 1 seed";
+        if (lastEligibility is EligibilityState previous && previous.Cost != state.Cost)
+            message = ModeHint;
         lastEligibility = state;
+    }
+
+    private static string Summary(Item? item)
+    {
+        if (item == null) return "Select from inventory";
+        string[] traits = Traits.Read(item.modData);
+        return traits.Length == 0 ? "No traits" : traits.Length == 1 ? TraitRules.Label(traits[0]) : $"{traits.Length} traits";
+    }
+
+    private void ChangeMode(int mode)
+    {
+        int current = RemovingTrait ? 2 : SettingCompanion ? 1 : 0;
+        if (mode == current) return;
+        if (machine.heldObject.Value != null || seeds != null || heldItem != null)
+        {
+            message = "Empty both slots and put down your held item to change mode.";
+            return;
+        }
+        machine.modData.Remove(Breeder.ModeKey);
+        machine.modData.Remove(Breeder.RemoveModeKey);
+        if (mode == 1) machine.modData[Breeder.ModeKey] = "true";
+        if (mode == 2) machine.modData[Breeder.RemoveModeKey] = "true";
+        selectedTrait = 0;
+        message = ModeHint;
+        Layout(mode == 0 ? 1003 : mode == 1 ? 1005 : 1006);
+        Game1.playSound("smallSelect");
     }
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
@@ -230,30 +334,14 @@ internal sealed class BreedingMenu : MenuWithInventory
                 exitThisMenu();
                 return;
             }
-            if (modeButton.containsPoint(x, y) || donorSlot.containsPoint(x, y) || seedSlot.containsPoint(x, y) || breedButton.containsPoint(x, y))
+            if (previousPage.visible && previousPage.containsPoint(x, y)) { ChangePage(-1); return; }
+            if (nextPage.visible && nextPage.containsPoint(x, y)) { ChangePage(1); return; }
+            bool modeClick = modeButton.containsPoint(x, y) || companionButton.containsPoint(x, y) || removalButton.containsPoint(x, y);
+            if (modeClick || donorSlot.containsPoint(x, y) || seedSlot.containsPoint(x, y) || breedButton.containsPoint(x, y))
                 snapshot = new InputSnapshot(this);
-            if (modeButton.containsPoint(x, y))
+            if (modeClick)
             {
-                if (machine.heldObject.Value != null || seeds != null || heldItem != null)
-                    message = "Empty both slots before changing mode.";
-                else
-                {
-                    if (RemovingTrait) machine.modData.Remove(Breeder.RemoveModeKey);
-                    else if (SettingCompanion)
-                    {
-                        machine.modData.Remove(Breeder.ModeKey);
-                        machine.modData[Breeder.RemoveModeKey] = "true";
-                    }
-                    else machine.modData[Breeder.ModeKey] = "true";
-                    selectedTrait = 0;
-                    message = ModeHint;
-                    Layout();
-                    if (Game1.options.SnappyMenus)
-                    {
-                        currentlySnappedComponent = modeButton;
-                        snapCursorToCurrentSnappedComponent();
-                    }
-                }
+                ChangeMode(modeButton.containsPoint(x, y) ? 0 : companionButton.containsPoint(x, y) ? 1 : 2);
                 return;
             }
             if (donorSlot.containsPoint(x, y))
@@ -358,6 +446,8 @@ internal sealed class BreedingMenu : MenuWithInventory
         try
         {
             base.update(time);
+            if (observedMaxItems != Game1.player.MaxItems || inventory.inventory.Count != backpack.Capacity)
+                Layout();
             RefreshEligibility();
             if (!Present || !mutex.IsLockHeld())
             {
@@ -424,28 +514,58 @@ internal sealed class BreedingMenu : MenuWithInventory
     {
         try
         {
-            b.Draw(Game1.fadeToBlackRect, new Rectangle(0, 0, Game1.uiViewport.Width, Game1.uiViewport.Height), Color.Black * .65f);
-            drawTextureBox(b, xPositionOnScreen, yPositionOnScreen, width, height, Color.White);
-            Text(b, "Crop Breeding", Bounds(48, 24, 360, 48), Game1.dialogueFont);
-            DrawSlot(b, donorSlot, machine.readyForHarvest.Value ? "Bred seed" : RemovingTrait ? "Seed (1)" : SettingCompanion ? "Companion seed" : "Donor crops (5)", Bounds(80, 88, 344, 32));
+            b.Draw(Game1.fadeToBlackRect, new Rectangle(0, 0, Game1.uiViewport.Width, Game1.uiViewport.Height), Color.Black * .5f);
+            Panel(b, new Rectangle(xPositionOnScreen, yPositionOnScreen, width, height));
+            Text(b, "Crop Breeding", Bounds(32, 22, 420, 42), Game1.dialogueFont);
+            Text(b, costHint, Bounds(460, 28, 452, 32), color: Muted, textScale: .82f);
+            Button(b, modeButton, "Breeding", selected: !SettingCompanion && !RemovingTrait);
+            Button(b, companionButton, "Set Companion", selected: SettingCompanion);
+            Button(b, removalButton, "Remove Trait", selected: RemovingTrait);
+
+            Panel(b, Bounds(28, 144, 316, 136), .6f);
+            Panel(b, Bounds(364, 144, 316, 136), .6f);
+            Panel(b, Bounds(700, 144, 280, 136), .6f);
+            Text(b, donorLabel, Bounds(48, 156, 276, 30), color: machine.readyForHarvest.Value ? Green : Muted, textScale: .82f);
+            Slot(b, donorSlot);
+            Text(b, donorName, Bounds(128, 196, 196, 26), textScale: .86f);
+            Text(b, donorTraits, Bounds(128, 226, 196, 36), color: Muted, textScale: .72f);
+            Text(b, seedLabel, Bounds(384, 156, 276, 30), color: Muted, textScale: .82f);
             if (RemovingTrait)
+                Button(b, seedSlot, selectedTraitLabel, enabled: RemovalTraits.Length > 0);
+            else
             {
-                Text(b, "Choose trait / select to cycle", Bounds(440, 88, 340, 32));
-                drawTextureBox(b, seedSlot.bounds.X, seedSlot.bounds.Y, seedSlot.bounds.Width, seedSlot.bounds.Height, Color.White);
-                Text(b, selectedTraitLabel, Bounds(452, 140, 316, 40));
+                Slot(b, seedSlot);
+                Text(b, seedName, Bounds(464, 196, 196, 26), textScale: .86f);
+                Text(b, seedTraits, Bounds(464, 226, 196, 36), color: Muted, textScale: .72f);
             }
-            else DrawSlot(b, seedSlot, SettingCompanion ? "Chosen crop (1)" : "Seeds (5)", Bounds(440, 88, 340, 32));
-            drawTextureBox(b, modeButton.bounds.X, modeButton.bounds.Y, modeButton.bounds.Width, modeButton.bounds.Height, Color.White);
-            Text(b, RemovingTrait ? "Mode: Remove Trait" : SettingCompanion ? "Mode: Set Companion" : "Mode: Breeding", Bounds(460, 28, 280, 40));
-            drawTextureBox(b, breedButton.bounds.X, breedButton.bounds.Y, breedButton.bounds.Width, breedButton.bounds.Height, CanBreed ? Color.White : Color.LightGray);
-            Text(b, RemovingTrait ? "Remove" : SettingCompanion ? "Set" : "Breed", Bounds(364, 236, 136, 40), color: CanBreed ? Game1.textColor : Color.Gray);
-            if (lastMessage != message)
+            Text(b, machine.readyForHarvest.Value ? "Seed ready" : CanBreed ? "Ready" : "Add ingredients",
+                Bounds(720, 156, 240, 30), color: CanBreed || machine.readyForHarvest.Value ? Green : Muted, textScale: .85f);
+            Button(b, breedButton, RemovingTrait ? "Remove trait" : SettingCompanion ? "Set companion" : "Breed", enabled: CanBreed);
+            string status = message == currentModeHint ? RemovingTrait ? "Select the trait box to cycle through traits."
+                : "Select an inventory item, then place it in an input slot." : message;
+            if (lastMessage != status)
             {
-                wrappedMessage = Game1.parseText(message, Game1.smallFont, 768);
-                lastMessage = message;
+                wrappedMessage = Game1.parseText(status, Game1.smallFont, 1180);
+                lastMessage = status;
             }
-            Text(b, wrappedMessage, Bounds(48, 304, 768, 68));
+            Text(b, wrappedMessage, Bounds(40, 288, 928, 36), color: Muted, textScale: .78f);
+
+            Panel(b, Bounds(28, 332, 952, geometry.InventoryBottom - 332), .6f);
+            Text(b, "Inventory", Bounds(48, 340, 360, 32), textScale: .9f);
+            if (backpack.PageCount > 1)
+            {
+                Button(b, previousPage, "<", enabled: inventoryPage > 0);
+                Text(b, pageLabel, Bounds(848, 340, 68, 32), centered: true, textScale: .8f);
+                Button(b, nextPage, ">", enabled: inventoryPage + 1 < backpack.PageCount);
+            }
             DrawInventory(b);
+            b.Draw(Game1.staminaRect, Bounds(32, geometry.InventoryBottom + 16, 944, 2), new Color(151, 83, 30));
+            string controls = Game1.options.gamepadControls
+                ? backpack.PageCount > 1 ? "D-pad: select  |  A: pick / place  |  X: split stack  |  LB/RB: page  |  B: close"
+                    : "D-pad: select  |  A: pick / place  |  X: split stack  |  B: close"
+                : backpack.PageCount > 1 ? "Left-click: pick / place  |  Right-click: split stack  |  Scroll: page  |  Esc: close"
+                    : "Left-click: pick / place  |  Right-click: split stack  |  Esc: close";
+            Text(b, controls, Bounds(32, geometry.InventoryBottom + 28, 944, 24), color: Muted, textScale: .72f);
             if (upperRightCloseButton != null)
                 b.Draw(upperRightCloseButton.texture, upperRightCloseButton.bounds, upperRightCloseButton.sourceRect, Color.White);
             DrawItems(b);
@@ -454,19 +574,37 @@ internal sealed class BreedingMenu : MenuWithInventory
         }
         catch (Exception ex) { Failed("draw", ex); }
     }
-    private void Text(SpriteBatch b, string text, Rectangle area, SpriteFont? font = null, Color? color = null)
+    private void Panel(SpriteBatch b, Rectangle area, float borderScale = 1f, Color? tint = null) =>
+        drawTextureBox(b, Game1.menuTexture, new Rectangle(0, 256, 60, 60), area.X, area.Y, area.Width, area.Height,
+            tint ?? Color.White, borderScale * geometry.Scale, false);
+
+    private void Button(SpriteBatch b, ClickableComponent button, string label, bool selected = false, bool enabled = true)
+    {
+        Rectangle area = button.bounds;
+        bool focused = Game1.options.SnappyMenus && currentlySnappedComponent == button
+            || button.containsPoint(Game1.getOldMouseX(), Game1.getOldMouseY());
+        drawTextureBox(b, Game1.mouseCursors, new Rectangle(432, 439, 9, 9), area.X, area.Y, area.Width, area.Height,
+            !enabled ? Color.LightGray : selected || focused ? Color.Wheat : Color.White, 3 * geometry.Scale, false);
+        int inset = geometry.Size(12);
+        Text(b, label, new Rectangle(area.X + inset, area.Y, area.Width - 2 * inset, area.Height),
+            color: enabled ? Ink : Muted, centered: true, textScale: .85f);
+    }
+    private void Text(SpriteBatch b, string text, Rectangle area, SpriteFont? font = null, Color? color = null,
+        bool centered = false, float textScale = 1f)
     {
         font ??= Game1.smallFont;
         Vector2 size = font.MeasureString(text);
-        float scale = Math.Min(geometry.Scale, Math.Min(area.Width / Math.Max(1f, size.X), area.Height / Math.Max(1f, size.Y)));
-        b.DrawString(font, text, new Vector2(area.X, area.Y + (area.Height - size.Y * scale) / 2), color ?? Game1.textColor,
+        float scale = Math.Min(geometry.Scale * textScale, Math.Min(area.Width / Math.Max(1f, size.X), area.Height / Math.Max(1f, size.Y)));
+        b.DrawString(font, text, new Vector2(area.X + (centered ? (area.Width - size.X * scale) / 2 : 0), area.Y + (area.Height - size.Y * scale) / 2), color ?? Ink,
             0, Vector2.Zero, scale, SpriteEffects.None, 1f);
     }
-    private void DrawSlot(SpriteBatch b, ClickableComponent slot, string label, Rectangle labelArea)
+    private void Slot(SpriteBatch b, ClickableComponent slot)
     {
-        Text(b, label, labelArea);
-        int border = geometry.Size(8);
-        drawTextureBox(b, slot.bounds.X - border, slot.bounds.Y - border, slot.bounds.Width + border * 2, slot.bounds.Height + border * 2, Color.White);
+        bool focused = Game1.options.SnappyMenus && currentlySnappedComponent == slot
+            || slot.containsPoint(Game1.getOldMouseX(), Game1.getOldMouseY());
+        int inset = geometry.Size(4);
+        Panel(b, new Rectangle(slot.bounds.X - inset, slot.bounds.Y - inset, slot.bounds.Width + 2 * inset, slot.bounds.Height + 2 * inset),
+            .4f, focused ? new Color(255, 247, 190) : Color.White);
     }
     private void DrawInventory(SpriteBatch b)
     {
@@ -474,10 +612,12 @@ internal sealed class BreedingMenu : MenuWithInventory
         // but draw using the very same scaled rectangles as pointer/controller hit testing.
         Rectangle background = Game1.getSourceRectForStandardTileSheet(Game1.menuTexture, 10);
         Rectangle locked = Game1.getSourceRectForStandardTileSheet(Game1.menuTexture, 57);
-        for (int i = 0; i < inventory.inventory.Count; i++)
+        for (int i = backpack.Start; i < backpack.End; i++)
         {
             Rectangle bounds = inventory.inventory[i].bounds;
-            b.Draw(Game1.menuTexture, bounds, background, Color.White);
+            bool focused = Game1.options.SnappyMenus && currentlySnappedComponent == inventory.inventory[i]
+                || bounds.Contains(Game1.getOldMouseX(), Game1.getOldMouseY());
+            b.Draw(Game1.menuTexture, bounds, background, focused ? Color.Wheat : Color.White);
             if (i >= Game1.player.MaxItems) b.Draw(Game1.menuTexture, bounds, locked, Color.White * .5f);
         }
     }
@@ -502,7 +642,7 @@ internal sealed class BreedingMenu : MenuWithInventory
         {
             Draw(machine.heldObject.Value, donorSlot.bounds.X, donorSlot.bounds.Y);
             if (!RemovingTrait) Draw(seeds, seedSlot.bounds.X, seedSlot.bounds.Y);
-            for (int i = 0; i < inventory.inventory.Count && i < inventory.actualInventory.Count && i < Game1.player.MaxItems; i++)
+            for (int i = backpack.Start; i < backpack.End && i < inventory.actualInventory.Count && i < Game1.player.MaxItems; i++)
                 Draw(inventory.actualInventory[i], inventory.inventory[i].bounds.X, inventory.inventory[i].bounds.Y);
             Draw(heldItem, Game1.getOldMouseX() + 8, Game1.getOldMouseY() + 8);
         }
