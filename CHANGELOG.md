@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Removed Researcher's growth and regrowth penalty. Its mutation bonus remains +5 percentage points per level.
+- Updated Researcher's Lookup Anything description and documentation.
+
 ## 1.0.7
 
 - Added controller X quick-insert for the selected inventory stack in Breed, Set Companion and Remove Trait modes, including expanded inventory pages.

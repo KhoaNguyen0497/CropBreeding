@@ -21,6 +21,9 @@ internal static class LookupDescriptionTests
         Check(TraitDescriptions.Describe("high_quality:3", config).Contains("15%"), "quality percentage");
         Check(TraitDescriptions.Describe("researcher:5", config).Contains("25 percentage points")
             && TraitDescriptions.Describe("researcher:5", config).Contains("30% total"), "Researcher distinguishes points and total");
+        for (int level = 1; level <= 5; level++)
+            Check(!TraitDescriptions.Describe($"researcher:{level}", config).Contains("longer")
+                && !TraitDescriptions.Describe($"researcher:{level}", config).Contains("growth"), "Researcher description has no growth penalty");
         Check(TraitDescriptions.Describe("evergreen:4", config).Contains("Dormant")
             && !TraitDescriptions.Describe("evergreen:5", config).Contains("Dormant"), "Evergreen activation level");
         Check(TraitDescriptions.Describe("companion:2", config).Contains("Unassigned")

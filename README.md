@@ -49,7 +49,7 @@ Trait percentages are fixed, per level unless stated otherwise.
 | High Quality | 5% chance per primary item to upgrade its normal harvest quality by one tier. |
 | Companion | Up to 20% chance for one chosen, plain companion crop. Chance scales with the main crop's base regrowth days / 10, or base growth days / 7 for single-harvest crops, capped at full chance. Adds half the companion's base growth time to growth and regrowth. |
 | Evergreen | Level 5 allows all-season planting and survival, including winter. Levels 1–4 are dormant. |
-| Researcher | Adds 5 percentage points to mutation chance, but increases growth and regrowth time by 10%. |
+| Researcher | Adds 5 percentage points to mutation chance. |
 | Seed Saver | 10% chance to return one matching seed with the parent's original traits. |
 | Rooted | 10% chance for a single-harvest crop to restart from seed stage with its original traits. |
 | Nurse Crop | 30% chance to advance adjacent non-fruit trees by one stage; excess chance adds stages. Stops one stage before maturity. Single-harvest crops only. |

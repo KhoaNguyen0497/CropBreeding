@@ -15,7 +15,7 @@ public static class TraitRules
     public const double SeedSaverChance = .10;
     public const double RootedChance = .10;
     public const double ResearcherMutationBonus = .05;
-    public const double ResearcherGrowthPenalty = .10;
+    public const double ResearcherGrowthPenalty = 0;
 
     public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver", "copper_bearing", "iron_bearing", "gold_bearing", "rooted", "nurse_crop",
         "maple_bearing", "resin_bearing", "tar_bearing"];
