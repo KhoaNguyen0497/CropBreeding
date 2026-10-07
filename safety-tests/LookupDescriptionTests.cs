@@ -61,7 +61,8 @@ internal static class LookupDescriptionTests
             && fields.Any(f => f.Label == "Companion 2" && f.Value.Contains("Parsnip")), "seed/produce trait rows contain current level and companion");
         var crop = new Crop(); crop.modData[Traits.Key] = "rooted:4";
         fields = Apply(new LookupSubject(item, crop), []).ToArray();
-        Check(fields.Length == 2 && fields[1].Label == "Rooted 4" && fields[1].Value.Contains("40%"), "planted crop metadata takes priority over sample item");
+        Check(fields.Length == 3 && fields[2].Label == "Rooted 4" && fields[2].Value.Contains("40%")
+            && fields[1].Label == "Settings timing" && fields[1].Value.Contains("saved mutation roll"), "planted crop metadata takes priority over sample item");
         Check(!crop.modData.ContainsKey(MutationState.Key) && crop.modData[Traits.Key] == "rooted:4", "lookup never prepares mutations or changes traits");
         var plain = new Item();
         Check(ReferenceEquals(Apply(new LookupSubject(plain), original), original), "plain items unchanged");

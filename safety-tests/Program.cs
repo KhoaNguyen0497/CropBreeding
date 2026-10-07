@@ -10,8 +10,8 @@ Check(ErrorHandler.Try("Next independent action", () => calls++), "next action s
 Check(calls == 2 && Game1.chatBox!.Messages.Count == 0, "chat disabled by default");
 ModEntry.Instance.Config.ShowErrorsInChat = true;
 ErrorHandler.Report("Repeat", new Exception("first"));
-ErrorHandler.Report("Repeat", new Exception("second"));
-Check(Game1.chatBox!.Messages.Count == 1 && ModEntry.Instance.Monitor.Messages.Count == 3, "chat throttled but every error logged");
+ErrorHandler.Report("Repeat", new Exception("first"));
+Check(Game1.chatBox!.Messages.Count == 1 && ModEntry.Instance.Monitor.Messages.Count == 2, "identical errors and chat both throttled");
 ModEntry.Instance.Monitor.Throw = true;
 Game1.chatBox.Throw = true;
 ErrorHandler.Report("Broken reporters", new Exception("must not escape"));
@@ -66,3 +66,5 @@ Console.WriteLine("Passed injected failures, reporter isolation, crop rollback, 
 
 MutationLifecycleTests.Run();
 LookupDescriptionTests.Run();
+
+ReviewFixTests.Run();

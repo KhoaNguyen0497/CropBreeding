@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
-using StardewValley.Network;
+using CropBreeding.Core;
 using SObject = StardewValley.Object;
 
 namespace CropBreeding.UI;
@@ -13,11 +13,21 @@ internal sealed class BreedingMenu : MenuWithInventory
 {
     private readonly SObject machine;
     private readonly GameLocation location;
-    private readonly NetMutex mutex;
+    private readonly StationLock mutex;
     private Item? seeds;
     private bool cleaned;
     private bool recovering;
     private int selectedTrait;
+    private MenuGeometry geometry;
+    private bool canBreed;
+    private string[] removalTraits = [];
+    private string selectedTraitLabel = "No trait selected";
+    private EligibilityState? lastEligibility;
+    private string? lastMessage;
+    private string wrappedMessage = "";
+    private readonly record struct EligibilityState(Item? Donor, int DonorCount, string? DonorTraits, string? DonorCompanion,
+        Item? Seeds, int SeedCount, string? SeedTraits, string? SeedCompanion, bool Ready, bool CompanionMode,
+        bool RemoveMode, int Selection, int TraitLimit, int CatalogRevision);
     private ClickableComponent donorSlot = null!, seedSlot = null!, breedButton = null!, modeButton = null!;
     private Item? hover;
     private string message = "5 donor crops + 5 matching seeds = 1 bred seed";
@@ -61,49 +71,65 @@ internal sealed class BreedingMenu : MenuWithInventory
         catch (Exception cleanupError) { ErrorHandler.Report("Close failed breeding menu", cleanupError); }
         finally
         {
-            ErrorHandler.Try("Release machine lock", () => { if (mutex != null && mutex.IsLockHeld()) mutex.ReleaseLock(); });
+            ErrorHandler.Try("Release machine lock", () => { mutex?.ReleaseLock(); });
             if (ReferenceEquals(Game1.activeClickableMenu, this)) Game1.activeClickableMenu = null;
         }
     }
 
-    internal BreedingMenu(SObject machine, GameLocation location, NetMutex mutex)
+    internal BreedingMenu(SObject machine, GameLocation location, StationLock mutex)
         : base(okButton: false, trashCan: false, heldItemExitBehavior: ItemExitBehavior.ReturnToPlayer, allowExitWithHeldItem: true)
     {
         this.machine = machine;
         this.location = location;
         this.mutex = mutex;
         message = ModeHint;
+        RefreshEligibility();
         Layout();
         if (recovering) throw new InvalidOperationException("The breeding menu could not initialize.");
     }
+    private Rectangle Bounds(int x, int y, int w, int h) => new(geometry.X(x), geometry.Y(y), geometry.Size(w), geometry.Size(h));
     private void Layout()
     {
-        width = 864; height = 640;
-        xPositionOnScreen = (Game1.uiViewport.Width - width) / 2;
-        yPositionOnScreen = (Game1.uiViewport.Height - height) / 2;
-        inventory.movePosition(xPositionOnScreen + 48 - inventory.xPositionOnScreen,
-            yPositionOnScreen + 352 - inventory.yPositionOnScreen);
-        donorSlot = new(new Rectangle(xPositionOnScreen + 240, yPositionOnScreen + 120, 64, 64), "Donor")
-            { myID = 1000, rightNeighborID = 1001, downNeighborID = 1002 };
-        seedSlot = new(new Rectangle(xPositionOnScreen + 528, yPositionOnScreen + 120, 64, 64), "Seeds")
-            { myID = 1001, leftNeighborID = 1000, downNeighborID = 1002 };
-        if (RemovingTrait) seedSlot.bounds = new Rectangle(xPositionOnScreen + 440, yPositionOnScreen + 120, 340, 64);
-        breedButton = new(new Rectangle(xPositionOnScreen + 352, yPositionOnScreen + 232, 160, 64), "Breed")
+        int previousFocus = currentlySnappedComponent?.myID ?? 1000;
+        geometry = new(Game1.uiViewport.Width, Game1.uiViewport.Height);
+        width = geometry.Width; height = geometry.Height;
+        xPositionOnScreen = geometry.Left; yPositionOnScreen = geometry.Top;
+        inventory.xPositionOnScreen = geometry.X(48);
+        inventory.yPositionOnScreen = geometry.Y(384);
+        inventory.width = geometry.Size(768);
+        inventory.height = geometry.Size(208);
+        for (int i = 0; i < inventory.inventory.Count; i++)
+        {
+            var slot = inventory.inventory[i];
+            slot.bounds = Bounds(48 + i % 12 * 64, 384 + i / 12 * 72, 64, 64);
+            slot.leftNeighborID = i % 12 > 0 ? inventory.inventory[i - 1].myID : -1;
+            slot.rightNeighborID = i % 12 < 11 && i + 1 < inventory.inventory.Count ? inventory.inventory[i + 1].myID : -1;
+            slot.upNeighborID = i >= 12 ? inventory.inventory[i - 12].myID : 1002;
+            slot.downNeighborID = i + 12 < inventory.inventory.Count ? inventory.inventory[i + 12].myID : -1;
+        }
+        donorSlot = new(Bounds(240, 128, 64, 64), "Donor")
+            { myID = 1000, rightNeighborID = 1001, upNeighborID = 1003, downNeighborID = 1002 };
+        seedSlot = new(RemovingTrait ? Bounds(440, 128, 340, 64) : Bounds(528, 128, 64, 64), "Seeds")
+            { myID = 1001, leftNeighborID = 1000, upNeighborID = 1003, downNeighborID = 1002 };
+        breedButton = new(Bounds(352, 224, 160, 64), "Breed")
             { myID = 1002, upNeighborID = 1000, downNeighborID = inventory.inventory[0].myID };
-        modeButton = new(new Rectangle(xPositionOnScreen + 520, yPositionOnScreen + 22, 276, 48), "Mode")
-            { myID = 1003, downNeighborID = 1001 };
-        donorSlot.upNeighborID = seedSlot.upNeighborID = 1003;
-        foreach (var slot in inventory.inventory.Take(12)) slot.upNeighborID = 1002;
+        modeButton = new(Bounds(448, 24, 304, 48), "Mode")
+            { myID = 1003, rightNeighborID = 1004, downNeighborID = 1001 };
         initializeUpperRightCloseButton();
         if (upperRightCloseButton != null)
         {
+            upperRightCloseButton.bounds = Bounds(776, 24, 48, 48);
             upperRightCloseButton.myID = 1004;
             upperRightCloseButton.leftNeighborID = 1003;
             upperRightCloseButton.downNeighborID = 1001;
-            modeButton.rightNeighborID = 1004;
         }
+        lastMessage = null;
         populateClickableComponentList();
-        if (Game1.options.SnappyMenus) snapToDefaultClickableComponent();
+        if (Game1.options.SnappyMenus)
+        {
+            currentlySnappedComponent = allClickableComponents.FirstOrDefault(c => c.myID == previousFocus) ?? donorSlot;
+            snapCursorToCurrentSnappedComponent();
+        }
     }
     public override void snapToDefaultClickableComponent()
     {
@@ -163,13 +189,25 @@ internal sealed class BreedingMenu : MenuWithInventory
     private bool Present => location.objects.TryGetValue(machine.TileLocation, out var current) && ReferenceEquals(current, machine);
     private bool SettingCompanion => Breeder.CompanionMode(machine);
     private bool RemovingTrait => Breeder.RemoveMode(machine);
-    private string[] RemovalTraits => machine.heldObject.Value is Item item && !machine.readyForHarvest.Value ? Traits.Read(item.modData) : [];
-    private string? SelectedTrait => RemovalTraits is { Length: > 0 } traits ? traits[selectedTrait % traits.Length] : null;
+    private string[] RemovalTraits => removalTraits;
+    private string? SelectedTrait => removalTraits.Length > 0 ? removalTraits[selectedTrait % removalTraits.Length] : null;
     private string ModeHint => RemovingTrait ? "Insert 1 seed, choose a trait, then select Remove." : SettingCompanion ? "1 Companion seed + 1 chosen crop" : "5 donor crops + 5 matching seeds = 1 bred seed";
-    private bool CanBreed => !machine.readyForHarvest.Value && machine.heldObject.Value is Item donor
-        && (RemovingTrait ? Breeder.CanRemoveFrom(donor) && SelectedTrait != null
-            : seeds != null && (SettingCompanion ? seeds.Stack >= 1 && Breeder.CanAssign(donor, seeds)
+    private bool CanBreed => canBreed;
+    private static string? Metadata(Item? item, string key) => item != null && item.modData.TryGetValue(key, out string value) ? value : null;
+    private void RefreshEligibility()
+    {
+        Item? donor = machine.heldObject.Value;
+        var state = new EligibilityState(donor, donor?.Stack ?? 0, Metadata(donor, Traits.Key), Metadata(donor, Companion.Key),
+            seeds, seeds?.Stack ?? 0, Metadata(seeds, Traits.Key), Metadata(seeds, Companion.Key), machine.readyForHarvest.Value,
+            SettingCompanion, RemovingTrait, selectedTrait, ModEntry.Instance.Config.MaximumTraits, Companion.Revision);
+        if (lastEligibility == state) return;
+        removalTraits = donor != null && !state.Ready ? Traits.Read(donor.modData) : [];
+        selectedTraitLabel = SelectedTrait is string trait ? TraitRules.Label(trait) : "No trait selected";
+        canBreed = !state.Ready && donor != null && (state.RemoveMode ? Breeder.CanRemoveFrom(donor) && SelectedTrait != null
+            : seeds != null && (state.CompanionMode ? seeds.Stack >= 1 && Breeder.CanAssign(donor, seeds)
             : seeds.Stack >= Breeder.SeedsRequired && Breeder.CanBreed(donor, seeds, out _)));
+        lastEligibility = state;
+    }
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
     {
@@ -177,6 +215,7 @@ internal sealed class BreedingMenu : MenuWithInventory
         try
         {
             if (!Present || !mutex.IsLockHeld()) return;
+            RefreshEligibility();
             if (upperRightCloseButton?.containsPoint(x, y) == true)
             {
                 exitThisMenu();
@@ -275,6 +314,10 @@ internal sealed class BreedingMenu : MenuWithInventory
             if (snapshot != null) ErrorHandler.Try("Restore breeding inputs", snapshot.Restore);
             Failed("Breeding input", ex);
         }
+        finally
+        {
+            if (!cleaned) ErrorHandler.Try("Refresh breeding controls", RefreshEligibility);
+        }
     }
     public override void receiveRightClick(int x, int y, bool playSound = true)
     {
@@ -306,6 +349,7 @@ internal sealed class BreedingMenu : MenuWithInventory
         try
         {
             base.update(time);
+            RefreshEligibility();
             if (!Present || !mutex.IsLockHeld())
             {
                 if (!Present) seeds = null; // Destroying the machine destroys its staged contents.
@@ -329,7 +373,7 @@ internal sealed class BreedingMenu : MenuWithInventory
             ReturnItem(returnHeld);
             ErrorHandler.Try("Base menu cleanup", () => base.cleanupBeforeExit());
         }
-        finally { ErrorHandler.Try("Release machine lock", () => { if (mutex.IsLockHeld()) mutex.ReleaseLock(); }); }
+        finally { ErrorHandler.Try("Release machine lock", () => { mutex.ReleaseLock(); }); }
     }
     private static void ReturnItem(Item? item)
     {
@@ -373,36 +417,95 @@ internal sealed class BreedingMenu : MenuWithInventory
         {
             b.Draw(Game1.fadeToBlackRect, new Rectangle(0, 0, Game1.uiViewport.Width, Game1.uiViewport.Height), Color.Black * .65f);
             drawTextureBox(b, xPositionOnScreen, yPositionOnScreen, width, height, Color.White);
-            b.DrawString(Game1.dialogueFont, "Crop Breeding", new Vector2(xPositionOnScreen + 48, yPositionOnScreen + 28), Game1.textColor);
-            DrawSlot(b, donorSlot, machine.heldObject.Value, machine.readyForHarvest.Value ? "Bred seed" : RemovingTrait ? "Seed (1)" : SettingCompanion ? "Companion seed" : "Donor crops (5)");
+            Text(b, "Crop Breeding", Bounds(48, 24, 360, 48), Game1.dialogueFont);
+            DrawSlot(b, donorSlot, machine.readyForHarvest.Value ? "Bred seed" : RemovingTrait ? "Seed (1)" : SettingCompanion ? "Companion seed" : "Donor crops (5)", Bounds(80, 88, 344, 32));
             if (RemovingTrait)
             {
-                b.DrawString(Game1.smallFont, "Choose trait (click to cycle)", new Vector2(seedSlot.bounds.X, seedSlot.bounds.Y - 40), Game1.textColor);
+                Text(b, "Choose trait / select to cycle", Bounds(440, 88, 340, 32));
                 drawTextureBox(b, seedSlot.bounds.X, seedSlot.bounds.Y, seedSlot.bounds.Width, seedSlot.bounds.Height, Color.White);
-                b.DrawString(Game1.smallFont, SelectedTrait is string trait ? Core.TraitRules.Label(trait) : "No trait selected",
-                    new Vector2(seedSlot.bounds.X + 12, seedSlot.bounds.Y + 16), Game1.textColor);
+                Text(b, selectedTraitLabel, Bounds(452, 140, 316, 40));
             }
-            else DrawSlot(b, seedSlot, seeds, SettingCompanion ? "Chosen crop (1)" : "Seeds (5)");
+            else DrawSlot(b, seedSlot, SettingCompanion ? "Chosen crop (1)" : "Seeds (5)", Bounds(440, 88, 340, 32));
             drawTextureBox(b, modeButton.bounds.X, modeButton.bounds.Y, modeButton.bounds.Width, modeButton.bounds.Height, Color.White);
-            b.DrawString(Game1.smallFont, RemovingTrait ? "Mode: Remove Trait" : SettingCompanion ? "Mode: Set Companion" : "Mode: Breeding", new Vector2(modeButton.bounds.X + 12, modeButton.bounds.Y + 8), Game1.textColor);
+            Text(b, RemovingTrait ? "Mode: Remove Trait" : SettingCompanion ? "Mode: Set Companion" : "Mode: Breeding", Bounds(460, 28, 280, 40));
             drawTextureBox(b, breedButton.bounds.X, breedButton.bounds.Y, breedButton.bounds.Width, breedButton.bounds.Height, CanBreed ? Color.White : Color.LightGray);
-            b.DrawString(Game1.smallFont, RemovingTrait ? "Remove" : SettingCompanion ? "Set" : "Breed", new Vector2(breedButton.bounds.X + 40, breedButton.bounds.Y + 16), CanBreed ? Game1.textColor : Color.Gray);
-            b.DrawString(Game1.smallFont, message, new Vector2(xPositionOnScreen + 48, yPositionOnScreen + 312), Game1.textColor);
-            inventory.draw(b);
-            upperRightCloseButton?.draw(b);
+            Text(b, RemovingTrait ? "Remove" : SettingCompanion ? "Set" : "Breed", Bounds(364, 236, 136, 40), color: CanBreed ? Game1.textColor : Color.Gray);
+            if (lastMessage != message)
+            {
+                wrappedMessage = Game1.parseText(message, Game1.smallFont, 768);
+                lastMessage = message;
+            }
+            Text(b, wrappedMessage, Bounds(48, 304, 768, 68));
+            DrawInventory(b);
+            if (upperRightCloseButton != null)
+                b.Draw(upperRightCloseButton.texture, upperRightCloseButton.bounds, upperRightCloseButton.sourceRect, Color.White);
+            DrawItems(b);
             if (hover != null && heldItem == null) drawToolTip(b, hover.getDescription(), hover.DisplayName, hover);
-            heldItem?.drawInMenu(b, new Vector2(Game1.getOldMouseX() + 8, Game1.getOldMouseY() + 8), 1f);
             drawMouse(b);
         }
-        catch (Exception ex)
+        catch (Exception ex) { Failed("draw", ex); }
+    }
+    private void Text(SpriteBatch b, string text, Rectangle area, SpriteFont? font = null, Color? color = null)
+    {
+        font ??= Game1.smallFont;
+        Vector2 size = font.MeasureString(text);
+        float scale = Math.Min(geometry.Scale, Math.Min(area.Width / Math.Max(1f, size.X), area.Height / Math.Max(1f, size.Y)));
+        b.DrawString(font, text, new Vector2(area.X, area.Y + (area.Height - size.Y * scale) / 2), color ?? Game1.textColor,
+            0, Vector2.Zero, scale, SpriteEffects.None, 1f);
+    }
+    private void DrawSlot(SpriteBatch b, ClickableComponent slot, string label, Rectangle labelArea)
+    {
+        Text(b, label, labelArea);
+        int border = geometry.Size(8);
+        drawTextureBox(b, slot.bounds.X - border, slot.bounds.Y - border, slot.bounds.Width + border * 2, slot.bounds.Height + border * 2, Color.White);
+    }
+    private void DrawInventory(SpriteBatch b)
+    {
+        // Vanilla InventoryMenu uses fixed 64px drawing coordinates. Keep its item handling,
+        // but draw using the very same scaled rectangles as pointer/controller hit testing.
+        Rectangle background = Game1.getSourceRectForStandardTileSheet(Game1.menuTexture, 10);
+        Rectangle locked = Game1.getSourceRectForStandardTileSheet(Game1.menuTexture, 57);
+        for (int i = 0; i < inventory.inventory.Count; i++)
         {
-            Failed("draw", ex);
+            Rectangle bounds = inventory.inventory[i].bounds;
+            b.Draw(Game1.menuTexture, bounds, background, Color.White);
+            if (i >= Game1.player.MaxItems) b.Draw(Game1.menuTexture, bounds, locked, Color.White * .5f);
         }
     }
-    private static void DrawSlot(SpriteBatch b, ClickableComponent slot, Item? item, string label)
+    private void DrawItems(SpriteBatch b)
     {
-        b.DrawString(Game1.smallFont, label, new Vector2(slot.bounds.X - 16, slot.bounds.Y - 40), Game1.textColor);
-        drawTextureBox(b, slot.bounds.X - 8, slot.bounds.Y - 8, 80, 80, Color.White);
-        item?.drawInMenu(b, new Vector2(slot.bounds.X, slot.bounds.Y), 1f);
+        // Item.drawInMenu's scale argument leaves quality/stack positions at fixed 64px
+        // offsets. Transform one batch of native item draws instead, including those icons
+        // and modded item renderers. Never allocate render targets or a batch per item.
+        bool transformed = geometry.Scale < 1;
+        if (transformed)
+        {
+            b.End();
+            try { b.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp,
+                transformMatrix: Matrix.CreateScale(geometry.Scale)); }
+            catch
+            {
+                b.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
+                throw;
+            }
+        }
+        try
+        {
+            Draw(machine.heldObject.Value, donorSlot.bounds.X, donorSlot.bounds.Y);
+            if (!RemovingTrait) Draw(seeds, seedSlot.bounds.X, seedSlot.bounds.Y);
+            for (int i = 0; i < inventory.inventory.Count && i < inventory.actualInventory.Count && i < Game1.player.MaxItems; i++)
+                Draw(inventory.actualInventory[i], inventory.inventory[i].bounds.X, inventory.inventory[i].bounds.Y);
+            Draw(heldItem, Game1.getOldMouseX() + 8, Game1.getOldMouseY() + 8);
+        }
+        finally
+        {
+            // Restore the standard Game1.DrawMenu batch even if an item renderer throws.
+            if (transformed)
+            {
+                try { b.End(); }
+                finally { b.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp); }
+            }
+        }
+        void Draw(Item? item, int x, int y) => item?.drawInMenu(b, new Vector2(x / geometry.Scale, y / geometry.Scale), 1f);
     }
 }

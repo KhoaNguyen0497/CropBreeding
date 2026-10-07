@@ -7,12 +7,22 @@ namespace CropBreeding;
 internal static class ErrorHandler
 {
     private static readonly Dictionary<string, long> LastChat = new(StringComparer.Ordinal);
+    private static readonly Core.ErrorThrottle LogThrottle = new();
 
-    // Logging must never become a second gameplay error. Full details always go to SMAPI;
-    // repeat chat notices for the same action are limited to one per ten seconds.
+    // Log new failures in full. While the same action keeps failing, summarize repeats
+    // at most once per ten seconds. Chat remains independently rate-limited.
     internal static void Report(string action, Exception error)
     {
-        try { ModEntry.Instance.Monitor.Log($"{action} failed; skipping this action's breeding changes.\n{error}", LogLevel.Error); }
+        try
+        {
+            Exception cause = error.GetBaseException();
+            string signature = cause.GetType().FullName + "\n" + cause.Message + "\n" + cause.StackTrace;
+            var decision = LogThrottle.Next(action, signature, Environment.TickCount64);
+            if (decision.Full)
+                ModEntry.Instance.Monitor.Log($"{action} failed; skipping this action's breeding changes.\n{error}", LogLevel.Error);
+            else if (decision.Repeats > 0)
+                ModEntry.Instance.Monitor.Log($"{action}: the same error repeated {decision.Repeats} times since the previous report. See the first error for details.", LogLevel.Error);
+        }
         catch { /* The logger itself may be unavailable during startup/shutdown. */ }
         try
         {

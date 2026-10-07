@@ -7,7 +7,8 @@ internal static class Companion
 {
     internal const string Key = ModEntry.Id + "/Companion";
     private static Dictionary<string, int>? growth;
-    internal static void Invalidate() => growth = null;
+    internal static int Revision { get; private set; }
+    internal static void Invalidate() { growth = null; Revision++; }
     private static Dictionary<string, int> Growth
     {
         get

@@ -1,3 +1,13 @@
+## Approved review fixes — 2026-10-07
+
+Scope: review items 4, 5, 6, 10, 11, 13, 14 and 47. Item 15 is a controller validation task: source/geometry checks are possible here, but actual PC/Steam Deck input and rendering still need the game. Multiplayer is out of scope. Unmentioned review items remain deferred; accepted balance rules are unchanged. Items 48 and 50 were requests for explanation, not broad exclusion/documentation changes.
+
+Automated safety checks link the production harvest context, error throttle, patch installer, station-lock lifecycle and menu geometry. Inject material, seed, Companion and quality-preparation failures and ensure stored mutations, independent outputs and High Yield survive. Check repeat summaries with a simulated clock and that a failed patch does not erase a previously installed prefix. Release locks during dictionary enumeration, close/reopen before deferred cleanup, and move a station repeatedly; no idle lock or repeating cleanup subscriber should remain. Check menu geometry at 1280x800, 1024x640, 864x640, 800x500, 640x480 and 480x360.
+
+Live controller/rendering checks still required: every inventory row and control reachable; same pointer/focus bounds at each viewport/UI scale; stack counts, quality stars and modded item icons scale with their slots; long status messages don't overlap inventory; resize retains focus; A operates each mode; B closes once with held/staged/full-inventory items; axe/pickaxe removes normally. Eligibility should refresh after each input/mode/trait choice or maximum-trait setting change without per-frame parsing. An item drawing error must restore the vanilla SpriteBatch before closing the menu. Verify ordinary item rendering, tooltips and cursor rendering after a scaled-menu close.
+
+Settings: ready mutations and ongoing countdowns stay fixed after a config edit; future readiness rolls/harvest bonuses/new countdowns use the new value. GMCM timing help and Lookup's Settings timing field must explain that distinction.
+
 # In-game validation checklist
 
 Use a copied save and test together with the actual SVE, Automate and AutoHarvester versions installed on PC/Steam Deck.

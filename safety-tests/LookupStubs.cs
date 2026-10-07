@@ -11,12 +11,15 @@ namespace HarmonyLib
         public string Id = "test";
         public MethodInfo? Postfix;
         public bool ThrowOnPatch, Unpatched;
-        public void Patch(MethodBase target, HarmonyMethod? postfix = null)
+        public readonly HashSet<MethodInfo> Installed = [];
+        public void Patch(MethodBase target, HarmonyMethod? prefix = null, HarmonyMethod? postfix = null, HarmonyMethod? transpiler = null, HarmonyMethod? finalizer = null)
         {
+            foreach (var addition in new[] { prefix, postfix, transpiler, finalizer }) if (addition != null) Installed.Add(addition.Method);
             if (ThrowOnPatch) throw new Exception("injected patch error");
-            Postfix = postfix!.Method;
+            Postfix = postfix?.Method;
         }
-        public void Unpatch(MethodBase target, HarmonyPatchType type, string id) => Unpatched = true;
+        public void Unpatch(MethodBase target, HarmonyPatchType type, string id) { Unpatched = true; Installed.Clear(); }
+        public void Unpatch(MethodBase target, MethodInfo method) { Unpatched = true; Installed.Remove(method); }
     }
     public static class AccessTools
     {

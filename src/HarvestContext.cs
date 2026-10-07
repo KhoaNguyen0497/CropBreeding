@@ -17,7 +17,7 @@ internal sealed class HarvestContext
     private readonly List<(Item Source, int Count)> primaryOutputs = [];
     private int primaryCount;
     private readonly string? companionId;
-    private readonly Random qualityRandom;
+    private readonly Random? qualityRandom;
     private readonly int qualityLevel;
     internal readonly List<Item> PendingExtras = [];
 
@@ -27,36 +27,53 @@ internal sealed class HarvestContext
         WasReady = Ready(crop);
         HarvestId = CropCatalog.Raw(crop.GetData()!.HarvestItemId);
         Inherited = Traits.Read(crop.modData);
+        OutputTraits = WasReady ? MutationState.ForHarvest(crop, Inherited) : Inherited;
+        // A broken bonus must not discard inherited traits or the stored mutation.
+        try { companionId = Companion.Read(crop.modData); }
+        catch (Exception ex) { ErrorHandler.Report("Read harvest Companion", ex); }
+        try { yieldLevel = TraitRules.Level(Inherited, "high_yield"); }
+        catch (Exception ex) { ErrorHandler.Report("Prepare High Yield", ex); }
+        try
+        {
+            qualityLevel = TraitRules.Level(Inherited, "high_quality");
+            qualityRandom = Traits.RandomFor(crop, 37);
+        }
+        catch (Exception ex) { qualityLevel = 0; ErrorHandler.Report("Prepare High Quality", ex); }
         int? baseGrowthDays = null;
         // Only inspect traits this plant actually has, not every possible material trait.
         foreach (string token in Inherited)
         {
-            string id = TraitRules.Id(token);
-            if (!TraitRules.MaterialDrops.TryGetValue(id, out var material)
-                || !Game1.objectData.ContainsKey(material.ItemId)) continue;
-            int level = TraitRules.Level(Inherited, id);
-            // Loaded crop data includes SVE/modded base growth, but no planted-phase speed,
-            // Companion delay, Researcher penalty or regrowth countdown.
-            baseGrowthDays ??= crop.GetData()!.DaysInPhase.Sum(days => Math.Max(0, days));
-            int count = TraitRules.MaterialDropCount(baseGrowthDays.Value, level, Traits.RandomFor(crop, material.Salt).NextDouble());
-            if (count > 0) PendingExtras.Add(ItemRegistry.Create("(O)" + material.ItemId, count, 0));
+            try
+            {
+                string id = TraitRules.Id(token);
+                if (!TraitRules.MaterialDrops.TryGetValue(id, out var material)
+                    || !Game1.objectData.ContainsKey(material.ItemId)) continue;
+                int level = TraitRules.Level(Inherited, id);
+                // Base crop data only: no planted speed, Companion, or regrowth countdown.
+                baseGrowthDays ??= crop.GetData()!.DaysInPhase.Sum(days => Math.Max(0, days));
+                int count = TraitRules.MaterialDropCount(baseGrowthDays.Value, level, Traits.RandomFor(crop, material.Salt).NextDouble());
+                if (count > 0) PendingExtras.Add(ItemRegistry.Create("(O)" + material.ItemId, count, 0));
+            }
+            catch (Exception ex) { ErrorHandler.Report("Prepare material " + TraitRules.Id(token), ex); }
         }
-        companionId = Companion.Read(crop.modData);
-        if (Traits.RandomFor(crop, 71).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "seed_saver") * ModEntry.Instance.Config.SeedSaverChance, 0, 1))
+        try
         {
-            Item seed = ItemRegistry.Create("(O)" + CropCatalog.Raw(crop.netSeedIndex.Value), 1, 0);
-            Traits.Write(seed.modData, Inherited);
-            Companion.Write(seed.modData, companionId);
-            PendingExtras.Add(seed);
+            if (Traits.RandomFor(crop, 71).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "seed_saver") * ModEntry.Instance.Config.SeedSaverChance, 0, 1))
+            {
+                Item seed = ItemRegistry.Create("(O)" + CropCatalog.Raw(crop.netSeedIndex.Value), 1, 0);
+                Traits.Write(seed.modData, Inherited);
+                Companion.Write(seed.modData, companionId);
+                PendingExtras.Add(seed);
+            }
         }
-        if (companionId != null && Companion.BaseDays(crop.modData) > 0
-            && Traits.RandomFor(crop, 53).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "companion") * ModEntry.Instance.Config.CompanionChance, 0, 1))
-            PendingExtras.Add(ItemRegistry.Create("(O)" + companionId, 1, 0));
-        qualityLevel = TraitRules.Level(Inherited, "high_quality");
-        qualityRandom = Traits.RandomFor(crop, 37);
-        OutputTraits = WasReady ? MutationState.ForHarvest(crop, Inherited) : Inherited;
-        // Existing plant traits determine the current harvest effects. A new mutation starts working after replanting.
-        yieldLevel = TraitRules.Level(Inherited, "high_yield");
+        catch (Exception ex) { ErrorHandler.Report("Prepare Seed Saver", ex); }
+        try
+        {
+            if (companionId != null && Companion.BaseDays(crop.modData) > 0
+                && Traits.RandomFor(crop, 53).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "companion") * ModEntry.Instance.Config.CompanionChance, 0, 1))
+                PendingExtras.Add(ItemRegistry.Create("(O)" + companionId, 1, 0));
+        }
+        catch (Exception ex) { ErrorHandler.Report("Prepare Companion output", ex); }
     }
 
     internal static bool Ready(Crop crop) => MutationState.Ready(crop);
@@ -161,7 +178,7 @@ internal sealed class HarvestContext
             Traits.Write(item.modData, Inherited);
             Companion.Write(item.modData, companionId);
         }
-        if (item.ItemId != HarvestId || qualityLevel <= 0 || item.Quality == 4) return [item];
+        if (item.ItemId != HarvestId || qualityLevel <= 0 || qualityRandom == null || item.Quality == 4) return [item];
         // Roll once per unit, including High Yield's extra units. Preserve the source quality and
         // color until after the normal harvest calculation, then split stacks by resulting quality.
         int baseQuality = item.Quality;

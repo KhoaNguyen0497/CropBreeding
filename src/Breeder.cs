@@ -12,8 +12,7 @@ internal static class Breeder
     internal const int SeedsRequired = 5;
     internal const int DonorsRequired = 5;
     internal const string MachineId = ModEntry.Id + "_Breeder";
-    internal static StardewValley.Network.NetMutex MenuMutex(SObject machine, GameLocation location) =>
-        Game1.player.team.GetOrCreateGlobalInventoryMutex($"{ModEntry.Id}/{location.NameOrUniqueName}/{machine.TileLocation.X}/{machine.TileLocation.Y}");
+    internal static StationLock MenuMutex(SObject machine, GameLocation location) => new(machine, location);
     internal static bool IsMachine(SObject machine) => machine.QualifiedItemId == "(BC)" + MachineId;
     internal static bool IsDonor(Item item) => item is SObject && item.Stack > 0
         && Traits.Read(item.modData).Length > 0 && CropCatalog.IsProduce(item) && item.ItemId != "433";

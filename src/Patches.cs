@@ -36,23 +36,9 @@ internal static class Patches
         Patch(harmony, typeof(SObject), nameof(SObject.OutputMachine), postfix: nameof(ProcessPostfix));
         Patch(harmony, typeof(CraftingRecipe), nameof(CraftingRecipe.createItem), postfix: nameof(CraftedPostfix));
     }
-    private static HarmonyMethod Method(string name) => new(typeof(Patches), name);
     private static void Patch(Harmony h, Type type, string name, string? prefix = null, string? postfix = null,
         string? finalizer = null, string? transpiler = null, Type[]? parameters = null)
-    {
-        MethodInfo? target = null;
-        try
-        {
-            target = AccessTools.Method(type, name, parameters) ?? throw new MissingMethodException(type.FullName, name);
-            h.Patch(target, prefix == null ? null : Method(prefix), postfix == null ? null : Method(postfix),
-                transpiler == null ? null : Method(transpiler), finalizer == null ? null : Method(finalizer));
-        }
-        catch (Exception ex)
-        {
-            ErrorHandler.Report($"Patch {type.Name}.{name}", ex);
-            if (target != null) ErrorHandler.Try("Remove incomplete patch", () => h.Unpatch(target, HarmonyPatchType.All, h.Id));
-        }
-    }
+        => PatchInstaller.Apply(h, typeof(Patches), type, name, prefix, postfix, finalizer, transpiler, parameters);
 
     private static void PlacementPrefix(SObject __instance, out SObject? __state)
     {

@@ -24,24 +24,24 @@ internal static class GenericModConfigMenuIntegration
         {
             api.Register(mod.ModManifest, () => mod.Config = new ModConfig(),
                 () => ErrorHandler.Try("Save settings", () => { mod.Config.Normalize(); mod.Helper.WriteConfig(mod.Config); }));
-            api.AddSectionTitle(mod.ModManifest, () => "Breeding and mutations");
+            api.AddSectionTitle(mod.ModManifest, () => "Breeding and mutations", () => "No restart needed. Mutation changes affect the next readiness roll; a ready plant keeps its saved result. Breeding uses current settings.");
             api.AddNumberOption(mod.ModManifest, () => mod.Config.MaximumTraits, value => mod.Config.MaximumTraits = Math.Clamp(value, 0, Core.TraitRules.Known.Length),
                 () => "Maximum traits", () => "Unique traits per seed or crop. Zero prevents adding new traits. Lowering this does not remove existing traits.", 0, Core.TraitRules.Known.Length, 1, fieldId: nameof(ModConfig.MaximumTraits));
             Percent(nameof(ModConfig.MutationChance), "Mutation chance", "Rolled once when each harvest becomes ready, before Researcher. Already stored outcomes are unchanged by settings edits.", c => c.MutationChance, (c, v) => c.MutationChance = v);
             api.AddBoolOption(mod.ModManifest, () => mod.Config.EnableRegrowingCropMutations, value => mod.Config.EnableRegrowingCropMutations = value,
                 () => "Mutations on regrowing crops", () => "Affects future readiness rolls, not outcomes already stored on ready plants.", fieldId: nameof(ModConfig.EnableRegrowingCropMutations));
-            api.AddSectionTitle(mod.ModManifest, () => "Trait effects per level");
-            Percent(nameof(ModConfig.GrowthReductionPerLevel), "Fast Growth reduction", "Applies to initial growth and natural regrowth after other modifiers. Existing planted growth is updated at its next normal recalculation, not scanned when saving settings.", c => c.GrowthReductionPerLevel, (c, v) => c.GrowthReductionPerLevel = v);
-            Percent(nameof(ModConfig.ExtraYieldPerLevel), "High Yield bonus", "Proportional extra produce, with fractional remainder chance. Total bonus capped at 100%.", c => c.ExtraYieldPerLevel, (c, v) => c.ExtraYieldPerLevel = v);
-            Percent(nameof(ModConfig.CompanionChance), "Companion chance", "Chance for one companion crop per harvest.", c => c.CompanionChance, (c, v) => c.CompanionChance = v);
-            Percent(nameof(ModConfig.QualityUpgradeChance), "High Quality chance", "Chance per item to upgrade one quality tier.", c => c.QualityUpgradeChance, (c, v) => c.QualityUpgradeChance = v);
-            Percent(nameof(ModConfig.SeedSaverChance), "Seed Saver chance", "Chance to return one seed with the parent's traits.", c => c.SeedSaverChance, (c, v) => c.SeedSaverChance = v);
-            Percent(nameof(ModConfig.RootedChance), "Rooted chance", "Chance to restart a single-harvest crop.", c => c.RootedChance, (c, v) => c.RootedChance = v);
-            Percent(nameof(ModConfig.ResearcherMutationBonus), "Researcher mutation bonus", "Percentage points added to mutation chance.", c => c.ResearcherMutationBonus, (c, v) => c.ResearcherMutationBonus = v);
-            Percent(nameof(ModConfig.ResearcherGrowthPenalty), "Researcher growth penalty", "Extra initial growth and regrowth time per level.", c => c.ResearcherGrowthPenalty, (c, v) => c.ResearcherGrowthPenalty = v);
+            api.AddSectionTitle(mod.ModManifest, () => "Trait effects per level", () => "Harvest bonuses use current settings. Growth settings don't rewrite planted phases or a running regrowth countdown; see each option's timing.");
+            Percent(nameof(ModConfig.GrowthReductionPerLevel), "Fast Growth reduction", "Applied after other modifiers. Initial growth changes on planting, Rooted restart, or a normal growth recalculation. Regrowth changes after the next harvest; the current countdown stays unchanged.", c => c.GrowthReductionPerLevel, (c, v) => c.GrowthReductionPerLevel = v);
+            Percent(nameof(ModConfig.ExtraYieldPerLevel), "High Yield bonus", "Proportional extra produce, with fractional remainder chance. Total bonus capped at 100%. Uses the current value at the next harvest, including already-ready crops.", c => c.ExtraYieldPerLevel, (c, v) => c.ExtraYieldPerLevel = v);
+            Percent(nameof(ModConfig.CompanionChance), "Companion chance", "Chance for one companion crop. Uses the current value at the next harvest, including already-ready crops.", c => c.CompanionChance, (c, v) => c.CompanionChance = v);
+            Percent(nameof(ModConfig.QualityUpgradeChance), "High Quality chance", "Chance per item to upgrade one quality tier. Uses the current value at the next harvest, including already-ready crops.", c => c.QualityUpgradeChance, (c, v) => c.QualityUpgradeChance = v);
+            Percent(nameof(ModConfig.SeedSaverChance), "Seed Saver chance", "Chance to return one seed with the parent's traits. Uses the current value at the next harvest, including already-ready crops.", c => c.SeedSaverChance, (c, v) => c.SeedSaverChance = v);
+            Percent(nameof(ModConfig.RootedChance), "Rooted chance", "Chance to restart a single-harvest crop. Uses the current value at the next harvest, including already-ready crops.", c => c.RootedChance, (c, v) => c.RootedChance = v);
+            Percent(nameof(ModConfig.ResearcherMutationBonus), "Researcher mutation bonus", "Percentage points added to the next readiness roll. A ready plant keeps its saved outcome.", c => c.ResearcherMutationBonus, (c, v) => c.ResearcherMutationBonus = v);
+            Percent(nameof(ModConfig.ResearcherGrowthPenalty), "Researcher growth penalty", "Extra initial growth and regrowth time per level. Applies on planting, Rooted restart, or a normal growth recalculation; regrowth uses it after the next harvest. Existing countdowns stay unchanged.", c => c.ResearcherGrowthPenalty, (c, v) => c.ResearcherGrowthPenalty = v);
             api.AddSectionTitle(mod.ModManifest, () => "Error reporting");
             api.AddBoolOption(mod.ModManifest, () => mod.Config.ShowErrorsInChat, value => mod.Config.ShowErrorsInChat = value,
-                () => "Show errors in chat", () => "Show local chat notices as well as full SMAPI errors. Repeated chat notices are limited to once per action every 10 seconds.", fieldId: nameof(ModConfig.ShowErrorsInChat));
+                () => "Show errors in chat", () => "Takes effect immediately. Local chat notices are limited to once per action every 10 seconds. SMAPI logs each new error in full and summarizes identical repeats.", fieldId: nameof(ModConfig.ShowErrorsInChat));
 
             void Percent(string id, string name, string help, Func<ModConfig, double> get, Action<ModConfig, double> set)
                 => api.AddNumberOption(mod.ModManifest, () => (int)Math.Round(get(mod.Config) * 100),
