@@ -25,8 +25,14 @@ public sealed class ModEntry : Mod
         });
         harmony = new Harmony(Id);
         Patches.Apply(harmony);
-        helper.Events.Input.ButtonPressed += (_, e) => ErrorHandler.Try("Controller menu close", () =>
+        helper.Events.Input.ButtonPressed += (_, e) => ErrorHandler.Try("Controller breeding menu input", () =>
         {
+            if (e.Button == SButton.ControllerX && Game1.activeClickableMenu is UI.BreedingMenu station)
+            {
+                // Stop vanilla from also splitting/picking up an item with this X press.
+                helper.Input.Suppress(e.Button);
+                station.QuickInsertSelected();
+            }
             if (e.Button == SButton.ControllerB && Game1.activeClickableMenu is UI.BreedingMenu menu)
             {
                 // Consume B before vanilla can also interpret the same press as opening inventory.

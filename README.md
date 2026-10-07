@@ -30,13 +30,13 @@ Empty both slots before switching modes.
 | Set Companion | 1 seed with Companion + 1 eligible crop | Assigns a different crop as companion; consumes the crop. Cannot choose the seed's own crop. |
 | Remove Trait | 1 seed with traits | Removes one selected trait for free. |
 
-**Breeding cost:** configurable from 1 to 10. A value of `x` requires `x` seeds and `x` donor crops, producing one seed. Retrieve and reinsert stored donor crops after changing the cost. Set Companion and Remove Trait keep their one-seed costs.
+**Breeding cost:** configurable from 1 to 10. A value of `x` requires `x` seeds and `x` donor crops, producing one seed. Set Companion and Remove Trait keep their one-seed costs.
 
 **Merging:** plain seeds copy the donor. A seed with exactly **one level-1 trait** can merge it into the donor's traits: matching traits gain one level; a different trait is added. Merges exceeding either limit are rejected.
 
 Coffee beans can inherit traits and be replanted directly. They cannot be breeding donors, but support Set Companion and Remove Trait.
 
-The station uses a controller-friendly menu with tabs for each mode. Expanded backpacks display up to four rows, with page buttons, mouse wheel and LB/RB for larger inventories. It has no automatic processing or Automate input support. **Breaking it destroys stored contents.**
+The station uses a controller-friendly menu with tabs for each mode. Select an inventory stack and press **X** to insert it into the appropriate input slot; compatible stacks combine up to the slot limit. Press the action button to process one recipe. Unused left-slot ingredients return to your inventory when replaced by the result. Expanded backpacks display up to four rows, with page buttons, mouse wheel and LB/RB for larger inventories. It has no automatic processing or Automate input support. **Breaking it destroys stored contents.**
 
 ## Traits
 

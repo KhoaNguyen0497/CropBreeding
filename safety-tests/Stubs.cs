@@ -37,6 +37,9 @@ namespace StardewValley
         public Metadata modData = new();
         public string ItemId = "24";
         public int Stack = 1, Quality;
+        public virtual int maximumStackSize() => 999;
+        public virtual bool canStackWith(Item other) => ItemId == other.ItemId && Quality == other.Quality
+            && modData.Count == other.modData.Count && modData.All(p => other.modData.GetValueOrDefault(p.Key) == p.Value);
         public virtual Item getOne()
         {
             var copy = new Item { ItemId = ItemId, Quality = Quality };
@@ -293,7 +296,7 @@ namespace CropBreeding
         internal static bool IsProduce(Item item) => Companion.Valid(item);
         internal static bool Matches(Item donor, Item seed) => donor.ItemId == "24" && seed.ItemId == "472";
         internal static bool Ground(HoeDirt soil) => soil.Ground;
-        internal static bool EligibleSeed(string id) => Raw(id) is not ("885" or "770" or "MixedFlowerSeeds");
+        internal static bool EligibleSeed(string id) => Raw(id) is "472" or "473" or "433";
     }
     public sealed class EventsStub { public GameLoopStub GameLoop = new(); }
     public sealed class GameLoopStub

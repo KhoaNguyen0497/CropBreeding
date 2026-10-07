@@ -126,7 +126,7 @@ No restart is needed. Saving settings does not scan/rewrite existing crops. GMCM
 | --- | --- |
 | Mutation chance and regrowing mutation toggle | Next readiness roll. Already stored success/failure outcomes stay fixed. |
 | Maximum traits | Next breeding operation or new mutation roll. Existing traits are not removed. |
-| Breeding cost | Next input/breeding action. Retrieve and reinsert donor crops if the stored count differs from the new cost. Range 1–10; default 3 of each ingredient. |
+| Breeding cost | Next input/breeding action. Stored inputs must cover the current cost; surplus donor crops are returned. Range 1–10; default 3 of each ingredient. |
 | Show errors in chat | Immediately; enabled by default. |
 
 Trait percentages, material/Nurse odds and the level cap are fixed gameplay rules. Lookup Anything uses these same fixed values and the configured base mutation chance for Researcher's total.

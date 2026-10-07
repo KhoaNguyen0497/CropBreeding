@@ -224,6 +224,7 @@ internal sealed class BreedingMenu : MenuWithInventory
     {
         try
         {
+            if (button == Buttons.X) return; // Handled once by the suppressed SMAPI input event.
             if (button == Buttons.B)
             {
                 ModEntry.Instance.Helper.Input.Suppress(SButton.ControllerB);
@@ -254,6 +255,45 @@ internal sealed class BreedingMenu : MenuWithInventory
         }
     }
     private bool Present => location.objects.TryGetValue(machine.TileLocation, out var current) && ReferenceEquals(current, machine);
+    internal void QuickInsertSelected()
+    {
+        InputSnapshot? snapshot = null;
+        Item? source = null;
+        int index = -1, count = 0;
+        try
+        {
+            if (!Present || !mutex.IsLockHeld() || cleaned) return;
+            if (heldItem != null) { message = "Put down your held item first."; return; }
+            index = Game1.options.SnappyMenus ? (currentlySnappedComponent?.myID ?? -1) - InventoryId
+                : inventory.inventory.FindIndex(slot => slot.visible && slot.containsPoint(Game1.getOldMouseX(), Game1.getOldMouseY()));
+            if (!backpack.IsVisible(index) || index >= inventory.actualInventory.Count || index >= Game1.player.MaxItems) return;
+            source = inventory.actualInventory[index];
+            if (source == null) return;
+            count = source.Stack;
+            snapshot = new InputSnapshot(this);
+            if (!StationStacks.Insert(machine, ref seeds, source))
+            {
+                message = "That item cannot be added to the current inputs.";
+                return;
+            }
+            if (source.Stack == 0) inventory.actualInventory[index] = null;
+            selectedTrait = 0;
+            message = ModeHint;
+            // Inventory transfer is committed before optional sound/label updates.
+            snapshot = null;
+            ErrorHandler.Try("Quick-insert sound", () => Game1.playSound("Ship"));
+        }
+        catch (Exception ex)
+        {
+            if (snapshot != null)
+            {
+                ErrorHandler.Try("Restore quick-insert slots", snapshot.Restore);
+                if (source != null) { source.Stack = count; inventory.actualInventory[index] = source; }
+            }
+            Failed("Quick-insert inventory stack", ex);
+        }
+        finally { if (!cleaned) ErrorHandler.Try("Refresh breeding controls", RefreshEligibility); }
+    }
     private bool SettingCompanion => Breeder.CompanionMode(machine);
     private bool RemovingTrait => Breeder.RemoveMode(machine);
     private string[] RemovalTraits => removalTraits;
@@ -279,9 +319,7 @@ internal sealed class BreedingMenu : MenuWithInventory
         if (lastEligibility == state) return;
         removalTraits = donor != null && !state.Ready ? Traits.Read(donor.modData) : [];
         selectedTraitLabel = SelectedTrait is string trait ? TraitRules.Label(trait) : "No trait selected";
-        canBreed = !state.Ready && donor != null && (state.RemoveMode ? Breeder.CanRemoveFrom(donor) && SelectedTrait != null
-            : seeds != null && (state.CompanionMode ? seeds.Stack >= 1 && Breeder.CanAssign(donor, seeds)
-            : seeds.Stack >= Breeder.IngredientsRequired && Breeder.CanBreed(donor, seeds, out _)));
+        canBreed = StationStacks.CanProcess(machine, seeds) && (!state.RemoveMode || SelectedTrait != null);
         donorName = donor?.DisplayName ?? "Empty";
         seedName = seeds?.DisplayName ?? "Empty";
         donorTraits = Summary(donor);
@@ -325,6 +363,7 @@ internal sealed class BreedingMenu : MenuWithInventory
     public override void receiveLeftClick(int x, int y, bool playSound = true)
     {
         InputSnapshot? snapshot = null;
+        Item? surplus = null;
         try
         {
             if (!Present || !mutex.IsLockHeld()) return;
@@ -386,33 +425,40 @@ internal sealed class BreedingMenu : MenuWithInventory
             {
                 if (RemovingTrait)
                 {
-                    if (CanBreed && SelectedTrait is string trait && Breeder.RemoveTrait(machine, Core.TraitRules.Id(trait)))
+                    if (CanBreed && SelectedTrait is string trait && StationStacks.Process(machine, null, Core.TraitRules.Id(trait), out surplus))
                     {
+                        snapshot = null;
                         message = "Trait removed. Collect your seed from the left slot.";
                         Game1.playSound("coin");
                     }
                     else message = "Insert a seed with traits and choose a trait to remove.";
                     return;
                 }
-                if (CanBreed && Breeder.Insert(machine, seeds!, false))
+                if (CanBreed && StationStacks.Process(machine, seeds, null, out surplus))
                 {
                     seeds!.Stack -= SettingCompanion ? 1 : Breeder.IngredientsRequired;
                     if (seeds.Stack == 0) seeds = null;
+                    snapshot = null;
                     message = "Ready! Collect your bred seed from the left slot.";
                     Game1.playSound("coin");
                 }
-                else message = SettingCompanion ? "Choose a different eligible crop; a seed cannot use its own crop as Companion." : $"Need {Breeder.IngredientsRequired} donor crops and {Breeder.IngredientsRequired} compatible seeds. If the cost changed, retrieve and reinsert the donor crops.";
+                else message = SettingCompanion ? "Choose a different eligible crop; a seed cannot use its own crop as Companion." : $"Need {Breeder.IngredientsRequired} donor crops and {Breeder.IngredientsRequired} compatible seeds.";
                 return;
             }
             base.receiveLeftClick(x, y, playSound);
         }
         catch (Exception ex)
         {
-            if (snapshot != null) ErrorHandler.Try("Restore breeding inputs", snapshot.Restore);
+            if (snapshot != null)
+            {
+                surplus = null; // Rolled-back input already contains these items.
+                ErrorHandler.Try("Restore breeding inputs", snapshot.Restore);
+            }
             Failed("Breeding input", ex);
         }
         finally
         {
+            ReturnItem(surplus);
             if (!cleaned) ErrorHandler.Try("Refresh breeding controls", RefreshEligibility);
         }
     }
@@ -561,8 +607,8 @@ internal sealed class BreedingMenu : MenuWithInventory
             DrawInventory(b);
             b.Draw(Game1.staminaRect, Bounds(32, geometry.InventoryBottom + 16, 944, 2), new Color(151, 83, 30));
             string controls = Game1.options.gamepadControls
-                ? backpack.PageCount > 1 ? "D-pad: select  |  A: pick / place  |  X: split stack  |  LB/RB: page  |  B: close"
-                    : "D-pad: select  |  A: pick / place  |  X: split stack  |  B: close"
+                ? backpack.PageCount > 1 ? "D-pad: select  |  A: pick / place  |  X: quick insert  |  LB/RB: page  |  B: close"
+                    : "D-pad: select  |  A: pick / place  |  X: quick insert  |  B: close"
                 : backpack.PageCount > 1 ? "Left-click: pick / place  |  Right-click: split stack  |  Scroll: page  |  Esc: close"
                     : "Left-click: pick / place  |  Right-click: split stack  |  Esc: close";
             Text(b, controls, Bounds(32, geometry.InventoryBottom + 28, 944, 24), color: Muted, textScale: .72f);

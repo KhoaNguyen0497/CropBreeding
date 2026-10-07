@@ -96,8 +96,8 @@ internal static class Breeder
     internal static bool CanBreed(Item donor, Item seed, out string[] traits)
     {
         traits = [];
-        // Only an exact staged donor batch is consumed. Changing cost cannot silently
-        // discard extra staged crops or breed with too few; retrieve and reinsert them.
+        // The menu isolates one exact batch before processing and returns any surplus.
+        // Low-level callers cannot discard extra crops or breed with too few.
         return donor.Stack == IngredientsRequired && seed.Stack >= IngredientsRequired && IsDonor(donor) && CropCatalog.Matches(donor, seed) && Core.TraitRules.TryBreed(Traits.Read(donor.modData),
             Traits.Read(seed.modData), ModEntry.Instance.Config.MaximumTraits, out traits);
     }

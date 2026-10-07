@@ -4,6 +4,7 @@
     <LangVersion>12</LangVersion><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../src/StationStacks.cs" Link="StationStacks.cs" />
     <Compile Include="../src/Patches.StationInput.cs" Link="Patches.StationInput.cs" />
     <Compile Include="../src/ErrorHandler.cs" Link="ErrorHandler.cs" />
     <Compile Include="../src/CropSnapshot.cs" Link="CropSnapshot.cs" />

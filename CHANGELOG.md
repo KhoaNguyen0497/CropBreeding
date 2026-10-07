@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.7
+
+- Added controller X quick-insert for the selected inventory stack in Breed, Set Companion and Remove Trait modes, including expanded inventory pages.
+- Valid crops and seeds go to the appropriate slot; matching stacks combine up to capacity. Invalid combinations and ready output are not overwritten.
+- Full left-slot stacks can be staged. Processing still consumes one recipe's required amount and returns unused left-slot ingredients when the result replaces them.
+- Suppressed vanilla's X split-stack action inside the station and updated controller hints.
+
 ## 1.0.6
 
 - Fixed opening the Breeding Machine while holding a crop or other item consuming one item from the active stack, including when using controller A.
