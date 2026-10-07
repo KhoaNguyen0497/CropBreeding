@@ -1,3 +1,9 @@
+## Time-aware trait randomness — 2026-10-07
+
+The shared `Traits.RandomFor` input now includes `DaysPlayed * 10000d + Game1.timeOfDay`. Different day/time pairs remain distinct (HHMM is below 10000); save ID, location, tile and per-effect salts are unchanged. The change applies to newly prepared mutation outcomes and harvest trait bonuses. No additional rolls, polling or state storage are added; `MutationState.EnsurePrepared` still returns before RNG when a stored success/failure exists.
+
+Build and existing mutation lifecycle tests validate compilation and the unchanged stored-outcome rules; they do not run the game's RNG. Live checks: instant-grow two successive cycles on the same tile at different in-game clock times and inspect their RNG inputs; a different input does not guarantee a different mutation/output. Repeated cycles inside the same 10-minute interval can still repeat. Waiting after readiness must not change the stored mutation, including failures, while harvesting later can change bonus rolls. Replaying identical day/time/state should reproduce the same deterministic rolls.
+
 ## Rooted island walnuts — 2026-10-07
 
 Review item 3 is fixed. Source review found that `HoeDirt.performUseAction` and `performToolAction` roll 5% and request `IslandFarming` walnuts with limit 5 only when `Crop.harvest` returns true. Rooted changes that removal result to false. The fix scopes those existing soil actions and restores exactly one skipped roll after a successful Rooted restart. It calls the game team's limited-drop method, preserving the existing global counter/reward handling; it does not directly spawn items or add rolls to direct Junimo/Auto Harvester calls. No scans or daily/update events are added.

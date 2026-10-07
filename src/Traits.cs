@@ -23,7 +23,9 @@ internal static class Traits
         && (!crop.modData.TryGetValue(EligibilityKey, out string allowed) || allowed != "false");
     internal static Random RandomFor(Crop crop, double salt) => Utility.CreateRandom(
         crop.Dirt?.Tile.X ?? 0, (crop.Dirt?.Tile.Y ?? 0) * 1009,
-        Game1.uniqueIDForThisGame, Game1.stats.DaysPlayed,
+        // Keep day and HHMM time distinct within one CreateRandom input. Stored mutations
+        // bypass this method; only newly prepared mutations/harvest bonuses use the clock.
+        Game1.uniqueIDForThisGame, Game1.stats.DaysPlayed * 10000d + Game1.timeOfDay,
         salt + StableHash(crop.currentLocation?.NameOrUniqueName ?? ""));
     private static int StableHash(string value)
     {
