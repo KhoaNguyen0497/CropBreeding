@@ -70,3 +70,4 @@ LookupDescriptionTests.Run();
 ReviewFixTests.Run();
 BetterJunimosPlantingTests.Run();
 BetterJunimosFertilizerTests.Run();
+RootedWalnutTests.Run();

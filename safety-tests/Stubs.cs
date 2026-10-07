@@ -41,7 +41,7 @@ namespace StardewValley
         public static Item Create(string id, int stack, int quality) => Factory?.Invoke(id, stack, quality)
             ?? new Item { ItemId = id.Replace("(O)", ""), Stack = stack, Quality = quality };
     }
-    public sealed class GameLocation
+    public class GameLocation
     {
         public string NameOrUniqueName = "Farm";
         public Dictionary<Microsoft.Xna.Framework.Vector2, object> terrainFeatures = new();
@@ -49,6 +49,13 @@ namespace StardewValley
     public sealed class Farmer { public FarmerTeam team = new(); }
     public sealed class FarmerTeam
     {
+        public readonly List<(string Key, GameLocation Location, int X, int Y, int Limit)> NutRequests = [];
+        public bool FailNutRequest;
+        public void RequestLimitedNutDrops(string key, GameLocation location, int x, int y, int limit)
+        {
+            if (FailNutRequest) throw new Exception("injected nut request failure");
+            NutRequests.Add((key, location, x, y, limit));
+        }
         public Dictionary<string, Network.NetMutex> globalInventoryMutexes = new();
         public Network.NetMutex GetOrCreateGlobalInventoryMutex(string key)
         {
@@ -75,6 +82,9 @@ namespace StardewValley
     }
     public sealed class HoeDirt
     {
+        public GameLocation? Location;
+        public bool performUseAction(Microsoft.Xna.Framework.Vector2 tileLocation) => false;
+        public bool performToolAction() => false;
         public Crop? crop;
         public Net<int> state = new(1), nearWaterForPaddy = new(0);
         public Microsoft.Xna.Framework.Vector2 Tile;
@@ -105,6 +115,7 @@ namespace StardewValley
     }
     public static class Game1
     {
+        public static Random random = new();
         public static Chat? chatBox = new();
         public static Farmer player = new();
         public static bool IsMasterGame = true;

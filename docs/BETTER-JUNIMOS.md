@@ -6,7 +6,7 @@ Reviewed 2026-10-07 against `hawkfalcon/Stardew-Mods` commit `faa40d440fd75c9f70
 
 `HarvestCropsAbility` leaves actual crop harvesting to vanilla. `PatchTryToHarvestHere` starts the harvest timer; `PatchJunimoShake` adjusts timing/animation after vanilla update. Neither replaces the actual `Crop.harvest` call. Our readiness fallback, stored mutation, primary output decoration, bonus delivery, regrowth timing, Nurse Crop and Rooted therefore share the same harvest path.
 
-Nurse Crop runs before Rooted resets the plant. Rooted changes the successful annual harvest's removal result to false after restarting it, so vanilla Junimo update leaves the plant in place. Both effects remain annual-only. The separately deferred island-walnut interaction has not been changed.
+Nurse Crop runs before Rooted resets the plant. Rooted changes the successful annual harvest's removal result to false after restarting it, so vanilla Junimo update leaves the plant in place. Both effects remain annual-only. The island-walnut interaction is now fixed for vanilla hand/scythe soil actions. Direct Junimo harvesting still uses its existing vanilla walnut behavior; this does not add a new automated walnut roll.
 
 Vanilla Junimo update clears `lastItemHarvested`, calls `Crop.harvest`, then—if raisins are active—rolls 20% to add `lastItemHarvested.getOne()` and explicitly preserves quality. This copies **one item**, not the full potato/coffee/High Yield batch. The copy does not call `Crop.harvest` again, so it does not roll mutation, restart Rooted, grow trees or award other breeding bonuses again.
 

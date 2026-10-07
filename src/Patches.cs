@@ -16,6 +16,7 @@ internal static class Patches
     internal static void Apply(Harmony harmony)
     {
         JunimoHarvestOutput.Initialize();
+        RootedWalnuts.Register(harmony);
         Patch(harmony, typeof(SObject), nameof(SObject.placementAction), nameof(PlacementPrefix), finalizer: nameof(PlacementFinalizer));
         Patch(harmony, typeof(HoeDirtAlias), nameof(HoeDirtAlias.plant), nameof(PlantPrefix), nameof(PlantPostfix));
         foreach (string name in new[] { nameof(HoeDirtAlias.plant), nameof(HoeDirtAlias.canPlantThisSeedHere) })
@@ -244,7 +245,14 @@ internal static class Patches
             catch (Exception ex) { ErrorHandler.Report("Regrowth timing", ex); }
             // Commit extras first. A successful annual harvest returns true to request removal;
             // only override that result after Rooted has restarted the plant successfully.
-            try { if (succeeded && __result && current.TryRestart()) __result = false; }
+            try
+            {
+                if (succeeded && __result && current.TryRestart())
+                {
+                    __result = false;
+                    RootedWalnuts.Restarted(current.Plant);
+                }
+            }
             catch (Exception ex) { ErrorHandler.Report("Rooted", ex); }
         }
         catch (Exception ex) { ErrorHandler.Report("Finish harvest", ex); }

@@ -6,6 +6,7 @@ Numbers refer to the 50-item code/gameplay review in this project's chat. Unment
 | --- | --- |
 | 1 | Resolved without a code change: let vanilla resolve Mixed Seeds into a known crop; that crop may participate normally when eligible. Mixed seed packets remain excluded breeding inputs. |
 | 2 | Fix approved and implemented: preserve the actual primary crop as Junimo's raisin copy target, including traits/quality/color. Exclude vanilla byproducts and breeding bonuses; keep vanilla's roll and one-item count. Source review and targeted tests pass; live gameplay remains untested. |
+| 3 | Fix approved and implemented: successful Rooted restarts preserve the skipped vanilla island hand/scythe 5% walnut roll via the shared IslandFarming limit of five. No additional roll for other harvests or direct automated callers. Build and targeted tests pass; live validation remains pending. |
 | 4 | Fix harvest-preparation error isolation. Implemented; injected-failure tests pass. |
 | 5 | Fix repeated SMAPI errors. New failures log in full; identical repeats are summarized. |
 | 6 | Fix broad patch rollback. Only the failed installation's additions are removed. |
@@ -24,7 +25,7 @@ Numbers refer to the 50-item code/gameplay review in this project's chat. Unment
 | 48 | Explanation requested only. A future Data/Crops entry producing ordinary resources is eligible unless its seed ID is explicitly excluded. No new general filter added. SVE Ancient Fiber remains allowed. |
 | 49 | Existing live/multiplayer test gap accepted for now. |
 | 50 | Explanation requested only. Broad cleanup of stale decision labels and obsolete tests is deferred; descriptions of this change's approved fixes were updated. |
-| 3, 7, 9, 12, 33, 34, 35 | Unmentioned: revisit later. This includes Rooted walnuts, destruction edges, stacking optimization, unready harvest work, and remaining randomness concerns. |
+| 7, 9, 12, 33, 34, 35 | Unmentioned: revisit later. This includes destruction edges, stacking optimization, unready harvest work, and remaining randomness concerns. |
 
 Better Junimos compatibility was checked separately on 2026-10-07. Its harvesting path is shared vanilla code. The user subsequently approved fixing planting trait loss: optional integration now transfers the exact selected seed's traits/Companion and applies initial trait timing. The user then approved fixing fertilizing and restricting it to empty soil/phase-0 crops: optional integration now routes speed recalculation through the normal game method with trait hooks and blocks later-phase actions before consumption. Better Junimos' out-of-season seed filter does not recognize Evergreen; the user explicitly accepted leaving this unchanged. Details are in BETTER-JUNIMOS.md.
 

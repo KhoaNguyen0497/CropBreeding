@@ -1,3 +1,11 @@
+## Rooted island walnuts — 2026-10-07
+
+Review item 3 is fixed. Source review found that `HoeDirt.performUseAction` and `performToolAction` roll 5% and request `IslandFarming` walnuts with limit 5 only when `Crop.harvest` returns true. Rooted changes that removal result to false. The fix scopes those existing soil actions and restores exactly one skipped roll after a successful Rooted restart. It calls the game team's limited-drop method, preserving the existing global counter/reward handling; it does not directly spawn items or add rolls to direct Junimo/Auto Harvester calls. No scans or daily/update events are added.
+
+Production code compiles against game references. Linked-code tests cover one roll per action, strict 5% boundary, shared request key/limit/coordinates, no extra roll for unmarked or non-island actions, unrelated crops, nested scopes, original exceptions, and request failure followed by a successful next action. These use doubles and do not validate live Harmony ordering, limited-drop networking or item spawning.
+
+Live checks: hand-harvest and scythe-harvest annual Rooted crops on Ginger Island (including Iridium Scythe), compare with non-Rooted crops, and verify the shared five-farming-walnut cap. Failed harvest attempts, natural regrowers, unready crops, destruction by tools/bombs and non-island soil must not receive the supplemental roll. Junimo and Auto Harvester walnut behavior must remain unchanged. A successful restart must remain planted and retain its usual traits/growth timing even when a walnut drops. No second award should come from High Yield, Companion, material output or raisins.
+
 ## Better Junimos fertilizer compatibility — 2026-10-07
 
 Approved: preserve trait growth timing and restrict Better Junimos fertilizing to empty soil or phase 0. Evergreen-aware out-of-season seed selection is explicitly left unchanged.
