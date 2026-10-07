@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.6
+
+- Fixed opening the Breeding Machine while holding a crop or other item consuming one item from the active stack, including when using controller A.
+- World item input now always rejects deposits; the normal interaction opens the menu, where ingredients can be inserted explicitly.
+
 ## 1.0.5
 
 - Balanced Companion output: its 20% chance per level is multiplied by the main crop's base regrowth days / 10, or base growth days / 7 for single-harvest crops, capped at full chance.

@@ -9,7 +9,7 @@ using SObject = StardewValley.Object;
 
 namespace CropBreeding;
 
-internal static class Patches
+internal static partial class Patches
 {
     [ThreadStatic] private static SObject? placing;
     internal static void Apply(Harmony harmony)
@@ -279,32 +279,6 @@ internal static class Patches
         {
             __result = original;
             ErrorHandler.Report("DescriptionPostfix", ex);
-        }
-    }
-    private static bool DropPrefix(SObject __instance, Item dropInItem, bool probe, Farmer who, ref bool __result, bool returnFalseIfItemConsumed)
-    {
-        bool original = __result;
-        try
-        {
-            if (!Breeder.IsMachine(__instance)) return true;
-            // Held inventory items are never deposited or consumed through the world interaction.
-            // Treat an actual interaction as opening the station; probes don't advertise item input.
-            __result = false;
-            if (!probe && who?.IsLocalPlayer == true)
-            {
-                if (ActionPrefix(__instance, who, false, ref __result))
-                {
-                    __result = original;
-                    return true;
-                }
-            }
-            return false;
-        }
-        catch (Exception ex)
-        {
-            __result = original;
-            ErrorHandler.Report("DropPrefix", ex);
-            return true;
         }
     }
     private static bool ActionPrefix(SObject __instance, Farmer who, bool justCheckingForActivity, ref bool __result)
