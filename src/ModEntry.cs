@@ -37,6 +37,7 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += (_, _) =>
         {
             ErrorHandler.Try("Register Better Junimos planting", () => Integrations.BetterJunimosIntegration.Register(harmony));
+            ErrorHandler.Try("Register Better Junimos fertilizing", () => Integrations.BetterJunimosFertilizerIntegration.Register(harmony));
             ErrorHandler.Try("Register Lookup Anything", () => Integrations.LookupAnythingIntegration.Register(harmony, Monitor));
             ErrorHandler.Try("Register config menu", Integrations.GenericModConfigMenuIntegration.Register);
         };

@@ -1,6 +1,6 @@
 # Better Junimos source compatibility review
 
-Reviewed 2026-10-07 against `hawkfalcon/Stardew-Mods` commit `faa40d440fd75c9f702142a12efef616ab06fc9a`. This checks the published source, not the user's installed DLL or an in-game session. An optional Better Junimos planting patch now transfers seed traits; there is no required dependency or special harvesting patch. Multiplayer remains out of scope. This does not audit the separate Better Junimos Forestry Redux fork.
+Reviewed 2026-10-07 against `hawkfalcon/Stardew-Mods` commit `faa40d440fd75c9f702142a12efef616ab06fc9a`. This checks the published source, not the user's installed DLL or an in-game session. Optional Better Junimos planting and fertilizer patches now preserve seed traits and growth timing; there is no required dependency or special harvesting patch. Multiplayer remains out of scope. This does not audit the separate Better Junimos Forestry Redux fork.
 
 ## Harvesting and raisins
 
@@ -20,18 +20,27 @@ The integration registers at GameLaunched only when Better Junimos is installed.
 
 The same `SeedInheritance.Apply` helper now serves vanilla planting and this integration. Traits and Companion selection transfer before initial growth is recalculated through the normal `HoeDirt.applySpeedIncreases` hooks. An instant-ready crop discards any premature mutation result and prepares from its inherited traits. Failure restores the pre-transfer crop snapshot and logs without replaying planting or consuming another seed. Better Junimos retains all control over planting, seed consumption, paddy watering and visuals.
 
-The four method hooks are signature-checked before installation and rolled back individually if registration fails. No crop/chest scan, daily maintenance or repeating event is added. Plain and excluded seeds retain Better Junimos behavior. This fixes inherited data loss; the existing out-of-season seed-selection policy and later fertilizing code are unchanged.
+The four method hooks are signature-checked before installation and rolled back individually if registration fails. No crop/chest scan, daily maintenance or repeating event is added. Plain and excluded seeds retain Better Junimos behavior. This fixes inherited data loss; fertilizer compatibility is handled separately below. Out-of-season seed-selection policy remains unchanged.
 
-## Remaining compatibility issues
+## Fertilizer timing fix
 
-| Feature | Source finding | Practical effect / current workaround |
-| --- | --- | --- |
-| Evergreen season selection | Plant eligibility caches `new Crop(seedId, ...).IsInSeason(location)` by seed ID, without the seed's traits. | With out-of-season avoidance enabled, Evergreen 5 seeds can be rejected outside normal seasons. Trait inheritance is now fixed, but out-of-season selection still requires a separate change; hand-plant Evergreen seeds when this filter rejects them. |
-| Fertilizing planted crops | `FertilizeAbility.CheckSpeedGro` duplicates the vanilla speed formula and may call `Crop.ResetPhaseDays` directly, instead of patched `HoeDirt.applySpeedIncreases`. Its planting code also duplicates speed calculation. | Better Junimos allows unfertilized soil with no crop or a crop at internal phase 0 or 1 (`currentPhase > 1` is rejected). Even phase 0 already has its trait-adjusted durations. On a trait plant, speed fertilizer or Agriculturist/paddy conditions can replace initial phase lengths without reapplying Fast Growth, Companion or Researcher adjustments, leaving our saved phase deltas stale. Fertilize empty ground before hand-planting; avoid having Junimos fertilize an existing trait plant. |
+Better Junimos normally allows fertilizing unfertilized soil with no crop or crops at internal phase 0 or 1. Its copied speed formula resets phase durations without calling our growth hooks. Phase 0 already has trait-adjusted durations, so merely blocking phase 1 would not preserve them.
+
+The optional fertilizer integration now:
+
+- Restricts available fertilizer jobs to empty soil or internal phase 0, retaining all of Better Junimos' other checks. This restriction applies to plain crops too.
+- Rechecks the phase in `PerformAction`, before Better Junimos applies or consumes fertilizer, so a crop advancing after job selection cannot slip through.
+- Replaces `CheckSpeedGro` with `HoeDirt.applySpeedIncreases(Game1.player)`. The existing growth hooks remove previous trait deltas, allow normal fertilizer/profession/paddy calculation, then apply Companion and Researcher followed by Fast Growth once. Existing traits and the mutation outcome are not rerolled. Empty soil requires no growth calculation.
+
+Better Junimos still chooses, applies and consumes the fertilizer and controls the visuals. This adds only tile checks to its existing ability calls and recalculates growth when fertilizing actually happens; there is no new update handler or crop scan. Hand fertilizing is unchanged. If growth recalculation throws, the crop snapshot is restored, the error is logged through the normal SMAPI/chat handler, and Better Junimos' original calculation is allowed to run. The action/consumption is not replayed.
+
+The three fertilizer hooks are signature-checked as one group. Registration failure removes only that group's attempted additions; planting and harvesting integration remain installed. Live mod/game validation remains pending.
+
+## Accepted limitation
+
+Better Junimos still caches out-of-season eligibility by seed ID without reading Evergreen. With out-of-season avoidance enabled it may reject Evergreen 5 seeds. The user explicitly accepted ignoring this limitation for now; hand-plant those seeds when necessary. Evergreen traits still transfer whenever Better Junimos successfully plants the seed.
 
 Watering changes soil water state; dead-crop cleanup calls `destroyCrop`. Neither invents another live-plant harvest or trait transfer path. Better Junimos flower/giant-crop avoidance settings can intentionally prevent harvesting; that is a selection setting, not missing harvest hooks.
-
-The inheritance fix deliberately leaves Better Junimos seed-selection filters and its later fertilizer ability unchanged. In particular, phase-0-only fertilizing would still need to preserve trait timings: the durations are assigned at planting, not when the crop reaches its next phase. This concerns stored growth durations, not erasing the trait metadata itself.
 
 ## Source links
 

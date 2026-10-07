@@ -1,8 +1,16 @@
+## Better Junimos fertilizer compatibility — 2026-10-07
+
+Approved: preserve trait growth timing and restrict Better Junimos fertilizing to empty soil or phase 0. Evergreen-aware out-of-season seed selection is explicitly left unchanged.
+
+The production integration compiles against game references. Linked-code tests cover optional registration, unsupported signatures, rollback preserving other patches, empty soil and phases 0/1/2/4, retaining Better Junimos rejection results, rechecking growth between job selection and action, routing growth through the normal method exactly once, retaining metadata, restoring crop/water state on a callback error before falling back to the original formula, and empty/mismatched-crop handling. These use doubles, not actual Better Junimos, live Harmony or the game's fertilizer calculation.
+
+Live checks still required: plain and trait seeds on empty versus prefertilized ground; fertilizer added after phase-0 planting; growth durations matching hand fertilizing for Fast Growth, Companion and Researcher with quality fertilizer/Speed-Gro/Agriculturist/paddy adjacency. Check no accumulated delay/reduction after repeated recalculation. Phase-1 and later crops must be skipped without consuming fertilizer, including a crop advancing after a job is selected. Confirm fertilizer selection/one-item consumption and Better Junimos infinite-inventory behavior are unchanged. Test SVE crops and Rooted restarting at phase 0. No extra scans or repeating callbacks should be registered.
+
 ## Better Junimos planting inheritance — 2026-10-07
 
 The optional planting integration and shared seed inheritance helper build against game references. Linked-code tests cover absent/present mod registration, rollback preserving unrelated patches, exact selected stack versus another same-ID stack, Companion metadata, calling normal speed calculation once, leaving seed consumption to Better Junimos, nested/failed action cleanup, wrong IDs/tiles, plain and excluded seeds, planter exclusion, rollback after a speed callback error, and instant-ready inheritance before mutation preparation. Tests use doubles and do not execute Better Junimos or live Harmony detours.
 
-Live checks: put two differently traited stacks of the same seed in the hut and verify each plant matches the stack actually consumed. Compare initial phase lengths and Lookup Anything against hand-planted copies with Fast Growth, Companion and Researcher, including prefertilized soil, Agriculturist, rice/taro adjacency, SVE crops and colored flowers. Verify one seed is consumed under normal Better Junimos settings, while its infinite-inventory setting is still respected. Test failure/occupied tiles, save/reload, instant-growing mods, and removing Better Junimos. Its current out-of-season filter still rejects Evergreen seeds when ordinary season checks fail; applying fertilizer after planting can still overwrite trait timing. Those two behaviors are not fixed by seed inheritance.
+Live checks: put two differently traited stacks of the same seed in the hut and verify each plant matches the stack actually consumed. Compare initial phase lengths and Lookup Anything against hand-planted copies with Fast Growth, Companion and Researcher, including prefertilized soil, Agriculturist, rice/taro adjacency, SVE crops and colored flowers. Verify one seed is consumed under normal Better Junimos settings, while its infinite-inventory setting is still respected. Test failure/occupied tiles, save/reload, instant-growing mods, and removing Better Junimos. Its out-of-season filter still rejects Evergreen seeds when ordinary season checks fail (accepted limitation). Fertilizing is handled by the separate integration described above.
 
 ## Junimo raisins and Better Junimos — 2026-10-07
 
@@ -10,7 +18,7 @@ Review item 2 is now fixed. Production code builds against game references. Link
 
 Live checks still required: with raisins active, hand-plant trait parsnips, sunflowers, wheat, potatoes, colored flowers and regrowers. Compare normal Junimos with Better Junimos. A successful vanilla raisin roll should add one main item with the selected primary item's traits/quality/color, never hay, seeds, bars or Companion produce. The copied item must not trigger additional Rooted/Nurse Crop/Seed Saver/material rolls. Test a same-ID Companion and different qualities in a multi-yield harvest. Check full huts retain the already-accepted vanilla overflow behavior. Auto Harvester still calls the shared harvest hooks but does not gain a raisin roll merely by using a Junimo collector.
 
-Known Better Junimos planting/fertilizing limitations and exact reviewed source are in BETTER-JUNIMOS.md. No claim of complete compatibility or live validation is made.
+Better Junimos planting/fertilizing integration details, the accepted Evergreen selection limitation and exact reviewed source are in BETTER-JUNIMOS.md. No claim of complete compatibility or live validation is made.
 
 ## Approved review fixes — 2026-10-07
 
