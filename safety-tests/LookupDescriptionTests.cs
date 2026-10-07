@@ -19,8 +19,8 @@ internal static class LookupDescriptionTests
         Check(TraitDescriptions.Describe("fast_growth:5", config).Contains("25%"), "default growth percentage");
         Check(TraitDescriptions.Describe("high_yield:5", config).Contains("100%"), "default yield percentage");
         Check(TraitDescriptions.Describe("high_quality:3", config).Contains("15%"), "quality percentage");
-        Check(TraitDescriptions.Describe("researcher:5", config).Contains("25 percentage points")
-            && TraitDescriptions.Describe("researcher:5", config).Contains("30% total"), "Researcher distinguishes points and total");
+        Check(TraitDescriptions.Describe("researcher:1", config).Contains("two successful trait rolls")
+            && TraitDescriptions.Describe("researcher:1", config).Contains("Single-level"), "Researcher explains machine conversion");
         for (int level = 1; level <= 5; level++)
             Check(!TraitDescriptions.Describe($"researcher:{level}", config).Contains("longer")
                 && !TraitDescriptions.Describe($"researcher:{level}", config).Contains("growth"), "Researcher description has no growth penalty");
@@ -38,7 +38,7 @@ internal static class LookupDescriptionTests
         Check(TraitDescriptions.Describe("fast_growth:2", config).Contains("10%")
             && TraitDescriptions.Describe("high_yield:5", config).Contains("100%"), "trait rates stay fixed when mutation config changes");
 
-        Check(TraitDescriptions.Describe("researcher:5", config).Contains("45% total"), "Researcher total uses configurable base chance");
+        Check(!TraitDescriptions.Describe("researcher:1", config).Contains("%"), "Researcher no longer advertises a mutation bonus");
 
         var harmony = new Harmony();
         LookupTraitDescriptions.Register(harmony, typeof(LookupSubject), ModEntry.Instance.Monitor);

@@ -4,6 +4,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.GameData.BigCraftables;
+using StardewValley.GameData.Machines;
 
 namespace CropBreeding;
 
@@ -25,6 +26,8 @@ public sealed class ModEntry : Mod
         });
         harmony = new Harmony(Id);
         Patches.Apply(harmony);
+        ErrorHandler.Try("Register research input rule", () =>
+            GameStateQuery.Register(ResearchMachine.InputQuery, (_, context) => ResearchMachine.CanAccept(context.InputItem)));
         helper.Events.Input.ButtonPressed += (_, e) => ErrorHandler.Try("Controller breeding menu input", () =>
         {
             if (e.Button == SButton.ControllerX && Game1.activeClickableMenu is UI.BreedingMenu station)
@@ -62,6 +65,10 @@ public sealed class ModEntry : Mod
             if (Context.IsWorldReady) Game1.player.addItemByMenuIfNecessary(ItemRegistry.Create("(BC)" + Breeder.MachineId));
         }));
         helper.ConsoleCommands.Add("cropbreeding_cleanup", "Remove breeding traits and machines before uninstalling. Save afterwards.", (_, _) => ErrorHandler.Try("Cleanup", Cleanup));
+        helper.ConsoleCommands.Add("cropbreeding_give_research", "Give one Research Machine.", (_, _) => ErrorHandler.Try("Give research machine", () =>
+        {
+            if (Context.IsWorldReady) Game1.player.addItemByMenuIfNecessary(ItemRegistry.Create("(BC)" + ResearchMachine.MachineId));
+        }));
         helper.ConsoleCommands.Add("cropbreeding_catalog", "List supported seed IDs and their exact harvest IDs.", (_, _) => ErrorHandler.Try("List crop catalog", () =>
         {
             if (Context.IsWorldReady)
@@ -71,10 +78,16 @@ public sealed class ModEntry : Mod
     }
     private void AssetRequested(object? sender, AssetRequestedEventArgs e)
     {
-        if (e.NameWithoutLocale.IsEquivalentTo(Id + "/BreedingMachine"))
+        if (e.NameWithoutLocale.IsEquivalentTo(Id + "/BreedingMachine")
+            || e.NameWithoutLocale.IsEquivalentTo(Id + "/ResearchMachine"))
             e.LoadFrom(() =>
             {
-                try { return Helper.ModContent.Load<Texture2D>("assets/breeding-machine.png"); }
+                try
+                {
+                    string file = e.NameWithoutLocale.IsEquivalentTo(Id + "/ResearchMachine")
+                        ? "assets/research-machine.png" : "assets/breeding-machine.png";
+                    return Helper.ModContent.Load<Texture2D>(file);
+                }
                 catch (Exception ex)
                 {
                     ErrorHandler.Report("Load machine sprite", ex);
@@ -92,14 +105,32 @@ public sealed class ModEntry : Mod
                     Texture = Id + "/BreedingMachine", SpriteIndex = 0,
                     CanBePlacedIndoors = true, CanBePlacedOutdoors = true, Fragility = 0, Price = 0
                 };
+                data[ResearchMachine.MachineId] = new BigCraftableData
+                {
+                    Name = "Research Machine", DisplayName = "Research Machine",
+                    Description = "Consumes one Researcher seed. Replaces Researcher with two successful trait rolls by the next morning. Breaking it loses its contents.",
+                    Texture = Id + "/ResearchMachine", SpriteIndex = 0,
+                    CanBePlacedIndoors = true, CanBePlacedOutdoors = true, Fragility = 0, Price = 0
+                };
             }));
+        else if (e.NameWithoutLocale.IsEquivalentTo("Data/Machines"))
+            e.Edit(asset => ErrorHandler.Try("Add research machine rules", () =>
+                asset.AsDictionary<string, MachineData>().Data["(BC)" + ResearchMachine.MachineId] = ResearchMachine.CreateData()));
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))
-            e.Edit(asset => ErrorHandler.Try("Add breeding recipe", () => asset.AsDictionary<string, string>().Data[Breeder.MachineId] =
-                $"388 50 335 5 787 1/Home/{Breeder.MachineId}/true/Farming 5/Breeding Machine"));
+            e.Edit(asset => ErrorHandler.Try("Add breeding recipes", () =>
+            {
+                var data = asset.AsDictionary<string, string>().Data;
+                data[Breeder.MachineId] = $"388 50 335 5 787 1/Home/{Breeder.MachineId}/true/Farming 5/Breeding Machine";
+                data[ResearchMachine.MachineId] = $"388 50 335 5 787 1/Home/{ResearchMachine.MachineId}/true/Farming 5/Research Machine";
+            }));
     }
     private static void Unlock()
     {
-        if (Context.IsWorldReady && Game1.player.FarmingLevel >= 5) Game1.player.craftingRecipes.TryAdd(Breeder.MachineId, 0);
+        if (Context.IsWorldReady && Game1.player.FarmingLevel >= 5)
+        {
+            Game1.player.craftingRecipes.TryAdd(Breeder.MachineId, 0);
+            Game1.player.craftingRecipes.TryAdd(ResearchMachine.MachineId, 0);
+        }
     }
 
     private void Cleanup()
@@ -109,7 +140,7 @@ public sealed class ModEntry : Mod
         {
             item.modData.Remove(Traits.Key);
             item.modData.Remove(Companion.Key);
-            if (item is StardewValley.Object machine && Breeder.IsMachine(machine)) Breeder.Clear(machine);
+            if (item is StardewValley.Object machine && (Breeder.IsMachine(machine) || ResearchMachine.IsMachine(machine))) Breeder.Clear(machine);
             return true;
         });
         Utility.ForEachLocation(location =>
@@ -123,17 +154,21 @@ public sealed class ModEntry : Mod
                     crop.modData.Remove(MutationState.Key);
                     feature.applySpeedIncreases(Game1.MasterPlayer);
                 }
-            foreach (var tile in location.objects.Pairs.Where(p => Breeder.IsMachine(p.Value)).Select(p => p.Key).ToArray())
+            foreach (var tile in location.objects.Pairs.Where(p => Breeder.IsMachine(p.Value) || ResearchMachine.IsMachine(p.Value)).Select(p => p.Key).ToArray())
                 location.objects.Remove(tile);
             return true;
         });
         // Remove machine items from all inventories (including nested inventories) through the official traversal.
         Utility.ForEachItemContext((in StardewValley.Internal.ForEachItemContext context) =>
         {
-            if (context.Item is StardewValley.Object machine && Breeder.IsMachine(machine)) context.RemoveItem();
+            if (context.Item is StardewValley.Object machine && (Breeder.IsMachine(machine) || ResearchMachine.IsMachine(machine))) context.RemoveItem();
             return true;
         });
-        foreach (Farmer farmer in Game1.getAllFarmers()) farmer.craftingRecipes.Remove(Breeder.MachineId);
+        foreach (Farmer farmer in Game1.getAllFarmers())
+        {
+            farmer.craftingRecipes.Remove(Breeder.MachineId);
+            farmer.craftingRecipes.Remove(ResearchMachine.MachineId);
+        }
         Monitor.Log("Breeding data and machines removed. Save, quit, then remove the mod.", LogLevel.Info);
     }
 }

@@ -78,7 +78,7 @@ internal static class BetterJunimosFertilizerIntegration
         {
             snapshot = new CropSnapshot(crop);
             // Our normal growth hooks remove previous trait deltas, let vanilla handle
-            // fertilizer/profession/paddy speed, then apply Companion/Researcher/Fast Growth once.
+            // fertilizer/profession/paddy speed, then apply Companion/Fast Growth once.
             hd.applySpeedIncreases(Game1.player);
             return false;
         }

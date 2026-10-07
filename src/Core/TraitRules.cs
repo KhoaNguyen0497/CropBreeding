@@ -14,8 +14,7 @@ public static class TraitRules
     public const double QualityUpgradeChance = .05;
     public const double SeedSaverChance = .10;
     public const double RootedChance = .10;
-    public const double ResearcherMutationBonus = .05;
-    public const double ResearcherGrowthPenalty = 0;
+    public static int MaxLevel(string id) => id == "researcher" ? 1 : MaximumLevel;
 
     public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver", "copper_bearing", "iron_bearing", "gold_bearing", "rooted", "nurse_crop",
         "maple_bearing", "resin_bearing", "tar_bearing"];
@@ -47,8 +46,6 @@ public static class TraitRules
         int units = (Math.Max(0, baseGrowthDays) / 5) * Math.Clamp(level, 0, MaximumLevel);
         return units / 20 + (roll < (units % 20) / 20.0 ? 1 : 0);
     }
-    public static double MutationRate(double baseline, int researcherLevel, double bonusPerLevel)
-        => Math.Clamp(baseline + Math.Clamp(researcherLevel, 0, MaximumLevel) * Math.Max(0, bonusPerLevel), 0, 1);
     public static bool EvergreenActive(int level) => level >= MaximumLevel;
     public static int ExtraYieldCount(int count, int level, double increasePerLevel, double roll)
     {
@@ -93,7 +90,7 @@ public static class TraitRules
     {
         string[] parts = token.Split(':');
         return parts.Length == 2 && int.TryParse(parts[1], out int level) && level > 0
-            ? Math.Min(level, MaximumLevel) : 0;
+            ? Math.Min(level, MaxLevel(parts[0])) : 0;
     }
     private static string Token(string id, int level) => $"{id}:{level}";
     public static string[] Parse(string? value) => (value ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -116,7 +113,7 @@ public static class TraitRules
         if (choices.Length == 0) return current;
         string chosen = choices[random.Next(choices.Length)];
         int level = Level(current, chosen);
-        if (level >= MaximumLevel || (level == 0 && current.Length >= Math.Max(0, limit))) return current;
+        if (level >= MaxLevel(chosen) || (level == 0 && current.Length >= Math.Max(0, limit))) return current;
         return Parse(Encode(current.Where(t => Id(t) != chosen).Append(Token(chosen, level + 1))));
     }
     public static bool TryBreed(IEnumerable<string> donor, IEnumerable<string> seed, int limit, out string[] result)
@@ -128,7 +125,7 @@ public static class TraitRules
         if (result.Length == 0 || seedTraits.Length != 1 || TokenLevel(seedTraits[0]) != 1) return false;
         string id = Id(seedTraits[0]);
         int level = Level(result, id);
-        if (result.Length > Math.Max(0, limit) || level >= MaximumLevel
+        if (result.Length > Math.Max(0, limit) || level >= MaxLevel(id)
             || (level == 0 && result.Length >= Math.Max(0, limit))) return false;
         result = Parse(Encode(result.Where(t => Id(t) != id).Append(Token(id, level + 1))));
         return true;
@@ -165,6 +162,6 @@ public static class TraitRules
             "copper_bearing" => "Copper Bearing", "iron_bearing" => "Iron Bearing", "gold_bearing" => "Gold Bearing", "rooted" => "Rooted", "nurse_crop" => "Nurse Crop",
             "maple_bearing" => "Maple Bearing", "resin_bearing" => "Resin Bearing", "tar_bearing" => "Tar Bearing", _ => Id(token)
         };
-        return $"{name} {TokenLevel(token)}";
+        return Id(token) == "researcher" ? name : $"{name} {TokenLevel(token)}";
     }
 }

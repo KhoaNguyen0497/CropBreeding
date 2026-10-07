@@ -1,12 +1,12 @@
 # Detailed mechanics
 
-A gameplay-focused SMAPI mod for Stardew Valley 1.6, including Stardew Valley Expanded crops. **Single-player only; multiplayer is unsupported.** This mod has never been installed: development targets fresh installs, with no migrations or support for earlier development save/config formats.
+A gameplay-focused SMAPI mod for Stardew Valley 1.6, including Stardew Valley Expanded crops. **Single-player only; multiplayer is unsupported.** Existing Researcher 1 crops and seeds keep the same saved trait data and use the new single-level effect. No planted Researcher migration is needed for the current save.
 
 ## Breeding loop
 
 Grow crops on ordinary tilled ground. When an eligible crop becomes harvest-ready, it rolls a configurable chance to add one new level-1 trait or increase one existing trait by one level on its produce. The saved outcome stays fixed until harvested. Existing traits stay intact. Open the Breeding Machine UI and place **3 trait crops and 3 matching seeds by default** in its slots; it consumes the inputs and produces **one bred seed**. Each input comes from a single stack of at least the configured breeding cost: the seeds must match each other, and the donor crops must match each other (traits, levels, Companion choice, quality and normal stacking rules). The `BreedingCost` setting defaults to 3; a value of x consumes x crops and x seeds. The result is always one seed.
 
-Plain seeds copy the donor crop's traits. Seeds with **exactly one trait at level 1** merge that trait into the donor: an existing trait gains one level, or a different trait is added at level 1. Seeds with multiple traits or a trait above level 1 are rejected. A merge that would exceed the trait-count limit or level 5 is rejected without consuming the seeds or changing the waiting donor.
+Plain seeds copy the donor crop's traits. Seeds with **exactly one trait at level 1** merge that trait into the donor: an existing trait gains one level, or a different trait is added at level 1. Seeds with multiple traits or a trait above level 1 are rejected. A merge that would exceed the trait-count limit or the trait’s maximum level (Researcher 1; others 5) is rejected without consuming the seeds or changing the waiting donor.
 
 Examples: `X + Y` donor with `X` seeds gives `X2 + Y`; the same donor with `Z` seeds gives `X + Y + Z`. Each uses the configured equal seed and donor cost. Matching comes from the loaded `Data/Crops` seed ID and `HarvestItemId`, including Content Patcher/SVE changes; names are never used.
 
@@ -26,7 +26,7 @@ Coffee beans already act as both produce and seeds, so mutated beans can be repl
 | Maple Bearing | Produces Maple Syrup using the material-drop rule. |
 | Resin Bearing | Produces Oak Resin using the material-drop rule. |
 | Tar Bearing | Produces Pine Tar using the material-drop rule. |
-| Researcher | Adds 5 percentage points of mutation chance per level: default total 10/15/20/25/30%. Uses the parent's inherited level. |
+| Researcher | Single-level trait. A Research Machine removes it from one seed, then applies two successful trait increases, ready the next morning. |
 | Seed Saver | 10% chance per level (up to 50%) to return one matching seed per successful plant harvest. Copies the parent's original traits, levels and Companion choice, never the new harvest mutation. No High Yield multiplication or High Quality upgrade. Works on regrowing harvests and directly plantable coffee too. |
 | Evergreen | Levels 1–4 are dormant and still occupy a trait slot. Level 5 allows planting and growth in all seasons, including winter, and prevents seasonal death on eligible tilled ground. Regrowing crops keep regrowing; single-harvest crops remain single-harvest. Normal watering and location restrictions still apply. |
 | Fast Growth | Reduces initial growth and supported regrowth by 5% per level (25% at level 5), after ordinary bonuses and Companion delay. Round the final result up, minimum one day. Never creates regrowth for single-harvest crops. |
@@ -38,7 +38,7 @@ Trait percentages are fixed: Fast Growth reduces initial growth and regrowth by 
 
 Every primary crop harvested from a trait plant inherits its traits and levels, including every regrowing harvest. Eligible donor crops can copy traits into matching seeds; coffee is the direct-replanting exception. A new mutation changes harvested produce, not the standing plant. For example, Fast Growth level 5 changes 7 days to 6; 2 days still rounds up to 2.
 
-Default mutation chance is 5%; default cap is 3 unique traits, each with levels 1–5. A successful chance roll chooses uniformly from ALL crop-eligible trait types, before checking owned traits, levels or free slots. Only intrinsic eligibility filters the pool (for example, natural regrowers cannot roll Rooted or Nurse Crop, and unavailable material outputs are excluded). The selected trait upgrades if below level 5, or is added at level 1 if a slot is free. Selecting a maxed trait or a missing trait with no free slot does nothing: no reroll. Thus X5/Y5/Z4 only upgrades when Z itself is selected; with N eligible traits its base per-harvest upgrade chance is 5% / N. Researcher increases the initial chance, not the odds of selecting any particular trait. One mutation roll applies to all primary produce from a harvest. High Quality uses separate rolls for each individual item, including the High Yield bonus, based on the plant's inherited level. A new High Quality mutation does not improve the same harvest; breed and replant it first. Quality rolls run after fertilizer/farming-level quality calculations, without changing those calculations. Mixed-quality outputs are separated into stacks. Hand-harvest extra items drop as ordinary harvest debris; Junimos receive them in the hut. The updated Auto Harvester uses this same vanilla Junimo harvest path: outputs go to its storage, with overflow dropped on the ground. Byproducts such as sunflower seeds and wheat hay do not receive quality upgrades. The new mutation is stored on produce; growth, regrowth, yield and quality effects require replanting. Lowering the cap never deletes existing traits; plain-seed copying preserves them, but merging is blocked while the donor exceeds the count cap. Traits use one explicit `trait:level` format in `modData`, including level 1; different trait sets or levels cannot stack, and vanilla quality/color distinctions still apply.
+Default mutation chance is 5%; default cap is 3 unique traits, each with levels 1–5 except Researcher (level 1 only). A successful chance roll chooses uniformly from ALL crop-eligible trait types, before checking owned traits, levels or free slots. Only intrinsic eligibility filters the pool (for example, natural regrowers cannot roll Rooted or Nurse Crop, and unavailable material outputs are excluded). The selected trait upgrades if below its maximum level, or is added at level 1 if a slot is free. Selecting a maxed trait or a missing trait with no free slot does nothing: no reroll. Thus X5/Y5/Z4 only upgrades when Z itself is selected; with N eligible traits its base per-harvest upgrade chance is 5% / N. Researcher does not alter the mutation chance. One mutation roll applies to all primary produce from a harvest. High Quality uses separate rolls for each individual item, including the High Yield bonus, based on the plant's inherited level. A new High Quality mutation does not improve the same harvest; breed and replant it first. Quality rolls run after fertilizer/farming-level quality calculations, without changing those calculations. Mixed-quality outputs are separated into stacks. Hand-harvest extra items drop as ordinary harvest debris; Junimos receive them in the hut. The updated Auto Harvester uses this same vanilla Junimo harvest path: outputs go to its storage, with overflow dropped on the ground. Byproducts such as sunflower seeds and wheat hay do not receive quality upgrades. The new mutation is stored on produce; growth, regrowth, yield and quality effects require replanting. Lowering the cap never deletes existing traits; plain-seed copying preserves them, but merging is blocked while the donor exceeds the count cap. Traits use one explicit `trait:level` format in `modData`, including level 1; different trait sets or levels cannot stack, and vanilla quality/color distinctions still apply.
 
 ### Mutation readiness and icon
 
@@ -64,7 +64,7 @@ Tapper-product traits cover only Maple Syrup, Oak Resin and Pine Tar. They use e
 
 ### Lookup Anything
 
-Lookup pages for trait seeds, harvested produce and planted crops include a separate row for each inherited trait, labelled with its level. Descriptions cover all 15 traits and use fixed trait percentages and the current base mutation chance, including Companion selection/unassigned state, Evergreen's level-5 activation, Researcher's mutation bonus, and material/Nurse Crop overflow rules. Planted crop descriptions use the actual plant's inherited traits, not its pending harvest mutation or a generic sample item. These are effect explanations, not guaranteed yield/quality forecasts. Normal inventory tooltips remain compact. Trait field integration is optional, validated separately from timing integration, and only runs when lookup fields are requested; it does not roll mutations or scan crops. If the field contract changes or description generation fails, normal Lookup Anything fields remain available.
+Lookup pages for trait seeds, harvested produce and planted crops include a separate row for each inherited trait, labelled with its level. Descriptions cover all 15 traits and use fixed trait percentages and the current base mutation chance, including Companion selection/unassigned state, Evergreen's level-5 activation, Researcher’s seed-research effect, and material/Nurse Crop overflow rules. Planted crop descriptions use the actual plant's inherited traits, not its pending harvest mutation or a generic sample item. These are effect explanations, not guaranteed yield/quality forecasts. Normal inventory tooltips remain compact. Trait field integration is optional, validated separately from timing integration, and only runs when lookup fields are requested; it does not roll mutations or scan crops. If the field contract changes or description generation fails, normal Lookup Anything fields remain available.
 
 Optional display integration adjusts trait seed previews, planted crop growth/regrowth summaries and next-harvest countdowns. Evergreen 5 displays all four seasons and avoids false out-of-season harvest warnings. Seed previews include Fast Growth, Companion and the current player's Agriculturist profession, without assuming fertilizer or paddy adjacency. Planted crops use their existing phase durations and countdowns. This does not change shared crop data or actual plants, and runs only during lookups. Harvest yield/quality probability fields remain Lookup Anything's base calculations, not breeding-trait forecasts. If Lookup Anything's internal API changes, the integration logs a warning and disables itself; gameplay does not depend on it.
 
@@ -100,7 +100,17 @@ Regrowing crop mutations are enabled by default (`EnableRegrowingCropMutations=t
 
 ## Accepted gameplay rules and limitations
 
-Researcher adds a fixed 5 percentage points to mutation chance per level, with no growth or regrowth penalty. Seed Saver has a fixed 10% chance per level. Researcher does not bypass disabled regrowing mutations or trait/level caps. Seed Saver returns one seed at most per plant harvest, regardless of primary yield. Neither trait scans the world. Remove Trait mode can remove Researcher or any other selected trait from a seed.
+Researcher is single-level, with no growth/regrowth penalty or mutation-chance bonus. Existing `researcher:1` item metadata stays valid without rewriting inventories. Researcher crops can copy their traits into seeds through normal breeding. Researcher cannot upgrade or merge with another Researcher; it can still be copied to plain seeds. Seed Saver has a fixed 10% chance per level and returns one seed at most per plant harvest, regardless of primary yield. Neither trait scans the world. Remove Trait mode can remove Researcher or any other selected trait from a seed.
+
+### Research Machine
+
+The Research Machine consumes one eligible seed containing Researcher, including seeds with other traits and directly plantable coffee. It removes Researcher first, then makes exactly two successful trait increases. Each roll chooses uniformly among applicable traits: existing eligible traits below their level cap, or new eligible traits when a slot is free. The choices are recalculated after the first increase. Researcher itself is excluded. Natural regrowing seeds cannot roll Rooted or Nurse Crop; unavailable material outputs are excluded. Newly added Companion is unassigned; an existing Companion assignment is preserved.
+
+With unchanged normal settings, removing Researcher frees a slot and guarantees capacity for two increases. Lowered caps or unusual data can make this impossible; such inputs are rejected untouched instead of producing only one increase. The output is one copy of the input seed with its new traits, quality and unrelated metadata preserved.
+
+Native `Data/Machines` processing fixes and stores the output at insertion, consumes one seed, and makes it ready the next morning. Input probes never roll. Collecting or saving/loading a stored result does not reroll it; replaying an unsaved insertion may. No UI, daily scan or custom Automate integration is needed: Automate uses its standard data-based loader and tracks the stored output. Fairy Dust is disabled. Breaking the machine loses input/output without refund. Errors generating the output log and reject processing before consuming the seed.
+
+Recipe: Farming 5, 50 Wood, 5 Iron Bars, 1 Battery Pack. Static 16×32 recolored Slime Incubator-style sprite with a sprout.
 
 - Foraged/shop/drop produce receives no new mutation from this mod. A matching item that already carries valid traits may be used as a donor (except coffee); there is no provenance restriction.
 - Ordinary processing, crafting and building requirements may consume trait crops normally. Traits provide no protection or special benefit in those uses; normal item quality rules still apply.
@@ -129,7 +139,7 @@ No restart is needed. Saving settings does not scan/rewrite existing crops. GMCM
 | Breeding cost | Next input/breeding action. Stored inputs must cover the current cost; surplus donor crops are returned. Range 1–10; default 3 of each ingredient. |
 | Show errors in chat | Immediately; enabled by default. |
 
-Trait percentages, material/Nurse odds and the level cap are fixed gameplay rules. Lookup Anything uses these same fixed values and the configured base mutation chance for Researcher's total.
+Trait percentages, material/Nurse odds and the level cap are fixed gameplay rules. Lookup Anything uses these same fixed values and describes Researcher’s guaranteed seed processing.
 
 ## Build and test
 
@@ -151,7 +161,8 @@ See [validation coverage and the pending in-game checklist](TESTING.md), [final 
 
 ## Commands and uninstalling
 
-- `cropbreeding_give`: give a machine for testing.
+- `cropbreeding_give`: give a Breeding Machine for testing.
+- `cropbreeding_give_research`: give a Research Machine for testing.
 - `cropbreeding_catalog`: list the exact eligible seed → harvest mappings from your installed mods.
 - `cropbreeding_cleanup`: as the host, remove traits, placed/inventory breeding machines, their contents and recipe unlocks. **Back up your save first, run this while the mod is installed, save, quit, then remove the mod.** Ordinary crops remain. This command intentionally destroys machine contents.
 

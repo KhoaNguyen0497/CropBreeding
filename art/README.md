@@ -1,10 +1,11 @@
 # Crop Breeding artwork
 
-The machine asset is a static RGBA PNG with binary transparency and no baked ground shadow. The game retains normal big-craftable rendering. Enlarged previews use nearest-neighbor scaling.
+Machine assets are static RGBA PNGs. The breeding station has binary transparency and no baked ground shadow. The research machine retains the Slime Incubator’s silhouette and ground-contact footprint. Both use normal big-craftable rendering. Enlarged previews use nearest-neighbor scaling.
 
 | Asset | Native size | Preview |
 |---|---|---|
 | `../src/assets/breeding-machine.png` | 16×32 | `breeding-machine-preview.png`, 10× |
+| `../src/assets/research-machine.png` | 16×32 | `research-machine-preview.png`, 10× |
 
 Created with the built-in image-generation tool from the user-approved machine design, then exported to native grids using nearest-neighbor sampling and a limited palette (up to 24 colors). The user-supplied vanilla workbench was a style reference, not a shipped asset.
 
@@ -12,3 +13,9 @@ Machine prompt: “A Stardew Valley crop-breeding biology station based on the v
 
 
 The trait badge reuses the vanilla Qi Gem item sprite, `(O)858`, via ItemRegistry. Its native 16×16 sprite is drawn at exactly 2× for a 32×32 badge on a normal 64-pixel inventory/crop icon. No resampled or generated gem artwork is shipped. Inventory badges mean inherited item traits; Crop Harvest Bubbles badges mean a saved successful mutation waiting to be harvested.
+
+## Research Machine
+
+Generated with the built-in image-generation tool using the [vanilla Slime Incubator](https://stardewvalleywiki.com/File:Slime_Incubator.png) as the reference. Exported to native 16×32 pixels with nearest-neighbor sampling and a limited palette. The original silhouette/alpha mask preserves the machine footprint; no additional runtime shadow or animation is added.
+
+Prompt: “Edit the supplied vanilla Slime Incubator. Preserve the silhouette, native 16×32 pixel grid, canvas proportions, perspective, dark outline, glass dome, lower mechanical housing and tiny baked ground-contact shadow. Replace the slime with a tiny two-leaf green sprout and brown soil patch in pale-blue glass. Recolor the purple housing to muted bronze/copper with moss-green accents. Native Stardew pixel art, no subpixel detail, smoothing, extra parts, effects, labels or animation; transparent background.”

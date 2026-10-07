@@ -292,6 +292,12 @@ namespace CropBreeding
 {
     internal static class CropCatalog
     {
+        internal static Dictionary<string, CropData> Data = new()
+        {
+            ["472"] = new() { RegrowDays = -1 },
+            ["473"] = new() { RegrowDays = 7 },
+            ["433"] = new() { RegrowDays = 2 }
+        };
         internal static string Raw(string id) => id.Replace("(O)", "");
         internal static bool IsProduce(Item item) => Companion.Valid(item);
         internal static bool Matches(Item donor, Item seed) => donor.ItemId == "24" && seed.ItemId == "472";

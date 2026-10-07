@@ -30,7 +30,7 @@ The optional fertilizer integration now:
 
 - Restricts available fertilizer jobs to empty soil or internal phase 0, retaining all of Better Junimos' other checks. This restriction applies to plain crops too.
 - Rechecks the phase in `PerformAction`, before Better Junimos applies or consumes fertilizer, so a crop advancing after job selection cannot slip through.
-- Replaces `CheckSpeedGro` with `HoeDirt.applySpeedIncreases(Game1.player)`. The existing growth hooks remove previous trait deltas, allow normal fertilizer/profession/paddy calculation, then apply Companion and Researcher followed by Fast Growth once. Existing traits and the mutation outcome are not rerolled. Empty soil requires no growth calculation.
+- Replaces `CheckSpeedGro` with `HoeDirt.applySpeedIncreases(Game1.player)`. The existing growth hooks remove previous trait deltas, allow normal fertilizer/profession/paddy calculation, then apply Companion followed by Fast Growth once. Existing traits and the mutation outcome are not rerolled. Empty soil requires no growth calculation.
 
 Better Junimos still chooses, applies and consumes the fertilizer and controls the visuals. This adds only tile checks to its existing ability calls and recalculates growth when fertilizing actually happens; there is no new update handler or crop scan. Hand fertilizing is unchanged. If growth recalculation throws, the crop snapshot is restored, the error is logged through the normal SMAPI/chat handler, and Better Junimos' original calculation is allowed to run. The action/consumption is not replayed.
 

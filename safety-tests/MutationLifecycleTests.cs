@@ -91,6 +91,12 @@ internal static class MutationLifecycleTests
         MutationState.AfterGrowth(plant);
         Check(plant.modData[MutationState.Key] == "high_yield:1", "Rooted's next ready cycle gets a fresh outcome");
 
+        ModEntry.Instance.Config.MutationChance = .05;
+        Traits.RandomFactory = () => new FixedRandom(.06, 1);
+        var researcher = Plant(regrows: true, inherited: "researcher:1");
+        MutationState.AfterGrowth(researcher);
+        Check(!MutationState.HasMutation(researcher), "Researcher no longer boosts harvest mutation chance");
+        Traits.RandomFactory = () => new FixedRandom(0, 1);
         ModEntry.Instance.Config.EnableRegrowingCropMutations = false;
         var disabled = Plant(regrows: true, inherited: "researcher:5");
         MutationState.AfterGrowth(disabled);

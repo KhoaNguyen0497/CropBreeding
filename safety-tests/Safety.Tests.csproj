@@ -4,6 +4,8 @@
     <LangVersion>12</LangVersion><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../src/Core/ResearchRules.cs" Link="ResearchRules.cs" />
+    <Compile Include="../src/ResearchMachine.cs" Link="ResearchMachine.cs" />
     <Compile Include="../src/StationStacks.cs" Link="StationStacks.cs" />
     <Compile Include="../src/Patches.StationInput.cs" Link="Patches.StationInput.cs" />
     <Compile Include="../src/ErrorHandler.cs" Link="ErrorHandler.cs" />

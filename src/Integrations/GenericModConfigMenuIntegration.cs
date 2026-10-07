@@ -27,7 +27,7 @@ internal static class GenericModConfigMenuIntegration
             api.AddSectionTitle(mod.ModManifest, () => "Breeding and mutations", () => "No restart needed. Mutation changes affect the next readiness roll; a ready plant keeps its saved result. Breeding uses current settings.");
             api.AddNumberOption(mod.ModManifest, () => mod.Config.MaximumTraits, value => mod.Config.MaximumTraits = Math.Clamp(value, 0, Core.TraitRules.Known.Length),
                 () => "Maximum traits", () => "Unique traits per seed or crop. Zero prevents adding new traits. Lowering this does not remove existing traits.", 0, Core.TraitRules.Known.Length, 1, fieldId: nameof(ModConfig.MaximumTraits));
-            Percent(nameof(ModConfig.MutationChance), "Mutation chance", "Rolled once when each harvest becomes ready, before Researcher. Already stored outcomes are unchanged by settings edits.", c => c.MutationChance, (c, v) => c.MutationChance = v);
+            Percent(nameof(ModConfig.MutationChance), "Mutation chance", "Rolled once when each harvest becomes ready. Already stored outcomes are unchanged by settings edits.", c => c.MutationChance, (c, v) => c.MutationChance = v);
             api.AddBoolOption(mod.ModManifest, () => mod.Config.EnableRegrowingCropMutations, value => mod.Config.EnableRegrowingCropMutations = value,
                 () => "Mutations on regrowing crops", () => "Affects future readiness rolls, not outcomes already stored on ready plants.", fieldId: nameof(ModConfig.EnableRegrowingCropMutations));
             api.AddNumberOption(mod.ModManifest, () => mod.Config.BreedingCost, value => mod.Config.BreedingCost = Math.Clamp(value, 1, 10),

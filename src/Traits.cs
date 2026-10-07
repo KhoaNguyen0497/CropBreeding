@@ -16,8 +16,7 @@ internal static class Traits
     }
     internal static int Level(ModDataDictionary data, string value) => TraitRules.Level(Read(data), value);
     internal static bool Has(ModDataDictionary data, string value) => Level(data, value) > 0;
-    internal static double GrowthPenalty(ModDataDictionary data) => Level(data, "researcher")
-        * Math.Max(0, CropBreeding.Core.TraitRules.ResearcherGrowthPenalty);
+    internal static double GrowthPenalty(ModDataDictionary data) => 0;
     internal static bool Eligible(Crop crop, HoeDirtAlias soil) => CropCatalog.Ground(soil) && !crop.forageCrop.Value
         && CropCatalog.EligibleSeed(crop.netSeedIndex.Value)
         && (!crop.modData.TryGetValue(EligibilityKey, out string allowed) || allowed != "false");

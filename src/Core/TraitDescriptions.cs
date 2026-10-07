@@ -31,7 +31,7 @@ internal static class TraitDescriptions
             "evergreen" => level < TraitRules.MaximumLevel
                 ? "Dormant until level 5: allows planting and growing in all seasons."
                 : "Allows planting and growing in all seasons.",
-            "researcher" => $"Mutation chance +{Points(Math.Max(0, CropBreeding.Core.TraitRules.ResearcherMutationBonus) * level)} percentage points ({Percent(TraitRules.MutationRate(config.MutationChance, level, CropBreeding.Core.TraitRules.ResearcherMutationBonus))} total).",
+            "researcher" => "Single-level trait. Research Machine replaces it with two successful trait rolls by the next morning. Existing traits can be upgraded; trait and level caps apply.",
             "seed_saver" => $"{Chance(CropBreeding.Core.TraitRules.SeedSaverChance)} chance per harvest for 1 matching seed. Keeps the plant's original traits and Companion.",
             "rooted" => $"{Chance(CropBreeding.Core.TraitRules.RootedChance)} chance to restart a single-harvest crop from seed stage for free. Keeps original traits and Companion.",
             "nurse_crop" => $"Single-harvest crops: {Percent(.30 * level)} chance on harvest to advance adjacent non-fruit trees by one stage, stopping before maturity.",

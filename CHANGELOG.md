@@ -2,8 +2,10 @@
 
 ## Unreleased
 
-- Removed Researcher's growth and regrowth penalty. Its mutation bonus remains +5 percentage points per level.
-- Updated Researcher's Lookup Anything description and documentation.
+- Researcher is now a single-level trait with no mutation-chance bonus or growth penalty. Existing Researcher 1 crops and seeds retain their saved traits.
+- Added a Research Machine: one Researcher seed becomes one seed with two successful trait increases the next morning. Researcher is removed first, and each roll respects crop eligibility, trait slots and level caps.
+- Research results are stored at insertion. Native machine processing supports Automate; breaking the machine destroys its contents.
+- Added a recolored Slime Incubator-style sprout sprite at the original 16×32 size, and updated Researcher's Lookup Anything description.
 
 ## 1.0.7
 

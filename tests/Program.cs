@@ -1,4 +1,5 @@
 using CropBreeding.Core;
+ResearchRulesTests.Run();
 static void Check(bool ok, string name) { if (!ok) throw new Exception(name); }
 // Compact test fixtures expand to the single explicit trait:level storage format.
 static string[] T(string value) => TraitRules.Parse(string.Join(',', value.Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -125,18 +126,11 @@ Console.WriteLine("Passed merge examples/rejections, explicit trait levels, leve
 
 Check(TraitRules.RegrowthDays(10, 5, .05, 8) == 11, "final reduction covers companion");
 Check(TraitRules.FinalGrowthPhases(new[] { 1, 2, 2, 99999 }, 5, .05, 7).Take(3).Sum() == 7, "initial growth rounds only after combined reduction");
-Check(Math.Abs(TraitRules.MutationRate(.05, 1, .05) - .10) < 1e-9, "Researcher one 10 percent total");
-Check(Math.Abs(TraitRules.MutationRate(.05, 5, .05) - .30) < 1e-9, "Researcher five 30 percent total");
-Check(TraitRules.MutationRate(.9, 5, .1) == 1, "mutation rate capped");
-for (int researcherLevel = 1; researcherLevel <= 5; researcherLevel++)
-{
-    double penalty = TraitRules.ResearcherGrowthPenalty * researcherLevel;
-    Check(TraitRules.RegrowthDays(10, 0, .05, 0, penalty) == 10, "Researcher does not slow regrowth");
-    Check(TraitRules.RegrowthDays(10, 5, .05, 8, penalty) == 11, "Researcher leaves Companion and Fast Growth timing unchanged");
-    Check(TraitRules.FinalGrowthPhases(new[] { 1, 2, 2, 99999 }, 0, .05, 0, penalty).Take(3).Sum() == 5, "Researcher does not slow initial growth");
-    Check(TraitRules.RegrowthDays(-1, 0, .05, 8, penalty) == -1, "Researcher cannot create regrowth");
-}
-Breed("researcher:2", "researcher", 3, "researcher:3");
+Check(TraitRules.Level(T("researcher:5"), "researcher") == 1, "Researcher has one level");
+Check(TraitRules.Label("researcher:1") == "Researcher", "single-level Researcher label");
+Breed("researcher", "researcher", 3, null);
+Breed("fast_growth:3", "researcher", 3, "fast_growth:3,researcher");
+Check(TraitRules.Mutate(T("researcher"), 3, 1, new Random(1), true, id => id == "researcher").SequenceEqual(T("researcher")), "harvest cannot upgrade Researcher");
 Breed("seed_saver:4", "seed_saver", 3, "seed_saver:5");
 Breed("seed_saver:5", "", 3, "seed_saver:5");
 Check(TraitRules.Without(T("researcher:5,high_yield:3,companion:2"), "researcher").SequenceEqual(T("high_yield:3,companion:2")), "remove selected trait preserves other levels");

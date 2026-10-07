@@ -16,7 +16,7 @@ Optional: **Generic Mod Config Menu** for settings, **Lookup Anything** for trai
 4. Open its two-slot menu and combine **3 trait crops + 3 matching seeds → 1 bred seed** by default. Each group must come from one matching stack.
 5. Plant the bred seed to use its traits. New harvest mutations affect the produce, not the standing plant.
 
-Seeds are matched to crops using actual game data, including SVE crops. Default limits are **3 traits per seed**, each up to **level 5**.
+Seeds are matched to crops using actual game data, including SVE crops. Default limits are **3 traits per seed**, each up to **level 5**, except single-level **Researcher**.
 
 Trait-bearing crops and seeds also show the Qi Gem badge in inventory and item menus, with no bubble mod required. The wooden biology station has direct mode tabs and supports expanded backpacks with controller-friendly paging.
 
@@ -38,6 +38,16 @@ Coffee beans can inherit traits and be replanted directly. They cannot be breedi
 
 The station uses a controller-friendly menu with tabs for each mode. Select an inventory stack and press **X** to insert it into the appropriate input slot; compatible stacks combine up to the slot limit. Press the action button to process one recipe. Unused left-slot ingredients return to your inventory when replaced by the result. Expanded backpacks display up to four rows, with page buttons, mouse wheel and LB/RB for larger inventories. It has no automatic processing or Automate input support. **Breaking it destroys stored contents.**
 
+## Research Machine
+
+Insert **1 seed with Researcher** to receive **1 researched seed the next morning**. Other traits are allowed. Researcher is removed, then two successful rolls add or upgrade traits. Each roll rechecks available slots, crop eligibility and maximum levels; Researcher cannot be rolled back onto the result.
+
+For example, `Researcher + X4 + Y5` can become `X5 + Y5 + Z1`. A plain Researcher seed can gain two different traits or one level-2 trait. If changed settings leave fewer than two legal increases, insertion is rejected without consuming the seed.
+
+The result is fixed when processing starts. This machine has no menu and uses vanilla processing, including **Automate** support. Craft it at Farming level 5 with **50 Wood, 5 Iron Bars and 1 Battery Pack**. **Breaking it destroys its contents.**
+
+Existing Researcher 1 crops and seeds keep their saved traits. Researcher no longer changes mutation chance or growth time; breed Researcher produce into matching seeds to use it in the machine.
+
 ## Traits
 
 Trait percentages are fixed, per level unless stated otherwise.
@@ -49,7 +59,7 @@ Trait percentages are fixed, per level unless stated otherwise.
 | High Quality | 5% chance per primary item to upgrade its normal harvest quality by one tier. |
 | Companion | Up to 20% chance for one chosen, plain companion crop. Chance scales with the main crop's base regrowth days / 10, or base growth days / 7 for single-harvest crops, capped at full chance. Adds half the companion's base growth time to growth and regrowth. |
 | Evergreen | Level 5 allows all-season planting and survival, including winter. Levels 1–4 are dormant. |
-| Researcher | Adds 5 percentage points to mutation chance. |
+| Researcher | Single level. Research Machine replaces it with two successful trait rolls by the next morning. |
 | Seed Saver | 10% chance to return one matching seed with the parent's original traits. |
 | Rooted | 10% chance for a single-harvest crop to restart from seed stage with its original traits. |
 | Nurse Crop | 30% chance to advance adjacent non-fruit trees by one stage; excess chance adds stages. Stops one stage before maturity. Single-harvest crops only. |
@@ -67,7 +77,7 @@ Mutation rolls choose from all eligible traits. Picking a maxed trait, or a new 
 - Uses vanilla harvest hooks for hand/scythe harvesting, Junimos and the updated **Auto Harvester**. Harvesters bypassing vanilla `Crop.harvest` are not covered.
 - **Better Junimos** transfers the actual selected seed's traits and preserves trait timing when fertilizing. Its existing seasonal selection, winter work settings and inventory-cache limitations still apply. [Details](docs/BETTER-JUNIMOS.md).
 - Full Junimo-hut overflow can lose traits. Giant crops yield ordinary, untraited produce.
-- Processing and crafting outputs, including Seed Maker seeds, do not inherit traits. Trait produce can be consumed normally by recipes and other machines.
+- Processing and crafting outputs, including Seed Maker seeds, do not inherit traits, except the Research Machine’s researched seeds. Trait produce can be consumed normally by recipes and other machines.
 - Settings support Generic Mod Config Menu: mutation chance, maximum traits, regrowing mutations, breeding cost, and chat errors. Chat errors are enabled by default.
 
 Build and automated checks are covered; live gameplay, controller and end-to-end mod integration testing remain outstanding. See [testing notes](docs/TESTING.md).
@@ -78,4 +88,4 @@ Build and automated checks are covered; live gameplay, controller and end-to-end
 - [Build from source](docs/BUILDING.md)
 - [Release notes](CHANGELOG.md)
 
-To uninstall, back up your save, run `cropbreeding_cleanup` in the SMAPI console while the mod is installed, save and quit, then remove the mod. Cleanup removes traits and breeding machines, including their contents.
+To uninstall, back up your save, run `cropbreeding_cleanup` in the SMAPI console while the mod is installed, save and quit, then remove the mod. Cleanup removes traits and both machines, including their contents.

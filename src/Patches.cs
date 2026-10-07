@@ -343,7 +343,8 @@ internal static partial class Patches
     {
         try
         {
-            if (Breeder.IsMachine(__instance) && (t == null || t is Axe || t is Pickaxe)) Breeder.Clear(__instance);
+            if ((Breeder.IsMachine(__instance) || ResearchMachine.IsMachine(__instance))
+                && (t == null || t is Axe || t is Pickaxe)) Breeder.Clear(__instance);
         }
         catch (Exception ex)
         {
@@ -354,7 +355,7 @@ internal static partial class Patches
     {
         try
         {
-            if (!__result || probe || __instance.heldObject.Value is not Item output) return;
+            if (!__result || probe || ResearchMachine.IsMachine(__instance) || __instance.heldObject.Value is not Item output) return;
             output.modData.Remove(Traits.Key);
             output.modData.Remove(Companion.Key);
         }

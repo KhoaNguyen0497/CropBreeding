@@ -80,6 +80,7 @@ RootedWalnutTests.Run();
 BreedingCostTests.Run();
 Patches.CheckStationInput();
 StationStacksTests.Run();
+ResearchMachineTests.Run();
 
 TraitBadgeTests.Run();
 CropHarvestBubblesTests.Run();

@@ -55,7 +55,7 @@ Station destruction has accepted exceptions: contents may clear on an axe/pickax
 
 ### 2. Mutation lifecycle and timing
 
-- [ ] Set mutation chance to 1 before readiness; an eligible free-slot crop gains one trait shared by every primary output. At cap, the full eligible pool is still selected: blocked/maxed picks produce a stored failure, not a retry. Researcher increases the chance roll only.
+- [ ] Set mutation chance to 1 before readiness; an eligible free-slot crop gains one trait shared by every primary output. At cap, the full eligible pool is still selected: blocked/maxed picks produce a stored failure, not a retry. Researcher does not increase the chance roll.
 - [ ] Set chance to 0 before another readiness event. Its no-change marker remains fixed through waiting, repeated growth calls, config edits and save/reload. Stored successful outcomes also remain fixed. Changes to mutation settings affect the next unprepared cycle only.
 - [ ] Check overnight growth before Auto Harvester and daytime Junimos, crop fairy/`growCompletely`, zero-day plants and other instant-growth effects. A mod that directly changes phases without a supported growth hook may show no icon until harvest, but the fallback must prepare the outcome before output decoration.
 - [ ] No standalone star remains. With Crop Harvest Bubbles 0.6.2 (Nexus 17761), a Qi Gem badge appears in the crop icon's top right only for a saved successful mutation. Check mod absent/disabled, key-held/toggle visibility, ignored flowers, opacity, size, zoom, trellises, colored flowers, dense rows and screen edges. One badge on colored crops; none for dead plants, regrowing countdowns or failed/unprepared mutations. No rendering path prepares a mutation.
@@ -67,8 +67,8 @@ Influencing the initial roll by replaying the day with different maturation timi
 
 ### 3. Growth, soil and crop exceptions
 
-- [ ] Compare planting on ordinary ground, greenhouse/Ginger Island ground, already-fertilized soil, and immediate harvest/replant on the same soil. Test quality fertilizer, Speed-Gro, Agriculturist and rice/taro adjacency alongside Fast Growth, Companion and Researcher.
-- [ ] Recalculation removes old trait adjustments before applying new ones; repeated recalculation or Rooted cycles must not accumulate speed or delays. Initial days use `(ordinary adjusted days + half Companion base days) × Researcher multiplier × Fast Growth multiplier`, rounded up once. Regrowth uses the same trait formula on the normal regrowth interval, without inventing vanilla fertilizer effects on regrowth.
+- [ ] Compare planting on ordinary ground, greenhouse/Ginger Island ground, already-fertilized soil, and immediate harvest/replant on the same soil. Test quality fertilizer, Speed-Gro, Agriculturist and rice/taro adjacency alongside Fast Growth and Companion. Researcher must not change timing.
+- [ ] Recalculation removes old trait adjustments before applying new ones; repeated recalculation or Rooted cycles must not accumulate speed or delays. Initial days use `(ordinary adjusted days + half Companion base days) × Fast Growth multiplier`, rounded up once. Regrowth uses the same trait formula on the normal regrowth interval, without inventing vanilla fertilizer effects on regrowth.
 - [ ] Initial 5 days plus a 7-day Companion gives 9 days; at Fast Growth 5 it gives 7. Regrowth 4 plus that Companion gives 8 days, or 6 with Fast Growth 5. Fast Growth never creates regrowth.
 - [ ] Trait seeds are refused in Garden Pots/modded planters using pot soil. Plain seeds there behave normally and do not gain crop-breeding mutations. Custom planters using actual terrain soil remain a separate compatibility boundary.
 - [ ] Mixed/Mixed Flower seed packets are not breeding inputs. After vanilla resolves them to an eligible known crop, test that crop using its actual mapping; do not require a blanket ban based on mixed-seed origin. Seasonal forage, vanilla Fiber and Qi crops remain excluded. Tea/tree/grass inputs are not crop-breeding seeds.
@@ -85,11 +85,11 @@ Run applicable cases through hand, scythe/Iridium Scythe, vanilla Junimo, Better
 - [ ] High Quality upgrades each primary unit by at most one tier, normal → silver → gold → iridium, after vanilla quality. Test mixed-quality stacks, colored flowers and High Yield extras. It uses inherited levels, not a new mutation, and does not upgrade byproducts.
 - [ ] Companion rolls once per plant harvest for one normal-quality, trait-free crop. Check unassigned/assigned choices and rejection of self-companions in the station. Its delay uses initial base data, never the companion's regrowth or modified days. No recursive effects or High Yield multiplication.
 - [ ] Copper/Iron/Gold Bearing output IDs are 334/335/336; Maple/Resin/Tar output IDs are 724/725/726. At 28 base days, levels 1/4/5 give 25%, exactly one, and one plus 25% for another. Under five base days gives zero. Each trait rolls independently, using initial base growth even on regrowers; buffs, primary yield and regrowth interval do not affect these odds.
-- [ ] Seed Saver returns at most one matching seed per successful harvest with original inherited traits/Companion, not the new mutation. Test coffee and sunflowers. Researcher level 1/5 gives default total mutation chances of 10%/30% and growth penalties of 10%/50%.
+- [ ] Seed Saver returns at most one matching seed per successful harvest with original inherited traits/Companion, not the new mutation. Test coffee and sunflowers. Researcher does not change mutation chance or growth time.
 - [ ] Rooted restarts a successful annual crop at phase/day zero with original traits/color/Companion and current soil fertilizer/water. Sunflowers become flowers again. Natural regrowers, newly mutated Rooted, failed harvests and tool/giant-crop destruction cannot trigger it. Harvest bonuses occur once before restart.
 - [ ] Nurse Crop advances living non-fruit trees in the eight neighboring tiles by the shared rolled stage count, capped at stage 4. Test stages 0–5, diagonals, stumps, fruit trees and trees two tiles away. Rooted may trigger Nurse Crop on each successful cycle; natural regrowers and new Nurse Crop mutations do not get the effect.
 - [ ] Failed harvest attempts award no pending bonuses. Full Auto Harvester storage does not start harvesting; successful overflow uses its normal drop behavior. Vanilla Junimo hut overflow retains its accepted object-debris/metadata limitation.
-- [ ] Same item ID with different traits/levels/Companion choices does not stack; normal quality/color rules still apply. Automate does not feed/collect from the breeding station, but can use trait items in other supported machines. Processing/Seed Maker/crafting outputs have no breeding traits or Companion assignment; input quality retains its ordinary meaning. Building/crafting consumption of valuable trait items is allowed.
+- [ ] Same item ID with different traits/levels/Companion choices does not stack; normal quality/color rules still apply. Automate does not feed/collect from the breeding station, but can use trait items in other supported machines. Other processing/Seed Maker/crafting outputs have no breeding traits or Companion assignment; input quality retains its ordinary meaning. Building/crafting consumption of valuable trait items is allowed.
 
 ### 5. Better Junimos, raisins and walnuts
 
@@ -102,11 +102,11 @@ Run applicable cases through hand, scythe/Iridium Scythe, vanilla Junimo, Better
 ### 6. Lookup Anything, settings and recovery
 
 - [ ] Lookup Anything shows all 15 inherited traits with fixed trait percentages and current base mutation chance. A planted crop describes its inherited traits, not its pending mutation. Check Companion assignment, Evergreen 4/5, overflow odds and long controller-visible text. Plain items remain ordinary.
-- [ ] Seed previews show Fast Growth/Companion/Researcher and current Agriculturist without assumed fertilizer/paddy adjacency. Actual crop views use stored phase durations/countdowns. Compare regrowth summaries and next-harvest dates immediately after harvest and later. Yield/quality forecasts remain Lookup Anything's base calculations.
+- [ ] Seed previews show Fast Growth/Companion and current Agriculturist without assumed fertilizer/paddy adjacency. Actual crop views use stored phase durations/countdowns. Compare regrowth summaries and next-harvest dates immediately after harvest and later. Yield/quality forecasts remain Lookup Anything's base calculations.
 - [ ] Opening lookup repeatedly does not change crops or roll mutations. Missing/changed Lookup Anything contracts or failed field writes preserve ordinary lookup behavior. Test without the optional mod.
 - [ ] All five GMCM settings support save/reset and bounds. Mutation settings affect only future rolls. Breeding cost defaults to 3 and consumes equal seed/crop counts; changing it refreshes menu eligibility. Chat errors default to on. Trait effect percentages cannot be edited in config or GMCM.
 - [ ] Inject errors in our preparation, growth, output decoration and menu transactions. Restore the original action/result/state where possible, keep unrelated bonuses operational, do not replay harvests or duplicate delivered items, and let later actions work. Do not suppress arbitrary original-game/other-mod exceptions.
-- [ ] Check SMAPI first-error logs/repeat summaries and optional local chat notices, with no per-frame spam or reporting timer. Chat defaults off. Test missing texture/patch target, malformed config and unavailable optional APIs.
+- [ ] Check SMAPI first-error logs/repeat summaries and optional local chat notices, with no per-frame spam or reporting timer. Chat defaults on. Test missing texture/patch target, malformed config and unavailable optional APIs.
 - [ ] Menu transaction errors close safely, release the lock and return undelivered items; test full inventory/overflow and Lost and Found fallback. Failed patch registration must preserve previously installed unrelated patches.
 - [ ] On a backup, run `cropbreeding_cleanup` with crops and placed/inventory/nested machines. Save, exit and remove the mod; verify intended metadata/machine removal and no missing-item remnants. Machine contents are intentionally destroyed. This is an uninstall check, not old-version migration support.
 
@@ -137,3 +137,14 @@ Upstream reviewed: `aedenthorn/StardewValleyMods`, CropHarvestBubbles 0.6.2, `Co
 - [ ] Inventory badges work with Crop Harvest Bubbles absent; bubble badges still mean a saved successful mutation, independently of inherited traits.
 - [ ] Wooden biology station renders at normal big-craftable size with transparent edges. Badge and machine are static, with no particle or animation loop.
 - Packaging checks require the native machine PNG dimensions, 16×32. The Qi Gem sprite is read from game data and no separate badge PNG is shipped.
+
+## Unreleased Research Machine checks
+
+Pure research rules and linked machine-callback safety tests pass: 6,000 randomized cases across trait caps and annual/regrowing crops, exactly two increases, capped-trait filtering, forced repeated picks, no Researcher output, input immutability, zero-RNG probes, Companion/quality preservation, insufficient-capacity rejection and error fallback. These are not live machine or Automate tests. No release package has been produced for this change.
+
+- [ ] Load existing Researcher 1 crops/seeds: same stack quantities and metadata, updated label/description, normal breeding into seeds, no mutation bonus or growth penalty.
+- [ ] Manual insertion consumes one seed only; rejects ordinary seeds, produce, excluded seed types and busy machines. Coffee with Researcher is valid.
+- [ ] Insert Researcher plus two traits; collect next morning with exactly two increases and no Researcher. Check level-5 filtering and Companion assignment preservation.
+- [ ] Save/reload while processing and while ready: result remains identical, no reroll on collection. Test full inventory and Automate chest overflow.
+- [ ] Automate loads one seed and collects one trait-preserving output. Invalid inputs remain in storage. No custom Automate patch is installed.
+- [ ] Break the machine during processing/when ready: contents disappear without refund. Check recipe unlock, cleanup, 16×32 sprite, contact shadow and controller insertion/collection.
