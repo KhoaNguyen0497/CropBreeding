@@ -1,6 +1,6 @@
 # Crop Breeding artwork
 
-Machine assets are native RGBA PNGs. The breeding station preserves the supplied vanilla workbench's outer wooden border, base, feet and silhouette. The research machine preserves its corrected blue-gray glass dome above a custom terracotta pot, with a fitted rim and integrated foot. Both use normal big-craftable rendering. Enlarged previews use nearest-neighbor scaling.
+Machine assets are native RGBA PNGs. The breeding station preserves the supplied vanilla workbench's outer wooden border, base, feet and silhouette. The research machine preserves its corrected blue-gray glass dome above a custom terracotta pot, with a fitted rim and connected tapered outline. Both use normal big-craftable rendering. Enlarged previews use nearest-neighbor scaling.
 
 | Asset | Native size | Preview |
 |---|---|---|
@@ -18,7 +18,7 @@ The trait badge reuses the vanilla Qi Gem item sprite, `(O)858`, via ItemRegistr
 
 The sheet contains two aligned 16×32 frames: soil-only idle/ready at index 0 and a sprout rooted in the same soil at index 1. Vanilla machine settings select the working frame and wobble during processing. Timing and rendering code are unchanged.
 
-The approved pot concept replaces the entire wooden base with clean terracotta, a thick fitted top lip in slightly top-down perspective, tapered body, small integrated foot and a side adjustment knob. No wooden stand, metallic parts or added cast-shadow ellipse are used. The same native pot pixels and silhouette are shared across both states.
+The approved pot concept replaces the entire wooden base with clean terracotta, a fitted top lip in slightly top-down perspective and a tapered body. The final native-grid pass removes the side knob and evens the connected outline. No wooden stand, metallic parts or added cast-shadow ellipse are used. The same native pot pixels and silhouette are shared across both states.
 
 The built-in image-generation tool supplied the pot artwork. Export used nearest-neighbor sampling, a limited palette and binary alpha at the native grid. The fitted pot preserves the corrected dome silhouette and neutral border without soil-color bleed. A later sprout/glass pass updates only the interior above it. The new pot occupies rows 19–31. The preview is exactly 10× nearest-neighbor scaling.
 
@@ -37,3 +37,7 @@ The follow-up pass replaces the flattened sprout with diagonally raised, tapered
 `research-machine-render-preview.png` shows both 16×32 frames at the ordinary 4× world scale. `research-machine-render-preview.gif` simulates the vanilla processing wobble using the inspected `Object.draw` destination rectangle: width `64 + 4w`, height `128 + 2w`, position offset `(-2w, -2w)`, with `w` ranging from 0 to 5. All phases draw the entire source frame. These are source-based render simulations, not screenshots from a running game. The mod uses sprite index 0, the next index while working, and no custom draw patch. Live in-game validation remains pending.
 
 Follow-up built-in image edit prompt: “Replace only the cropped-looking rectangular sprout with a taller complete seedling: diagonally raised pointed leaves with single-pixel tapered tips and a continuous visible stem above the soil. Keep coherent native-grid shapes; preserve the existing dome, reflections, soil, pot and idle frame.” The generated sprout is palette-matched and aligned one native row upward to root at the soil surface.
+
+### Native pot perimeter correction
+
+Per the user’s request, this revision edits the original 32×32 sheet directly. No generated or enlarged artwork is downsampled. The lower 13 rows are replaced with a matching terracotta base in each 16×32 frame, with mirrored silhouette geometry and one connected dark perimeter around the rim, stepped sides and bottom. The right-side handle is removed completely. Rows 0–18, including glass, soil and the full sprout, remain byte-for-byte unchanged. All pot silhouette edges use the same outline color. Enlarged and 4×/wobble previews are generated only after the native asset is complete.

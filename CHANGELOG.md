@@ -6,7 +6,7 @@
 
 - Breeding cost now controls only donor crop count, always consuming one seed: cost 1 uses 1 seed + 1 crop; cost 3 uses 1 seed + 3 crops. Updated machine hints and configuration help; the default remains 3 and every merge produces one seed.
 
-- Replaced the Research Machine's wooden housing with a larger terracotta pot, fitted top rim, integrated foot and small side knob. The corrected glass dome and soil stay identical; only the processing frame has a sprout.
+- Replaced the Research Machine's wooden housing with a terracotta pot with a fitted top rim, clean tapered body and connected outline, drawn directly on the native pixel grid without a side handle. The corrected glass dome and soil stay identical; only the processing frame has a sprout.
 
 ## 1.0.13
 
