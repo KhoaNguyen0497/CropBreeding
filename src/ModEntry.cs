@@ -108,7 +108,7 @@ public sealed class ModEntry : Mod
                 data[ResearchMachine.MachineId] = new BigCraftableData
                 {
                     Name = "Research Machine", DisplayName = "Research Machine",
-                    Description = "Consumes one Researcher seed. Replaces Researcher with two successful trait rolls by the next morning. Breaking it loses its contents.",
+                    Description = "Consumes one Researcher seed. Replaces Researcher with two successful trait rolls in 4 in-game hours. Breaking it loses its contents.",
                     Texture = Id + "/ResearchMachine", SpriteIndex = 0,
                     CanBePlacedIndoors = true, CanBePlacedOutdoors = true, Fragility = 0, Price = 0
                 };

@@ -138,13 +138,13 @@ Upstream reviewed: `aedenthorn/StardewValleyMods`, CropHarvestBubbles 0.6.2, `Co
 - [ ] Wooden biology station renders at normal big-craftable size with transparent edges. Badge and machine are static, with no particle or animation loop.
 - Packaging checks require the native machine PNG dimensions, 16×32. The Qi Gem sprite is read from game data and no separate badge PNG is shipped.
 
-## Unreleased Research Machine checks
+## Research Machine checks
 
-Pure research rules and linked machine-callback safety tests pass: 6,000 randomized cases across trait caps and annual/regrowing crops, exactly two increases, capped-trait filtering, forced repeated picks, no Researcher output, input immutability, zero-RNG probes, Companion/quality preservation, insufficient-capacity rejection and error fallback. These are not live machine or Automate tests. No release package has been produced for this change.
+Pure research rules and linked machine-callback safety tests pass: 6,000 randomized cases across trait caps and annual/regrowing crops, exactly two increases, capped-trait filtering, forced repeated picks, no Researcher output, input immutability, zero-RNG probes, Companion/quality preservation, insufficient-capacity rejection and error fallback. These are not live machine or Automate tests. Version 1.0.9 is released; the four-hour timing change is unreleased.
 
 - [ ] Load existing Researcher 1 crops/seeds: same stack quantities and metadata, updated label/description, normal breeding into seeds, no mutation bonus or growth penalty.
 - [ ] Manual insertion consumes one seed only; rejects ordinary seeds, produce, excluded seed types and busy machines. Coffee with Researcher is valid.
-- [ ] Insert Researcher plus two traits; collect next morning with exactly two increases and no Researcher. Check level-5 filtering and Companion assignment preservation.
+- [ ] Insert Researcher plus two traits; collect after 4 in-game hours with exactly two increases and no Researcher. Check level-5 filtering and Companion assignment preservation. Test a 6am insertion becoming ready at 10am, overnight progress, and already-running batches retaining their saved remaining time.
 - [ ] Save/reload while processing and while ready: result remains identical, no reroll on collection. Test full inventory and Automate chest overflow.
 - [ ] Automate loads one seed and collects one trait-preserving output. Invalid inputs remain in storage. No custom Automate patch is installed.
 - [ ] Break the machine during processing/when ready: contents disappear without refund. Check recipe unlock, cleanup, 16×32 sprite, contact shadow and controller insertion/collection.

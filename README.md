@@ -40,7 +40,7 @@ The station uses a controller-friendly menu with tabs for each mode. Select an i
 
 ## Research Machine
 
-Insert **1 seed with Researcher** to receive **1 researched seed the next morning**. Other traits are allowed. Researcher is removed, then two successful rolls add or upgrade traits. Each roll rechecks available slots, crop eligibility and maximum levels; Researcher cannot be rolled back onto the result.
+Insert **1 seed with Researcher** to receive **1 researched seed after 4 in-game hours**. Other traits are allowed. Researcher is removed, then two successful rolls add or upgrade traits. Each roll rechecks available slots, crop eligibility and maximum levels; Researcher cannot be rolled back onto the result.
 
 For example, `Researcher + X4 + Y5` can become `X5 + Y5 + Z1`. A plain Researcher seed can gain two different traits or one level-2 trait. If changed settings leave fewer than two legal increases, insertion is rejected without consuming the seed.
 
@@ -59,7 +59,7 @@ Trait percentages are fixed, per level unless stated otherwise.
 | High Quality | 5% chance per primary item to upgrade its normal harvest quality by one tier. |
 | Companion | Up to 20% chance for one chosen, plain companion crop. Chance scales with the main crop's base regrowth days / 10, or base growth days / 7 for single-harvest crops, capped at full chance. Adds half the companion's base growth time to growth and regrowth. |
 | Evergreen | Level 5 allows all-season planting and survival, including winter. Levels 1–4 are dormant. |
-| Researcher | Single level. Research Machine replaces it with two successful trait rolls by the next morning. |
+| Researcher | Single level. Research Machine replaces it with two successful trait rolls in 4 in-game hours. |
 | Seed Saver | 10% chance to return one matching seed with the parent's original traits. |
 | Rooted | 10% chance for a single-harvest crop to restart from seed stage with its original traits. |
 | Nurse Crop | 30% chance to advance adjacent non-fruit trees by one stage; excess chance adds stages. Stops one stage before maturity. Single-harvest crops only. |
