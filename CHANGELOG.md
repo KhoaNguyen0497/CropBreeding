@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.12
 
 - Restored the Breeding Machine's vanilla workbench side borders, base, feet and silhouette, keeping biology details inside the wooden frame.
 - Refined the Research Machine with a blue-gray dome rim, smaller glass highlights, clean brown hardwood housing and soil in both states. The sprout still appears only while processing; native frame size, footprint and two-hour timing are unchanged.
