@@ -1,12 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.0.14
 
-- Reworked the Research Machine sprout with complete tapered leaves and a visible stem, checked at native resolution and simulated world scale including wobble. Added a subtle curved glass reflection in both states, preserving the fitted pot and clean borders.
-
-- Breeding cost now controls only donor crop count, always consuming one seed: cost 1 uses 1 seed + 1 crop; cost 3 uses 1 seed + 3 crops. Updated machine hints and configuration help; the default remains 3 and every merge produces one seed.
-
-- Replaced the Research Machine's wooden housing with a terracotta pot with a fitted top rim, clean tapered body and connected outline, drawn directly on the native pixel grid without a side handle. The corrected glass dome and soil stay identical; only the processing frame has a sprout.
+- Breeding cost now controls only donor crop count. Every merge consumes one seed plus the configured number of crops and produces one seed. Default: 1 seed + 3 crops; range: 1–10 crops. Updated machine hints and configuration help.
+- Replaced the Research Machine's wooden base with a clean terracotta pot, fitted rim and connected, symmetrical outline. Removed the side handle; the pot was redrawn directly at native resolution.
+- Reworked the processing sprout with complete tapered leaves and a visible stem. Added subtle glass reflections while keeping soil inside the dome and matching borders in both states.
 
 ## 1.0.13
 
