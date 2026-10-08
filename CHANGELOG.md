@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Replaced the Research Machine's wooden housing with a larger terracotta pot, fitted top rim, integrated foot and small side knob. The corrected glass dome and soil stay identical; only the processing frame has a sprout.
+
 ## 1.0.13
 
 - Breeding now combines all crop and seed traits at any levels, adding matching levels up to each trait's maximum. Plain crops and outputs above the trait-count cap are rejected; plain seeds still copy valid crop traits.

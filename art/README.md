@@ -1,6 +1,6 @@
 # Crop Breeding artwork
 
-Machine assets are native RGBA PNGs. The breeding station preserves the supplied vanilla workbench's outer wooden border, base, feet and silhouette. The research machine retains the Slime Incubator’s dome silhouette and ground-contact alpha, with a blue-gray glass rim and warm hardwood housing. Both use normal big-craftable rendering. Enlarged previews use nearest-neighbor scaling.
+Machine assets are native RGBA PNGs. The breeding station preserves the supplied vanilla workbench's outer wooden border, base, feet and silhouette. The research machine preserves its corrected blue-gray glass dome above a custom terracotta pot, with a fitted rim and integrated foot. Both use normal big-craftable rendering. Enlarged previews use nearest-neighbor scaling.
 
 | Asset | Native size | Preview |
 |---|---|---|
@@ -16,12 +16,14 @@ The trait badge reuses the vanilla Qi Gem item sprite, `(O)858`, via ItemRegistr
 
 ## Research Machine
 
-The sheet contains two aligned 16×32 frames: soil-only idle/ready at index 0 and a sprout rooted in the same soil at index 1. Vanilla machine settings select the working frame and wobble during processing. Both frames share their glass, soil and hardwood base pixels outside the sprout region. The original alpha mask preserves the machine footprint and ground-contact transparency.
+The sheet contains two aligned 16×32 frames: soil-only idle/ready at index 0 and a sprout rooted in the same soil at index 1. Vanilla machine settings select the working frame and wobble during processing. Timing and rendering code are unchanged.
 
-The latest edit replaces the inherited purple rim with muted blue-gray, removes the long bright reflection streaks, and replaces the moss/olive housing with clean brown hardwood. Small pale-blue highlights keep the dome readable. Soil is visible in both states, with green confined to the active sprout. Exported using nearest-neighbor sampling to the native grid and a limited palette; preview is exactly 10× nearest-neighbor.
+The approved pot concept replaces the entire wooden base with clean terracotta, a thick fitted top lip in slightly top-down perspective, tapered body, small integrated foot and a side adjustment knob. No wooden stand, metallic parts or added cast-shadow ellipse are used. The same native pot pixels and silhouette are shared across both states.
 
-Latest edit prompt (built-in image-generation tool): “Edit the two-frame research machine sprite sheet, preserving its 16×32 frame grid, silhouette and transparency. Replace purple dome rims with muted blue-gray, remove long white/mint glare streaks and keep small subtle highlights. Recolor the mossy olive base to clean warm brown hardwood with tan highlights. Add dark brown soil inside both domes. Only the active right frame has a tiny green sprout rooted in that soil. Keep both machines otherwise identical; no smoothing, extra detail or text.”
+The built-in image-generation tool supplied the pot artwork. Export used nearest-neighbor sampling, a limited palette and binary alpha at the native grid. Rows 0–18 of the existing corrected sheet were retained exactly, preserving the dome, highlights, soil, sprout and neutral border without soil-color bleed. The new pot occupies rows 19–31. The preview is exactly 10× nearest-neighbor scaling.
+
+Pot edit prompt (built-in image-generation tool): “Use the existing two-frame sheet for exact layout and the approved larger terracotta pot concept for the lower body. Replace the wooden base with a clean terracotta pot directly supporting the dome, with a thick oval top lip in Stardew’s slightly top-down perspective, tapered body, small integrated foot and tiny side knob. No wooden stand or platform, metal, moss or extra shadow. Preserve the blue-gray glass border and keep soil inside it. Idle has soil only; active has the sprout. Same 16×32 native pixel grid per frame, limited flat palette, transparent background; frames identical outside the sprout.”
 
 Workbench correction prompt, built-in image-generation tool: “Turn only the central gray tool/display area into a biology workbench with a pale blue flask containing green liquid, a tiny potted sprout and a cream seed sample tray. Preserve the exact vanilla wooden frame, tabletop border, side strips, drawer, legs and shadow. All contents fit inside the frame. Same native 16×32 grid, warm palette and transparency.” The previously approved, larger biology details were retained inside the restored vanilla border after comparing the generated variant.
 
-Border cleanup (built-in image-generation edit): “Replace stray brown soil pixels in the vertical dome rim with adjacent blue-gray glass-border shading, preserving all other pixels.” Only the corrected border detail was exported and palette-matched into the native sheet: six pixels across both frames, with the original alpha unchanged. Base redesign concepts are previews only and are not shipped.
+Border cleanup (built-in image-generation edit): “Replace stray brown soil pixels in the vertical dome rim with adjacent blue-gray glass-border shading, preserving all other pixels.” Only the corrected border detail was exported and palette-matched into the native sheet: six pixels across both frames, with the original alpha unchanged. The implemented pot keeps these corrected dome pixels.
