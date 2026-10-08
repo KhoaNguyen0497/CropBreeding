@@ -47,3 +47,7 @@ The user has still not installed the mod and explicitly requested no compatibili
 ## Unreleased breeding cost adjustment
 
 The default `BreedingCost` is now 3: each breeding or merge consumes three matching seeds and three matching donor crops, producing one seed. The accepted range is 1–10 in GMCM and config validation. The user will adjust their installed config; no build or release is requested.
+
+## Revised breeding ingredient ratio
+
+Each breeding or merge now consumes `BreedingCost` matching seeds and twice as many matching trait-bearing crops, producing one seed. Cost 1 means 1 seed plus 2 crops; the default remains 3 (3 seeds plus 6 crops), with range 1–10. Companion assignment and trait removal retain their existing costs. Release is paused while the user reviews the sprout and glass refinements.

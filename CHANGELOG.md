@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Repaired the Research Machine sprout silhouette and added a subtle curved glass reflection in both states, preserving the fitted pot and clean borders.
+
+- Breeding cost now requires the configured number of seeds and twice as many donor crops: cost 1 uses 1 seed + 2 crops. Updated machine hints and configuration help; the default remains 3 and every merge produces one seed.
+
 - Replaced the Research Machine's wooden housing with a larger terracotta pot, fitted top rim, integrated foot and small side knob. The corrected glass dome and soil stay identical; only the processing frame has a sprout.
 
 ## 1.0.13

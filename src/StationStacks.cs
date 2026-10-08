@@ -7,25 +7,26 @@ namespace CropBreeding;
 // input is returned after processing, instead of being overwritten by the output.
 internal static class StationStacks
 {
-    private static int Cost(SObject machine) => Breeder.RemoveMode(machine) || Breeder.CompanionMode(machine) ? 1 : Breeder.IngredientsRequired;
+    private static int LeftCost(SObject machine) => Breeder.RemoveMode(machine) || Breeder.CompanionMode(machine) ? 1 : Breeder.CropsRequired;
+    private static int RightCost(SObject machine) => Breeder.CompanionMode(machine) ? 1 : Breeder.SeedsRequired;
     private static SObject Batch(SObject machine)
     {
         var batch = (SObject)machine.heldObject.Value!.getOne();
-        batch.Stack = Cost(machine);
+        batch.Stack = LeftCost(machine);
         return batch;
     }
     private static bool Pair(SObject machine, Item left, Item right)
     {
         if (Breeder.CompanionMode(machine)) return Breeder.CanAssign(left, right);
-        var donor = left.getOne(); donor.Stack = Breeder.IngredientsRequired;
-        var seed = right.getOne(); seed.Stack = Breeder.IngredientsRequired;
+        var donor = left.getOne(); donor.Stack = Breeder.CropsRequired;
+        var seed = right.getOne(); seed.Stack = Breeder.SeedsRequired;
         return Breeder.CanBreed(donor, seed, out _);
     }
     internal static bool CanProcess(SObject machine, Item? right)
     {
-        if (machine.readyForHarvest.Value || machine.heldObject.Value is not Item left || left.Stack < Cost(machine)) return false;
+        if (machine.readyForHarvest.Value || machine.heldObject.Value is not Item left || left.Stack < LeftCost(machine)) return false;
         return Breeder.RemoveMode(machine) ? Breeder.CanRemoveFrom(left)
-            : right != null && right.Stack >= Cost(machine) && Pair(machine, left, right);
+            : right != null && right.Stack >= RightCost(machine) && Pair(machine, left, right);
     }
     internal static bool Insert(SObject machine, ref Item? right, Item source)
     {
@@ -75,7 +76,7 @@ internal static class StationStacks
         surplus = null;
         if (!CanProcess(machine, right)) return false;
         var original = machine.heldObject.Value!;
-        int count = original.Stack - Cost(machine);
+        int count = original.Stack - LeftCost(machine);
         Item? remainder = count > 0 ? original.getOne() : null;
         if (remainder != null) remainder.Stack = count;
         var batch = Batch(machine);

@@ -12,15 +12,15 @@ internal static class BreedingCostTests
         foreach (int cost in new[] { 1, 2, 3, 5, 10 })
         {
             ModEntry.Instance.Config = new ModConfig { BreedingCost = cost };
-            var donor = new SObject { ItemId = "24", Stack = cost };
+            var donor = new SObject { ItemId = "24", Stack = cost * 2 };
             Traits.Write(donor.modData, ["high_yield:2"]);
             var seed = new SObject { ItemId = "472", Stack = cost };
             var machine = new SObject();
-            donor.Stack = cost - 1;
+            donor.Stack = cost * 2 - 1;
             Check(!Breeder.Insert(machine, donor, false), "insufficient donor rejected");
-            donor.Stack = cost;
+            donor.Stack = cost * 2;
             Check(Breeder.Insert(machine, donor, true) && machine.heldObject.Value == null, "probe does not stage ingredients");
-            Check(Breeder.Insert(machine, donor, false) && machine.heldObject.Value!.Stack == cost, "stages exactly configured donor amount");
+            Check(Breeder.Insert(machine, donor, false) && machine.heldObject.Value!.Stack == cost * 2, "stages twice the configured seed amount");
             seed.Stack = cost - 1;
             Check(!Breeder.Insert(machine, seed, false) && !machine.readyForHarvest.Value, "insufficient seeds cannot consume staged crops");
             seed.Stack = cost;
@@ -28,19 +28,19 @@ internal static class BreedingCostTests
             Check(machine.readyForHarvest.Value && machine.heldObject.Value!.ItemId == "472"
                 && machine.heldObject.Value.Stack == 1 && Traits.Level(machine.heldObject.Value.modData, "high_yield") == 2,
                 "one output preserves donor traits for every cost");
-            Check(donor.Stack == cost && seed.Stack == cost, "station never also decrements caller-owned input stacks; UI owns removal");
+            Check(donor.Stack == cost * 2 && seed.Stack == cost, "station never also decrements caller-owned input stacks; UI owns removal");
         }
 
         ModEntry.Instance.Config = new ModConfig { BreedingCost = 5 };
         var staged = new SObject();
-        var crops = new SObject { ItemId = "24", Stack = 5 };
+        var crops = new SObject { ItemId = "24", Stack = 10 };
         Traits.Write(crops.modData, ["high_yield:2"]);
         Breeder.Insert(staged, crops, false);
         var seeds = new SObject { ItemId = "472", Stack = 10 };
         foreach (int changedCost in new[] { 1, 6 })
         {
             ModEntry.Instance.Config.BreedingCost = changedCost;
-            Check(!Breeder.Insert(staged, seeds, false) && staged.heldObject.Value!.Stack == 5
+            Check(!Breeder.Insert(staged, seeds, false) && staged.heldObject.Value!.Stack == 10
                 && !staged.readyForHarvest.Value, "cost changes cannot silently discard or underpay staged ingredients");
         }
         ModEntry.Instance.Config.BreedingCost = 5;

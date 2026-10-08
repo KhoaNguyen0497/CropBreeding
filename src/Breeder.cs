@@ -9,7 +9,8 @@ internal static class Breeder
     internal const string RemoveModeKey = ModEntry.Id + "/RemoveTraitMode";
     internal static bool RemoveMode(SObject machine) => machine.modData.ContainsKey(RemoveModeKey);
     internal static bool CompanionMode(SObject machine) => machine.modData.ContainsKey(ModeKey);
-    internal static int IngredientsRequired => Math.Clamp(ModEntry.Instance.Config.BreedingCost, 1, 10);
+    internal static int SeedsRequired => Math.Clamp(ModEntry.Instance.Config.BreedingCost, 1, 10);
+    internal static int CropsRequired => SeedsRequired * 2;
     internal const string MachineId = ModEntry.Id + "_Breeder";
     internal static StationLock MenuMutex(SObject machine, GameLocation location) => new(machine, location);
     internal static bool IsMachine(SObject machine) => machine.QualifiedItemId == "(BC)" + MachineId;
@@ -31,17 +32,17 @@ internal static class Breeder
         if (CompanionMode(machine)) return SetCompanion(machine, item, probe);
         if (machine.heldObject.Value == null)
         {
-            if (!IsDonor(item) || item.Stack < IngredientsRequired) return false;
+            if (!IsDonor(item) || item.Stack < CropsRequired) return false;
             if (!probe)
             {
                 machine.heldObject.Value = (SObject)item.getOne();
-                machine.heldObject.Value.Stack = IngredientsRequired;
+                machine.heldObject.Value.Stack = CropsRequired;
                 machine.MinutesUntilReady = -1;
                 machine.readyForHarvest.Value = false;
             }
             return true;
         }
-        if (item.Stack < IngredientsRequired || !CanBreed(machine.heldObject.Value, item, out string[] traits)) return false;
+        if (item.Stack < SeedsRequired || !CanBreed(machine.heldObject.Value, item, out string[] traits)) return false;
         if (!probe)
         {
             Item output = item.getOne();
@@ -98,7 +99,7 @@ internal static class Breeder
         traits = [];
         // The menu isolates one exact batch before processing and returns any surplus.
         // Low-level callers cannot discard extra crops or breed with too few.
-        return donor.Stack == IngredientsRequired && seed.Stack >= IngredientsRequired && IsDonor(donor) && CropCatalog.Matches(donor, seed) && Core.TraitRules.TryBreed(Traits.Read(donor.modData),
+        return donor.Stack == CropsRequired && seed.Stack >= SeedsRequired && IsDonor(donor) && CropCatalog.Matches(donor, seed) && Core.TraitRules.TryBreed(Traits.Read(donor.modData),
             Traits.Read(seed.modData), ModEntry.Instance.Config.MaximumTraits, out traits);
     }
     internal static void Clear(SObject machine)
