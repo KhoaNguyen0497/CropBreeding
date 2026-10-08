@@ -4,7 +4,8 @@
 
 - Restored the Breeding Machine's vanilla workbench side borders, base, feet and silhouette, keeping biology details inside the wooden frame.
 - Restored the Research Machine's original Slime Incubator dome contour, crisp glass palette and highlights. The sprout still appears only while processing; timing remains two in-game hours.
-- Added an on-demand, read-only `cropbreeding_research_check` console diagnostic for machine input and callback failures. Automate's reported input rejection is still under investigation; this is not a confirmed compatibility fix.
+- Fixed Research Machine input rejection: the output callback was missing the game's required `Farmer player` parameter, so both manual insertion and Automate failed to create output. The callback is now checked against the actual game delegate during compilation.
+- Added an on-demand, read-only `cropbreeding_research_check` console diagnostic for machine input and callback failures.
 
 ## 1.0.11
 

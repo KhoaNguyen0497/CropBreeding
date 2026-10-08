@@ -1,6 +1,6 @@
 # Research Machine input diagnostics
 
-The reported Automate failure has not been reproduced in a running game. Source review confirms that current Automate uses native `AttemptAutoLoad`, which reaches the same `PlaceInMachine` and machine-output rules as manual insertion. No separate Automate patch has been added.
+The supplied SMAPI log from Crop Breeding 1.0.11 confirmed that `CreateOutput` was missing the required `Farmer player` parameter. The game could not bind the callback, blocking output generation through both manual insertion and Automate. The signature is now corrected and assigned to the actual game's `MachineOutputDelegate` during compilation to catch future mismatches. Current Automate uses native `AttemptAutoLoad`, which reaches the same `PlaceInMachine` and machine-output rules as manual insertion. No separate Automate patch has been added. A complete processing cycle has not yet been verified in a running game.
 
 On a build containing this diagnostic:
 

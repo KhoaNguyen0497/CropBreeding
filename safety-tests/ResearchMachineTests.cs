@@ -27,16 +27,20 @@ namespace CropBreeding
                     "manual and Automate share one-seed validation and consumption");
                 Check(rule.OutputItem.Single().OutputMethod == "CropBreeding.ResearchMachine, CropBreeding: CreateOutput", "native callback name matches public output method");
                 var machine = new SObject { ItemId = ResearchMachine.MachineId };
+                var player = new Farmer();
+                var callback = (StardewValley.Delegates.MachineOutputDelegate)Delegate.CreateDelegate(
+                    typeof(StardewValley.Delegates.MachineOutputDelegate),
+                    typeof(ResearchMachine).GetMethod("CreateOutput")!);
                 var seed = new SObject { ItemId = "473", Stack = 12, Quality = 2 };
                 Traits.Write(seed.modData, ["researcher:1", "companion:3", "fast_growth:4"]);
                 seed.modData[Companion.Key] = "24";
                 var before = seed.modData.ToArray();
                 Check(ResearchMachine.CanAccept(seed), "multi-trait Researcher seed accepted");
                 for (int i = 0; i < 3; i++)
-                    Check(ResearchMachine.CreateOutput(machine, seed, true, rule.OutputItem[0], out _) != null, "probe accepts without processing");
+                    Check(callback(machine, seed, true, rule.OutputItem[0], player, out _) != null, "probe accepts without processing");
                 Check(random.Calls == 0 && machine.heldObject.Value == null && seed.Stack == 12 && seed.modData.SequenceEqual(before),
                     "probes never roll, stage output or alter input");
-                var output = ResearchMachine.CreateOutput(machine, seed, false, rule.OutputItem[0], out int? minutes);
+                var output = callback(machine, seed, false, rule.OutputItem[0], player, out int? minutes);
                 Check(output != null && output.ItemId == seed.ItemId && output.Stack == 1 && output.Quality == 2
                     && minutes == null && random.Calls == 2, "exactly two trait picks, same seed and native timing");
                 Check(Traits.Level(output!.modData, "researcher") == 0 && output.modData[Companion.Key] == "24",
@@ -47,11 +51,11 @@ namespace CropBreeding
                 Check(!ResearchMachine.CanAccept(crop), "produce rejected even when it has Researcher");
                 ModEntry.Instance.Config.MaximumTraits = 0;
                 int calls = random.Calls;
-                Check(ResearchMachine.CreateOutput(machine, seed, false, rule.OutputItem[0], out _) == null
+                Check(callback(machine, seed, false, rule.OutputItem[0], player, out _) == null
                     && random.Calls == calls, "impossible input rejected without rolls or consumption");
                 ModEntry.Instance.Config.MaximumTraits = 3;
                 random.Throw = true;
-                Check(ResearchMachine.CreateOutput(machine, seed, false, rule.OutputItem[0], out _) == null
+                Check(callback(machine, seed, false, rule.OutputItem[0], player, out _) == null
                     && seed.Stack == 12 && seed.modData.SequenceEqual(before), "research error returns no output and preserves input");
             }
             finally { Game1.random = originalRandom; ModEntry.Instance.Config = new ModConfig(); }
@@ -65,6 +69,12 @@ namespace CropBreeding
             public override double NextDouble() => throw new Exception("research must not roll a chance gate");
         }
     }
+}
+
+namespace StardewValley.Delegates
+{
+    public delegate Item? MachineOutputDelegate(SObject machine, Item inputItem, bool probe,
+        MachineItemOutput outputData, Farmer player, out int? overrideMinutesUntilReady);
 }
 
 namespace StardewValley.GameData.Machines

@@ -1,5 +1,6 @@
 using CropBreeding.Core;
 using StardewValley;
+using StardewValley.Delegates;
 using StardewValley.GameData.Machines;
 using SObject = StardewValley.Object;
 
@@ -9,6 +10,8 @@ public static class ResearchMachine
 {
     internal const string MachineId = ModEntry.Id + "_Researcher";
     internal const string InputQuery = ModEntry.Id + "_RESEARCH_SEED";
+    // Type-check the string-addressed callback against the actual game delegate at build time.
+    private static readonly MachineOutputDelegate OutputCallback = CreateOutput;
     internal static bool IsMachine(SObject machine) => machine.QualifiedItemId == "(BC)" + MachineId;
     private static bool Available(string id) => !TraitRules.MaterialDrops.TryGetValue(id, out var material)
         || Game1.objectData.ContainsKey(material.ItemId);
@@ -36,14 +39,14 @@ public static class ResearchMachine
             {
                 Id = "ResearchSeed", DaysUntilReady = -1, MinutesUntilReady = 120, RecalculateOnCollect = false,
                 Triggers = [new() { Trigger = MachineOutputTrigger.ItemPlacedInMachine, RequiredCount = 1, Condition = InputQuery }],
-                OutputItem = [new() { Id = "ResearchedSeed", OutputMethod = "CropBreeding.ResearchMachine, CropBreeding: CreateOutput", MinStack = 1, MaxStack = 1, CopyQuality = true }]
+                OutputItem = [new() { Id = "ResearchedSeed", OutputMethod = $"CropBreeding.ResearchMachine, CropBreeding: {OutputCallback.Method.Name}", MinStack = 1, MaxStack = 1, CopyQuality = true }]
             }
         ]
     };
 
     // Called by the native machine system, including Automate's data-based loader.
     // Vanilla stores this result on the machine before consuming its one input.
-    public static Item? CreateOutput(SObject machine, Item inputItem, bool probe, MachineItemOutput outputData, out int? overrideMinutesUntilReady)
+    public static Item? CreateOutput(SObject machine, Item inputItem, bool probe, MachineItemOutput outputData, Farmer player, out int? overrideMinutesUntilReady)
     {
         overrideMinutesUntilReady = null;
         try
