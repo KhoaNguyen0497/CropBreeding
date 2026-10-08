@@ -140,7 +140,7 @@ Upstream reviewed: `aedenthorn/StardewValleyMods`, CropHarvestBubbles 0.6.2, `Co
 
 ## Research Machine checks
 
-Pure research rules and linked machine-callback safety tests pass: 6,000 randomized cases across trait caps and annual/regrowing crops, exactly two increases, capped-trait filtering, forced repeated picks, no Researcher output, input immutability, zero-RNG probes, Companion/quality preservation, insufficient-capacity rejection and error fallback. These are not live machine or Automate tests. Version 1.0.9 is released; the four-hour timing change is unreleased.
+Pure research rules and linked machine-callback safety tests pass: 6,000 randomized cases across trait caps and annual/regrowing crops, exactly two increases, capped-trait filtering, forced repeated picks, no Researcher output, input immutability, zero-RNG probes, Companion/quality preservation, insufficient-capacity rejection and error fallback. These are not live machine or Automate tests. Version 1.0.10 uses a fixed four-hour timer; automated checks cover its native machine rule.
 
 - [ ] Load existing Researcher 1 crops/seeds: same stack quantities and metadata, updated label/description, normal breeding into seeds, no mutation bonus or growth penalty.
 - [ ] Manual insertion consumes one seed only; rejects ordinary seeds, produce, excluded seed types and busy machines. Coffee with Researcher is valid.
