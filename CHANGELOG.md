@@ -1,10 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.0.13
 
 - Breeding now combines all crop and seed traits at any levels, adding matching levels up to each trait's maximum. Plain crops and outputs above the trait-count cap are rejected; plain seeds still copy valid crop traits.
 - Controller quick-insert accepts higher-level and multi-trait seeds. Equal configured ingredient costs, one-seed output, Companion selection priority and mutation chance are unchanged.
-
 - Corrected soil-colored pixels in both Research Machine glass borders; idle and active frames retain their native size and transparency.
 
 ## 1.0.12
