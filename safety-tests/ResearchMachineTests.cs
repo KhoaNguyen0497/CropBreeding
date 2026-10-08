@@ -20,6 +20,8 @@ namespace CropBreeding
                 var rule = data.OutputRules.Single();
                 Check(data.HasInput && data.HasOutput && !data.AllowFairyDust && rule.DaysUntilReady == 1
                     && !rule.RecalculateOnCollect, "native next-morning machine, no fairy dust or collection rerolls");
+                Check(data.WobbleWhileWorking && data.ShowNextIndexWhileWorking && !data.ShowNextIndexWhenReady,
+                    "native working sprout and wobble; empty idle/ready frame");
                 Check(rule.Triggers.Single().RequiredCount == 1 && rule.Triggers.Single().Condition == ResearchMachine.InputQuery,
                     "manual and Automate share one-seed validation and consumption");
                 Check(rule.OutputItem.Single().OutputMethod == "CropBreeding.ResearchMachine, CropBreeding: CreateOutput", "native callback name matches public output method");

@@ -44,7 +44,7 @@ Insert **1 seed with Researcher** to receive **1 researched seed the next mornin
 
 For example, `Researcher + X4 + Y5` can become `X5 + Y5 + Z1`. A plain Researcher seed can gain two different traits or one level-2 trait. If changed settings leave fewer than two legal increases, insertion is rejected without consuming the seed.
 
-The result is fixed when processing starts. This machine has no menu and uses vanilla processing, including **Automate** support. Craft it at Farming level 5 with **50 Wood, 5 Iron Bars and 1 Battery Pack**. **Breaking it destroys its contents.**
+The result is fixed when processing starts. This machine has no menu and uses vanilla processing, including **Automate** support. Its chamber is empty and still when idle; a sprout appears and the machine wobbles while processing. Ready output uses the empty, still machine with the normal output bubble. Craft it at Farming level 5 with **50 Wood, 5 Iron Bars and 1 Battery Pack**. **Breaking it destroys its contents.**
 
 Existing Researcher 1 crops and seeds keep their saved traits. Researcher no longer changes mutation chance or growth time; breed Researcher produce into matching seeds to use it in the machine.
 

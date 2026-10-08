@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.9
+
+- Research Machine now shows an empty chamber while idle and a sprout while processing, with vanilla processing wobble.
+- When output is ready, the machine stops wobbling and returns to the empty-chamber frame with the normal output bubble.
+- Preserved the existing working sprite, native 16×32 frame size, machine body and shadow. Frame switching uses vanilla machine settings with no extra scans or rendering patches.
+
 ## 1.0.8
 
 - Researcher is now a single-level trait with no mutation-chance bonus or growth penalty. Existing Researcher 1 crops and seeds retain their saved traits.

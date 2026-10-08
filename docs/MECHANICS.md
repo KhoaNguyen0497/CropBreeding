@@ -110,7 +110,7 @@ With unchanged normal settings, removing Researcher frees a slot and guarantees 
 
 Native `Data/Machines` processing fixes and stores the output at insertion, consumes one seed, and makes it ready the next morning. Input probes never roll. Collecting or saving/loading a stored result does not reroll it; replaying an unsaved insertion may. No UI, daily scan or custom Automate integration is needed: Automate uses its standard data-based loader and tracks the stored output. Fairy Dust is disabled. Breaking the machine loses input/output without refund. Errors generating the output log and reject processing before consuming the seed.
 
-Recipe: Farming 5, 50 Wood, 5 Iron Bars, 1 Battery Pack. Static 16×32 recolored Slime Incubator-style sprite with a sprout.
+Recipe: Farming 5, 50 Wood, 5 Iron Bars, 1 Battery Pack. Two 16×32 recolored Slime Incubator-style frames: empty and still when idle; sprout and vanilla wobble while processing. When ready, the machine uses the empty frame, stops wobbling and shows its normal output bubble. Native frame settings handle transitions, including Automate, without extra scans or rendering hooks.
 
 - Foraged/shop/drop produce receives no new mutation from this mod. A matching item that already carries valid traits may be used as a donor (except coffee); there is no provenance restriction.
 - Ordinary processing, crafting and building requirements may consume trait crops normally. Traits provide no protection or special benefit in those uses; normal item quality rules still apply.

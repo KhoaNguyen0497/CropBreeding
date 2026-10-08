@@ -16,7 +16,7 @@ if json.loads((output / "manifest.json").read_text()) != manifest:
     raise SystemExit("Build output manifest is stale; rebuild before packaging.")
 files = [Path(manifest["EntryDll"]), Path("manifest.json")]
 files += sorted(p.relative_to(output) for p in (output / "assets").rglob("*") if p.is_file())
-for name, size in {"breeding-machine.png": (16, 32), "research-machine.png": (16, 32)}.items():
+for name, size in {"breeding-machine.png": (16, 32), "research-machine.png": (32, 32)}.items():
     sprite = Path("assets") / name
     if sprite not in files:
         raise SystemExit(f"Missing sprite: {name}")

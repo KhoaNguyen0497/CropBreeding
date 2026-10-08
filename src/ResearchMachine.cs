@@ -28,7 +28,7 @@ public static class ResearchMachine
     internal static MachineData CreateData() => new()
     {
         HasInput = true, HasOutput = true, AllowFairyDust = false,
-        WobbleWhileWorking = true, ShowNextIndexWhileWorking = false, ShowNextIndexWhenReady = false,
+        WobbleWhileWorking = true, ShowNextIndexWhileWorking = true, ShowNextIndexWhenReady = false,
         InvalidItemMessage = "Insert a Researcher seed with room for two trait increases.",
         OutputRules =
         [
