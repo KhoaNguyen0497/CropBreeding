@@ -8,7 +8,6 @@ namespace CropBreeding;
 internal static class StationStacks
 {
     private static int LeftCost(SObject machine) => Breeder.RemoveMode(machine) || Breeder.CompanionMode(machine) ? 1 : Breeder.CropsRequired;
-    private static int RightCost(SObject machine) => Breeder.CompanionMode(machine) ? 1 : Breeder.SeedsRequired;
     private static SObject Batch(SObject machine)
     {
         var batch = (SObject)machine.heldObject.Value!.getOne();
@@ -26,7 +25,7 @@ internal static class StationStacks
     {
         if (machine.readyForHarvest.Value || machine.heldObject.Value is not Item left || left.Stack < LeftCost(machine)) return false;
         return Breeder.RemoveMode(machine) ? Breeder.CanRemoveFrom(left)
-            : right != null && right.Stack >= RightCost(machine) && Pair(machine, left, right);
+            : right != null && right.Stack >= 1 && Pair(machine, left, right);
     }
     internal static bool Insert(SObject machine, ref Item? right, Item source)
     {

@@ -14,6 +14,18 @@ internal static class StationStacksTests
     }
     internal static void Run()
     {
+        foreach (int cropCost in new[] { 1, 2, 3, 5, 10 })
+        {
+            ModEntry.Instance.Config = new ModConfig { BreedingCost = cropCost };
+            var machine = new SObject(); Item? right = null;
+            StationStacks.Insert(machine, ref right, Item("24", cropCost + 2, "high_yield:2"));
+            StationStacks.Insert(machine, ref right, Item("472", 1, "high_yield:1"));
+            Check(StationStacks.Process(machine, right, null, out var remaining) && remaining?.Stack == 2,
+                "one seed supports every configured crop cost and preserves crop surplus");
+            Check(machine.heldObject.Value!.Stack == 1 && Traits.Level(machine.heldObject.Value.modData, "high_yield") == 3,
+                "one seed produces one merged seed regardless of crop cost");
+            Check(right!.Stack == 1, "seed consumption remains owned by the UI");
+        }
         ModEntry.Instance.Config = new ModConfig { BreedingCost = 3 };
         foreach (bool seedFirst in new[] { false, true })
         {
@@ -28,7 +40,7 @@ internal static class StationStacksTests
                 "whole stacks routed without auto-crafting");
             Check(!machine.readyForHarvest.Value && StationStacks.CanProcess(machine, right), "full-stack inputs become ready for explicit action");
             Check(StationStacks.Process(machine, right, null, out var surplus), "full-stack breeding succeeds");
-            Check(surplus?.Stack == 44 && surplus.Quality == 2 && Traits.Level(surplus.modData, "high_yield") == 3
+            Check(surplus?.Stack == 47 && surplus.Quality == 2 && Traits.Level(surplus.modData, "high_yield") == 3
                 && Traits.Level(surplus.modData, "companion") == 2 && Companion.Read(surplus.modData) == "192",
                 "unused donor quantity, quality and original traits preserved");
             Check(machine.heldObject.Value!.Stack == 1 && Traits.Level(machine.heldObject.Value.modData, "high_yield") == 5
@@ -99,7 +111,7 @@ internal static class StationStacksTests
             var original = machine.heldObject.Value;
             Check(!StationStacks.Process(machine, right, null, out var rejected) && rejected == null
                 && ReferenceEquals(original, machine.heldObject.Value) && original!.Stack == 2, "insufficient stack remains untouched");
-            StationStacks.Insert(machine, ref right, Item("24", 13, "high_yield:2"));
+            StationStacks.Insert(machine, ref right, Item("24", 8, "high_yield:2"));
             ModEntry.Instance.Config.BreedingCost = 5;
             Check(StationStacks.Process(machine, right, null, out var remaining) && remaining!.Stack == 5,
                 "changed cost consumes only current requirement and preserves surplus");

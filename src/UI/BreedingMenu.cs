@@ -303,9 +303,9 @@ internal sealed class BreedingMenu : MenuWithInventory
     {
         get
         {
-            int cost = Breeder.SeedsRequired;
-            return cost == 1 ? "2 donor crops + 1 matching seed = 1 bred seed"
-                : $"{Breeder.CropsRequired} donor crops + {cost} matching seeds = 1 bred seed";
+            int cost = Breeder.CropsRequired;
+            return cost == 1 ? "1 donor crop + 1 matching seed = 1 bred seed"
+                : $"{cost} donor crops + 1 matching seed = 1 bred seed";
         }
     }
     private bool CanBreed => canBreed;
@@ -315,7 +315,7 @@ internal sealed class BreedingMenu : MenuWithInventory
         Item? donor = machine.heldObject.Value;
         var state = new EligibilityState(donor, donor?.Stack ?? 0, Metadata(donor, Traits.Key), Metadata(donor, Companion.Key),
             seeds, seeds?.Stack ?? 0, Metadata(seeds, Traits.Key), Metadata(seeds, Companion.Key), machine.readyForHarvest.Value,
-            SettingCompanion, RemovingTrait, selectedTrait, ModEntry.Instance.Config.MaximumTraits, Breeder.SeedsRequired, Companion.Revision);
+            SettingCompanion, RemovingTrait, selectedTrait, ModEntry.Instance.Config.MaximumTraits, Breeder.CropsRequired, Companion.Revision);
         if (lastEligibility == state) return;
         removalTraits = donor != null && !state.Ready ? Traits.Read(donor.modData) : [];
         selectedTraitLabel = SelectedTrait is string trait ? TraitRules.Label(trait) : "No trait selected";
@@ -325,10 +325,10 @@ internal sealed class BreedingMenu : MenuWithInventory
         donorTraits = Summary(donor);
         seedTraits = Summary(seeds);
         donorLabel = state.Ready ? "Collect seed" : state.RemoveMode ? "Seed (1)"
-            : state.CompanionMode ? "Companion seed (1)" : $"Donor crops ({state.Cost * 2})";
-        seedLabel = state.RemoveMode ? "Trait to remove" : state.CompanionMode ? "Chosen crop (1)" : $"Matching seeds ({state.Cost})";
+            : state.CompanionMode ? "Companion seed (1)" : $"Donor crops ({state.Cost})";
+        seedLabel = state.RemoveMode ? "Trait to remove" : state.CompanionMode ? "Chosen crop (1)" : "Matching seed (1)";
         currentModeHint = ModeHint;
-        costHint = state.RemoveMode ? "Remove one trait for free" : state.CompanionMode ? "1 seed + 1 crop" : $"{state.Cost} seeds + {state.Cost * 2} crops = 1 seed";
+        costHint = state.RemoveMode ? "Remove one trait for free" : state.CompanionMode ? "1 seed + 1 crop" : $"1 seed + {state.Cost} crop{(state.Cost == 1 ? "" : "s")} = 1 seed";
         if (lastEligibility is EligibilityState previous && previous.Cost != state.Cost)
             message = ModeHint;
         lastEligibility = state;
@@ -436,13 +436,13 @@ internal sealed class BreedingMenu : MenuWithInventory
                 }
                 if (CanBreed && StationStacks.Process(machine, seeds, null, out surplus))
                 {
-                    seeds!.Stack -= SettingCompanion ? 1 : Breeder.SeedsRequired;
+                    seeds!.Stack -= Breeder.SeedsRequired;
                     if (seeds.Stack == 0) seeds = null;
                     snapshot = null;
                     message = "Ready! Collect your bred seed from the left slot.";
                     Game1.playSound("coin");
                 }
-                else message = SettingCompanion ? "Choose a different eligible crop; a seed cannot use its own crop as Companion." : $"Need {Breeder.CropsRequired} donor crops and {Breeder.SeedsRequired} compatible seeds.";
+                else message = SettingCompanion ? "Choose a different eligible crop; a seed cannot use its own crop as Companion." : $"Need {Breeder.CropsRequired} donor crops and 1 compatible seed.";
                 return;
             }
             base.receiveLeftClick(x, y, playSound);

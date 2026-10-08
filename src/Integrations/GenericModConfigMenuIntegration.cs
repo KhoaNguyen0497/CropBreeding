@@ -31,7 +31,7 @@ internal static class GenericModConfigMenuIntegration
             api.AddBoolOption(mod.ModManifest, () => mod.Config.EnableRegrowingCropMutations, value => mod.Config.EnableRegrowingCropMutations = value,
                 () => "Mutations on regrowing crops", () => "Affects future readiness rolls, not outcomes already stored on ready plants.", fieldId: nameof(ModConfig.EnableRegrowingCropMutations));
             api.AddNumberOption(mod.ModManifest, () => mod.Config.BreedingCost, value => mod.Config.BreedingCost = Math.Clamp(value, 1, 10),
-                () => "Breeding cost", () => "Each breeding or merge consumes this many matching seeds and twice as many donor crops, producing one seed. Cost 1: 1 seed + 2 crops. Default 3: 3 seeds + 6 crops. Each input must be one matching stack. The next recipe uses the current cost; unused donor crops are returned. Companion assignment and trait removal are unchanged.",
+                () => "Breeding crop cost", () => "Each breeding or merge consumes one matching seed and this many donor crops, producing one seed. Cost 1: 1 seed + 1 crop. Default 3: 1 seed + 3 crops. Donor crops must come from one matching stack. The next recipe uses the current cost; unused donor crops are returned. Companion assignment and trait removal are unchanged.",
                 1, 10, 1, fieldId: nameof(ModConfig.BreedingCost));
             api.AddSectionTitle(mod.ModManifest, () => "Error reporting");
             api.AddBoolOption(mod.ModManifest, () => mod.Config.ShowErrorsInChat, value => mod.Config.ShowErrorsInChat = value,

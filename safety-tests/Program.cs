@@ -52,7 +52,7 @@ Check(typeof(ModConfig).GetProperties().All(p => fields.Contains(p.Name)) && fie
 api.Numbers[nameof(ModConfig.MutationChance)].Set(25);
 Check(ModEntry.Instance.Config.MutationChance == .25, "GMCM percentages convert correctly");
 api.Numbers[nameof(ModConfig.BreedingCost)].Set(5);
-Check(ModEntry.Instance.Config.BreedingCost == 5, "GMCM breeding cost changes both ingredient amounts");
+Check(ModEntry.Instance.Config.BreedingCost == 5, "GMCM breeding cost changes the crop requirement");
 api.Booleans[nameof(ModConfig.ShowErrorsInChat)].Set(true);
 api.Save();
 Check(ModEntry.Instance.Helper.Saves == 1 && ModEntry.Instance.Config.ShowErrorsInChat, "GMCM save persists settings");

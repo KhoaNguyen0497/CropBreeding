@@ -51,3 +51,7 @@ The default `BreedingCost` is now 3: each breeding or merge consumes three match
 ## Revised breeding ingredient ratio
 
 Each breeding or merge now consumes `BreedingCost` matching seeds and twice as many matching trait-bearing crops, producing one seed. Cost 1 means 1 seed plus 2 crops; the default remains 3 (3 seeds plus 6 crops), with range 1–10. Companion assignment and trait removal retain their existing costs. Release is paused while the user reviews the sprout and glass refinements.
+
+## Crop-only breeding cost (supersedes the ratio above)
+
+`BreedingCost` now sets only the donor crop quantity. Every breeding or merge uses exactly one matching seed plus that many trait-bearing crops and produces one seed. The default remains 3 and the range remains 1–10. Existing output seeds can feed directly into the next merge at every cost. Release remains paused.
