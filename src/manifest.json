@@ -1,7 +1,7 @@
 {
   "Name": "Crop Breeding",
   "Author": "KhoaNguyen0497",
-  "Version": "1.0.10",
+  "Version": "1.0.11",
   "Description": "Breed inherited crop traits using matching seeds and harvested produce.",
   "UniqueID": "KhoaNguyen0497.CropBreeding",
   "EntryDll": "CropBreeding.dll",

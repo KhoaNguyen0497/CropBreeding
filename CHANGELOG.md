@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.11
+
+- Reduced Research Machine processing to a fixed 2 in-game hours (120 minutes), with no configuration option.
+- Updated machine and Researcher descriptions. Already-running batches retain their saved remaining time; new batches use the two-hour timer.
+
 ## 1.0.10
 
 - Research Machine processing now takes a fixed 4 in-game hours (240 minutes), instead of finishing the next morning. No configuration option is added.

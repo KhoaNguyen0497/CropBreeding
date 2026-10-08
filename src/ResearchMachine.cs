@@ -34,7 +34,7 @@ public static class ResearchMachine
         [
             new()
             {
-                Id = "ResearchSeed", DaysUntilReady = -1, MinutesUntilReady = 240, RecalculateOnCollect = false,
+                Id = "ResearchSeed", DaysUntilReady = -1, MinutesUntilReady = 120, RecalculateOnCollect = false,
                 Triggers = [new() { Trigger = MachineOutputTrigger.ItemPlacedInMachine, RequiredCount = 1, Condition = InputQuery }],
                 OutputItem = [new() { Id = "ResearchedSeed", OutputMethod = "CropBreeding.ResearchMachine, CropBreeding: CreateOutput", MinStack = 1, MaxStack = 1, CopyQuality = true }]
             }

@@ -19,8 +19,8 @@ namespace CropBreeding
                 var data = ResearchMachine.CreateData();
                 var rule = data.OutputRules.Single();
                 Check(data.HasInput && data.HasOutput && !data.AllowFairyDust && rule.DaysUntilReady == -1
-                    && rule.MinutesUntilReady == 240 && !rule.RecalculateOnCollect,
-                    "native fixed four-hour machine, no fairy dust or collection rerolls");
+                    && rule.MinutesUntilReady == 120 && !rule.RecalculateOnCollect,
+                    "native fixed two-hour machine, no fairy dust or collection rerolls");
                 Check(data.WobbleWhileWorking && data.ShowNextIndexWhileWorking && !data.ShowNextIndexWhenReady,
                     "native working sprout and wobble; empty idle/ready frame");
                 Check(rule.Triggers.Single().RequiredCount == 1 && rule.Triggers.Single().Condition == ResearchMachine.InputQuery,
