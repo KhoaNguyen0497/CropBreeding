@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Repaired the Research Machine sprout silhouette and added a subtle curved glass reflection in both states, preserving the fitted pot and clean borders.
+- Reworked the Research Machine sprout with complete tapered leaves and a visible stem, checked at native resolution and simulated world scale including wobble. Added a subtle curved glass reflection in both states, preserving the fitted pot and clean borders.
 
 - Breeding cost now requires the configured number of seeds and twice as many donor crops: cost 1 uses 1 seed + 2 crops. Updated machine hints and configuration help; the default remains 3 and every merge produces one seed.
 
