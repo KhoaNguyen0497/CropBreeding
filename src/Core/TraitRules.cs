@@ -118,16 +118,16 @@ public static class TraitRules
     }
     public static bool TryBreed(IEnumerable<string> donor, IEnumerable<string> seed, int limit, out string[] result)
     {
-        result = Parse(Encode(donor));
+        string[] donorTraits = Parse(Encode(donor));
         string[] seedTraits = Parse(Encode(seed));
-        // Plain seeds copy the donor, preserving traits if the user lowered the configured count cap.
-        if (seedTraits.Length == 0) return result.Length > 0;
-        if (result.Length == 0 || seedTraits.Length != 1 || TokenLevel(seedTraits[0]) != 1) return false;
-        string id = Id(seedTraits[0]);
-        int level = Level(result, id);
-        if (result.Length > Math.Max(0, limit) || level >= MaxLevel(id)
-            || (level == 0 && result.Length >= Math.Max(0, limit))) return false;
-        result = Parse(Encode(result.Where(t => Id(t) != id).Append(Token(id, level + 1))));
+        result = [];
+        if (donorTraits.Length == 0) return false;
+        // Normalize each input independently, then add shared levels across the two inputs.
+        // Plain seeds copy the donor; every output must fit the configured trait-count cap.
+        var combined = donorTraits.Concat(seedTraits).GroupBy(Id).ToArray();
+        if (combined.Length > Math.Max(0, limit)) return false;
+        result = Parse(Encode(combined.Select(group =>
+            Token(group.Key, Math.Min(MaxLevel(group.Key), group.Sum(TokenLevel))))));
         return true;
     }
     public static double CompanionOutputChance(int level, int baseGrowthDays, int baseRegrowDays)

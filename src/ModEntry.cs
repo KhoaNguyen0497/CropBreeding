@@ -103,7 +103,7 @@ public sealed class ModEntry : Mod
                 data[Breeder.MachineId] = new BigCraftableData
                 {
                     Name = "Breeding Machine", DisplayName = "Breeding Machine",
-                    Description = "Open to breed trait crops with matching seeds. Input amounts follow the Breeding cost setting; each input must be one matching stack. Plain seeds copy traits; one level-1 trait can merge. Breaking it loses its contents.",
+                    Description = "Breed trait crops with matching seeds. Equal input amounts follow the Breeding cost setting. Combine traits at any level; shared levels add up to their maximum. Plain seeds copy traits. Plain crops and outputs above the trait cap are rejected. Breaking it loses its contents.",
                     Texture = Id + "/BreedingMachine", SpriteIndex = 0,
                     CanBePlacedIndoors = true, CanBePlacedOutdoors = true, Fragility = 0, Price = 0
                 };

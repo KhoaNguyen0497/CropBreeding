@@ -32,7 +32,7 @@ Empty both slots before switching modes.
 
 **Breeding cost:** configurable from 1 to 10. A value of `x` requires `x` seeds and `x` donor crops, producing one seed. Set Companion and Remove Trait keep their one-seed costs.
 
-**Merging:** plain seeds copy the donor. A seed with exactly **one level-1 trait** can merge it into the donor's traits: matching traits gain one level; a different trait is added. Merges exceeding either limit are rejected.
+**Merging:** combine all traits from the crop and matching seeds, at any levels. Matching trait levels add together, capped at each trait's maximum (normally 5; Researcher 1). Plain seeds copy the crop's traits. Plain crops and outputs exceeding the configured trait-count cap are rejected. The configured cost applies equally to both inputs and always produces one seed.
 
 Coffee beans can inherit traits and be replanted directly. They cannot be breeding donors, but support Set Companion and Remove Trait.
 

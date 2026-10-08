@@ -18,17 +18,23 @@ internal static class StationStacksTests
         foreach (bool seedFirst in new[] { false, true })
         {
             var machine = new SObject(); Item? right = null;
-            var donor = Item("24", 50, "high_yield:2");
-            var seed = Item("472", 40, "high_yield:1");
+            var donor = Item("24", 50, "high_yield:3", "companion:2");
+            var seed = Item("472", 40, "high_yield:4", "companion:4", "evergreen:3");
+            Companion.Write(donor.modData, "192");
+            Companion.Write(seed.modData, "24");
             Check(StationStacks.Insert(machine, ref right, seedFirst ? seed : donor), "first quick-insert accepted");
             Check(StationStacks.Insert(machine, ref right, seedFirst ? donor : seed), "matching second quick-insert accepted");
             Check(donor.Stack == 0 && seed.Stack == 0 && machine.heldObject.Value!.Stack == 50 && right!.Stack == 40,
                 "whole stacks routed without auto-crafting");
             Check(!machine.readyForHarvest.Value && StationStacks.CanProcess(machine, right), "full-stack inputs become ready for explicit action");
             Check(StationStacks.Process(machine, right, null, out var surplus), "full-stack breeding succeeds");
-            Check(surplus?.Stack == 47 && surplus.Quality == 2 && Traits.Level(surplus.modData, "high_yield") == 2,
+            Check(surplus?.Stack == 47 && surplus.Quality == 2 && Traits.Level(surplus.modData, "high_yield") == 3
+                && Traits.Level(surplus.modData, "companion") == 2 && Companion.Read(surplus.modData) == "192",
                 "unused donor quantity, quality and original traits preserved");
-            Check(machine.heldObject.Value!.Stack == 1 && Traits.Level(machine.heldObject.Value.modData, "high_yield") == 3,
+            Check(machine.heldObject.Value!.Stack == 1 && Traits.Level(machine.heldObject.Value.modData, "high_yield") == 5
+                && Traits.Level(machine.heldObject.Value.modData, "companion") == 5
+                && Traits.Level(machine.heldObject.Value.modData, "evergreen") == 3
+                && Companion.Read(machine.heldObject.Value.modData) == "192",
                 "merging still produces one upgraded seed");
             Check(right!.Stack == 40, "UI remains sole owner of right-input consumption");
             var extra = Item("24", 5, "high_yield:2");
@@ -37,8 +43,6 @@ internal static class StationStacksTests
         {
             var machine = new SObject(); Item? right = null;
             Check(!StationStacks.Insert(machine, ref right, Item("24", 10)), "plain crop rejected");
-            Check(!StationStacks.Insert(machine, ref right, Item("472", 10, "high_yield:2")), "ineligible merge seed rejected");
-            Check(!StationStacks.Insert(machine, ref right, Item("472", 10, "high_yield:1", "rooted:1")), "multi-trait seed rejected");
             Check(StationStacks.Insert(machine, ref right, Item("24", 998, "high_yield:2")), "large stack staged");
             var excess = Item("24", 5, "high_yield:2");
             Check(StationStacks.Insert(machine, ref right, excess) && excess.Stack == 4 && machine.heldObject.Value!.Stack == 999,
@@ -47,6 +51,29 @@ internal static class StationStacksTests
             Check(!StationStacks.Insert(machine, ref right, different) && different.Stack == 5, "different traits never merged into occupied slot");
             var mismatch = Item("473", 5);
             Check(!StationStacks.Insert(machine, ref right, mismatch) && mismatch.Stack == 5 && right == null, "mismatched seeds untouched");
+        }
+        foreach (bool seedFirst in new[] { false, true })
+        {
+            var machine = new SObject(); Item? right = null;
+            var donor = Item("24", 5, "high_yield:2", "companion:1");
+            var seed = Item("472", 5, "evergreen:3", "rooted:4");
+            var first = seedFirst ? seed : donor;
+            var second = seedFirst ? donor : seed;
+            Check(StationStacks.Insert(machine, ref right, first), "first input may stage before combination is known");
+            Check(!StationStacks.Insert(machine, ref right, second) && second.Stack == 5,
+                "over-cap second input rejected untouched in either insertion order");
+            Check((seedFirst ? right?.Stack : machine.heldObject.Value?.Stack) == 5, "cap rejection preserves first input");
+        }
+        {
+            var machine = new SObject(); Item? right = null;
+            StationStacks.Insert(machine, ref right, Item("24", 5, "high_yield:2", "companion:1"));
+            StationStacks.Insert(machine, ref right, Item("472", 5, "evergreen:3"));
+            var left = machine.heldObject.Value;
+            ModEntry.Instance.Config.MaximumTraits = 2;
+            Check(!StationStacks.Process(machine, right, null, out var surplus) && surplus == null
+                && ReferenceEquals(left, machine.heldObject.Value) && left!.Stack == 5 && right!.Stack == 5,
+                "lowered cap rechecked at processing without consuming inputs");
+            ModEntry.Instance.Config.MaximumTraits = 3;
         }
         foreach (bool remove in new[] { false, true })
         {

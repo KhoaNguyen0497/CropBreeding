@@ -20,15 +20,35 @@ Check(TraitRules.Level(T("high_yield:99"), "high_yield") == 5, "loaded levels cl
 Breed("fast_growth,high_yield", "fast_growth", 3, "fast_growth:2,high_yield");
 Breed("fast_growth,high_yield", "evergreen", 3, "fast_growth,high_yield,evergreen");
 Breed("fast_growth:4,high_yield", "fast_growth", 2, "fast_growth:5,high_yield");
-Breed("fast_growth:5,high_yield", "fast_growth", 3, null);
+Breed("fast_growth:5,high_yield", "fast_growth", 3, "fast_growth:5,high_yield");
 Breed("fast_growth,high_yield", "evergreen", 2, null);
 Breed("fast_growth,high_yield,evergreen", "fast_growth", 3, "fast_growth:2,high_yield,evergreen");
-Breed("fast_growth,high_yield", "evergreen:2", 3, null);
-Breed("fast_growth,high_yield", "evergreen,high_yield", 3, null);
+Breed("fast_growth,high_yield", "evergreen:2", 3, "fast_growth,high_yield,evergreen:2");
+Breed("fast_growth,high_yield", "evergreen,high_yield", 3, "fast_growth,high_yield:2,evergreen");
 Breed("fast_growth:3,high_yield", "", 3, "fast_growth:3,high_yield");
-Breed("fast_growth:3,high_yield", "", 1, "fast_growth:3,high_yield");
+Breed("fast_growth:3,high_yield", "", 1, null);
 Breed("fast_growth:3,high_yield", "fast_growth", 1, null);
 Breed("", "high_yield", 3, null);
+Breed("", "", 3, null);
+Breed("", "fast_growth:5,high_yield:5,evergreen:5", 3, null);
+Breed("fast_growth", "", 0, null);
+Breed("fast_growth", "", -1, null);
+Breed("fast_growth:3", "fast_growth:4", 3, "fast_growth:5");
+Breed("fast_growth:2,high_yield", "fast_growth,evergreen:3", 3, "fast_growth:3,high_yield,evergreen:3");
+Breed("fast_growth:5,high_yield:2", "high_yield:4,evergreen:5", 3, "fast_growth:5,high_yield:5,evergreen:5");
+Breed("fast_growth,high_yield", "evergreen,companion", 3, null);
+Breed("fast_growth:5,high_yield:5,evergreen:5", "", 3, "fast_growth:5,high_yield:5,evergreen:5");
+foreach (string id in TraitRules.Known)
+    for (int a = 1; a <= TraitRules.MaxLevel(id); a++)
+        for (int b = 1; b <= TraitRules.MaxLevel(id); b++)
+            Breed($"{id}:{a}", $"{id}:{b}", 1, $"{id}:{Math.Min(a + b, TraitRules.MaxLevel(id))}");
+var mergeDonor = T("high_yield:3,companion:2");
+var mergeSeed = T("high_yield:4,companion:4,evergreen:3");
+var donorBefore = mergeDonor.ToArray(); var seedBefore = mergeSeed.ToArray();
+Check(TraitRules.TryBreed(mergeDonor, mergeSeed, 3, out var merged)
+    && TraitRules.TryBreed(mergeSeed, mergeDonor, 3, out var reversed)
+    && merged.SequenceEqual(reversed), "trait combination independent of direction");
+Check(mergeDonor.SequenceEqual(donorBefore) && mergeSeed.SequenceEqual(seedBefore), "merge leaves input trait arrays unchanged");
 Check(TraitRules.Parse("unknown:5,fast_growth:1").SequenceEqual(T("fast_growth")), "unknown traits ignored");
 Check(TraitRules.RegrowthDays(10, 1, .1) == 9, "level one regrowth");
 Check(TraitRules.RegrowthDays(10, 5, .1) == 5, "level five regrowth");
@@ -76,7 +96,7 @@ Check(TraitRules.CompanionChoice("strawberry", "blueberry") == "strawberry", "do
 Check(TraitRules.CompanionChoice(null, "blueberry") == "blueberry", "unassigned donor keeps seed choice");
 Check(TraitRules.CompanionChoice(null, null) == null, "both unassigned stays unassigned");
 Breed("companion:2", "companion", 3, "companion:3");
-Breed("companion:5", "companion", 3, null);
+Breed("companion:5", "companion", 3, "companion:5");
 Breed("fast_growth", "companion", 3, "fast_growth,companion");
 Breed("high_quality,fast_growth,high_yield", "companion", 3, null);
 bool sawNew = false, sawUpgrade = false;
@@ -98,7 +118,7 @@ Check(previewBase.SequenceEqual(new[] { 1, 2, 2, 99999 }), "preview never mutate
 for (int level = 0; level <= 5; level++)
     Check(TraitRules.EvergreenActive(level) == (level == 5), $"Evergreen activation level {level}");
 Breed("evergreen:4", "evergreen", 3, "evergreen:5");
-Breed("evergreen:5", "evergreen", 3, null);
+Breed("evergreen:5", "evergreen", 3, "evergreen:5");
 Breed("evergreen:5", "", 3, "evergreen:5");
 Check(TraitRules.Label("evergreen:4") == "Evergreen 4", "level four tooltip");
 Check(TraitRules.Label("evergreen:5") == "Evergreen 5", "level five tooltip");
@@ -128,7 +148,7 @@ Check(TraitRules.RegrowthDays(10, 5, .05, 8) == 11, "final reduction covers comp
 Check(TraitRules.FinalGrowthPhases(new[] { 1, 2, 2, 99999 }, 5, .05, 7).Take(3).Sum() == 7, "initial growth rounds only after combined reduction");
 Check(TraitRules.Level(T("researcher:5"), "researcher") == 1, "Researcher has one level");
 Check(TraitRules.Label("researcher:1") == "Researcher", "single-level Researcher label");
-Breed("researcher", "researcher", 3, null);
+Breed("researcher", "researcher", 3, "researcher");
 Breed("fast_growth:3", "researcher", 3, "fast_growth:3,researcher");
 Check(TraitRules.Mutate(T("researcher"), 3, 1, new Random(1), true, id => id == "researcher").SequenceEqual(T("researcher")), "harvest cannot upgrade Researcher");
 Breed("seed_saver:4", "seed_saver", 3, "seed_saver:5");
@@ -188,7 +208,7 @@ for (int stage = 0; stage <= 15; stage++)
 Check(TraitRules.AdvanceImmatureTree(0, 2, 5) == 2, "Nurse Crop can advance planted tree seeds");
 Check(TraitRules.AdvanceImmatureTree(3, 2, 5) == 4, "Nurse Crop discards excess stages near maturity");
 Breed("nurse_crop:4", "nurse_crop", 3, "nurse_crop:5");
-Breed("nurse_crop:5", "nurse_crop", 3, null);
+Breed("nurse_crop:5", "nurse_crop", 3, "nurse_crop:5");
 Check(TraitRules.Label("nurse_crop:3") == "Nurse Crop 3", "Nurse Crop label");
 bool sawNurseCrop = false;
 for (int i = 0; i < 1000; i++)
@@ -207,7 +227,7 @@ foreach (string id in TraitRules.MaterialDrops.Keys)
 {
     Check(TraitRules.Known.Contains(id), "material traits are recognized");
     Breed(id + ":4", id, 3, id + ":5");
-    Breed(id + ":5", id, 3, null);
+    Breed(id + ":5", id, 3, id + ":5");
     Check(TraitRules.Without(T(id), id).Length == 0, "material trait removable");
     foreach (bool regrows in new[] { false, true })
     {

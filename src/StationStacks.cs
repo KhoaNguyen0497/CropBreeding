@@ -43,8 +43,6 @@ internal static class StationStacks
         }
         else if (CropCatalog.EligibleSeed(source.ItemId))
         {
-            var traits = Traits.Read(source.modData);
-            if (traits.Length > 0 && (traits.Length != 1 || Core.TraitRules.Level(traits, Core.TraitRules.Id(traits[0])) != 1)) return false;
             toLeft = false;
         }
         else
