@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Corrected soil-colored pixels in both Research Machine glass borders; idle and active frames retain their native size and transparency.
+
 ## 1.0.12
 
 - Restored the Breeding Machine's vanilla workbench side borders, base, feet and silhouette, keeping biology details inside the wooden frame.
