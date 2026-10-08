@@ -41,3 +41,7 @@ Follow-up built-in image edit prompt: “Replace only the cropped-looking rectan
 ### Native pot perimeter correction
 
 Per the user’s request, this revision edits the original 32×32 sheet directly. No generated or enlarged artwork is downsampled. The lower 13 rows are replaced with a matching terracotta base in each 16×32 frame, with mirrored silhouette geometry and one connected dark perimeter around the rim, stepped sides and bottom. The right-side handle is removed completely. Rows 0–18, including glass, soil and the full sprout, remain byte-for-byte unchanged. All pot silhouette edges use the same outline color. Enlarged and 4×/wobble previews are generated only after the native asset is complete.
+
+### Research Machine runtime shadow
+
+The native PNG retains its approved artwork. On texture load, the game adds Fertilizer Makers’ compact ground footprint to transparent pixels in rows 29–31 of both frames. Colour/opacity matches the vanilla Seed Maker: straight RGBA (0,21,58,105), correctly premultiplied for Texture2D. Existing opaque pixels are never overwritten. The cached texture supplies the shadow to all normal renders without any per-frame draw patch. Current previews include this load-time shadow; the PNG asset itself remains shadow-free.

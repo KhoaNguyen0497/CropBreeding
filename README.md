@@ -89,3 +89,5 @@ Build and automated checks are covered; live gameplay, controller and end-to-end
 - [Release notes](CHANGELOG.md)
 
 To uninstall, back up your save, run `cropbreeding_cleanup` in the SMAPI console while the mod is installed, save and quit, then remove the mod. Cleanup removes traits and both machines, including their contents.
+
+Copper, Iron and Gold Bearing produce ore at 10% per level per full five base growth days. Coal Bearing produces coal at 5% using the same rule. Tapper-product traits retain their 5% rate. Whole 100% chances guarantee items; the remaining chance can add one more.

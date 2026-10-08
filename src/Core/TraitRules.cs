@@ -17,17 +17,18 @@ public static class TraitRules
     public static int MaxLevel(string id) => id == "researcher" ? 1 : MaximumLevel;
 
     public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver", "copper_bearing", "iron_bearing", "gold_bearing", "rooted", "nurse_crop",
-        "maple_bearing", "resin_bearing", "tar_bearing"];
+        "maple_bearing", "resin_bearing", "tar_bearing", "coal_bearing"];
     // Exact object IDs, with independent stable rolls.
-    public static readonly IReadOnlyDictionary<string, (string ItemId, int Salt)> MaterialDrops =
-        new Dictionary<string, (string ItemId, int Salt)>(StringComparer.Ordinal)
+    public static readonly IReadOnlyDictionary<string, (string ItemId, int Salt, int ChancePercent)> MaterialDrops =
+        new Dictionary<string, (string ItemId, int Salt, int ChancePercent)>(StringComparer.Ordinal)
         {
-            ["copper_bearing"] = ("334", 83),
-            ["iron_bearing"] = ("335", 89),
-            ["gold_bearing"] = ("336", 97),
-            ["maple_bearing"] = ("724", 127),
-            ["resin_bearing"] = ("725", 131),
-            ["tar_bearing"] = ("726", 137)
+            ["copper_bearing"] = ("378", 83, 10),
+            ["iron_bearing"] = ("380", 89, 10),
+            ["gold_bearing"] = ("384", 97, 10),
+            ["maple_bearing"] = ("724", 127, 5),
+            ["resin_bearing"] = ("725", 131, 5),
+            ["tar_bearing"] = ("726", 137, 5),
+            ["coal_bearing"] = ("382", 139, 5)
         };
     public static int NurseCropStages(int level, bool canRegrow, double roll)
     {
@@ -40,11 +41,12 @@ public static class TraitRules
             ? currentStage : currentStage + Math.Min(stages, matureStage - 1 - currentStage);
     public static bool RootedTriggers(int level, double chancePerLevel, bool canRegrow, double roll)
         => !canRegrow && roll < Math.Clamp(Math.Clamp(level, 0, MaximumLevel) * chancePerLevel, 0, 1);
-    public static int MaterialDropCount(int baseGrowthDays, int level, double roll)
+    public static int MaterialDropCount(int baseGrowthDays, int level, double roll, int chancePercent = 5)
     {
-        // Each full five-day block contributes one 5% unit per inherited level.
+        // Each full five-day block contributes the material-specific percentage per inherited level.
         int units = (Math.Max(0, baseGrowthDays) / 5) * Math.Clamp(level, 0, MaximumLevel);
-        return units / 20 + (roll < (units % 20) / 20.0 ? 1 : 0);
+        int percent = units * chancePercent;
+        return percent / 100 + (roll < (percent % 100) / 100.0 ? 1 : 0);
     }
     public static bool EvergreenActive(int level) => level >= MaximumLevel;
     public static int ExtraYieldCount(int count, int level, double increasePerLevel, double roll)
@@ -159,7 +161,7 @@ public static class TraitRules
         string name = Id(token) switch
         {
             "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "high_quality" => "High Quality", "companion" => "Companion", "evergreen" => "Evergreen", "researcher" => "Researcher", "seed_saver" => "Seed Saver",
-            "copper_bearing" => "Copper Bearing", "iron_bearing" => "Iron Bearing", "gold_bearing" => "Gold Bearing", "rooted" => "Rooted", "nurse_crop" => "Nurse Crop",
+            "copper_bearing" => "Copper Bearing", "iron_bearing" => "Iron Bearing", "gold_bearing" => "Gold Bearing", "coal_bearing" => "Coal Bearing", "rooted" => "Rooted", "nurse_crop" => "Nurse Crop",
             "maple_bearing" => "Maple Bearing", "resin_bearing" => "Resin Bearing", "tar_bearing" => "Tar Bearing", _ => Id(token)
         };
         return Id(token) == "researcher" ? name : $"{name} {TokenLevel(token)}";

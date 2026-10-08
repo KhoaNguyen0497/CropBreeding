@@ -32,7 +32,7 @@ internal static class LookupDescriptionTests
             && TraitDescriptions.Describe("companion:5", config).Contains("base growth days / 7"), "Companion explains both base-time thresholds");
         Check(TraitDescriptions.Describe("nurse_crop:5", config).Contains("150%"), "Nurse Crop overflow shown");
         foreach (string id in TraitRules.MaterialDrops.Keys)
-            Check(TraitDescriptions.Describe(id + ":5", config).Contains("25%")
+            Check(TraitDescriptions.Describe(id + ":5", config).Contains(TraitRules.MaterialDrops[id].ChancePercent == 10 ? "50%" : "25%")
                 && TraitDescriptions.Describe(id + ":5", config).Contains("per full 5 base growth days"), "material base growth formula");
         config.MutationChance = .20;
         Check(TraitDescriptions.Describe("fast_growth:2", config).Contains("10%")
@@ -84,6 +84,6 @@ internal static class LookupDescriptionTests
         var incompatible = new Harmony();
         LookupTraitDescriptions.Register(incompatible, typeof(Item), ModEntry.Instance.Monitor);
         Check(incompatible.Postfix == null, "unknown lookup contract skipped safely");
-        Console.WriteLine("Passed all 15 trait descriptions at levels 1-5, config-aware values, companion text, native lookup field construction, source precedence, lazy enumeration and error fallback. Uses test doubles.");
+        Console.WriteLine("Passed all 16 trait descriptions at levels 1-5, config-aware values, companion text, native lookup field construction, source precedence, lazy enumeration and error fallback. Uses test doubles.");
     }
 }

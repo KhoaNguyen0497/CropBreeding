@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.15
+
+- Added a compact vanilla-colour ground shadow to the Research Machine, matching Fertilizer Makers. Applied once when its texture loads, preserving the sprite and avoiding per-frame draw patches.
+- Copper, Iron and Gold Bearing now produce ore instead of bars, with their rate doubled from 5% to 10% per level per full five base growth days. Existing trait levels are preserved.
+- Added Coal Bearing: coal drops at 5% per level per full five base growth days. Supports mutation, research, breeding and trait removal; tapper-product rates remain unchanged.
+
 ## 1.0.14
 
 - Breeding cost now controls only donor crop count. Every merge consumes one seed plus the configured number of crops and produces one seed. Default: 1 seed + 3 crops; range: 1–10 crops. Updated machine hints and configuration help.

@@ -9,6 +9,7 @@ internal static class ReviewFixTests
     private static void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
     internal static void Run()
     {
+        CheckMaterialHarvest();
         var throttle = new ErrorThrottle();
         Check(throttle.Next("harvest", "first", 0).Full, "first error logged fully");
         for (int i = 1; i < 100; i++) Check(throttle.Next("harvest", "first", i) == (false, 0), "hot-loop errors suppressed");
@@ -102,7 +103,7 @@ internal static class ReviewFixTests
 
     private static void CheckHarvestIsolation()
     {
-        ModEntry.Instance.Config = new ModConfig { MutationChance = 0, MaximumTraits = 15 };
+        ModEntry.Instance.Config = new ModConfig { MutationChance = 0, MaximumTraits = 16 };
         foreach (var material in TraitRules.MaterialDrops.Values) Game1.objectData[material.ItemId] = new();
         foreach (string failure in new[] { "copper", "seed", "companion", "quality" })
         {
@@ -118,7 +119,7 @@ internal static class ReviewFixTests
             int failures = 0;
             ItemRegistry.Factory = (id, count, quality) =>
             {
-                if ((failure == "copper" && id == "(O)334") || (failure == "seed" && id == "(O)472"))
+                if ((failure == "copper" && id == "(O)378") || (failure == "seed" && id == "(O)472"))
                 { failures++; throw new Exception("injected item creation " + id); }
                 return new Item { ItemId = CropCatalog.Raw(id), Stack = count, Quality = quality };
             };
@@ -126,7 +127,7 @@ internal static class ReviewFixTests
             {
                 var context = new HarvestContext(plant);
                 Check(TraitRules.Encode(context.OutputTraits) == expected, "bonus failure preserves stored mutation");
-                Check(context.PendingExtras.Any(i => i.ItemId == "335"), "independent iron bonus survives");
+                Check(context.PendingExtras.Any(i => i.ItemId == "380"), "independent iron bonus survives");
                 Check(context.PendingExtras.Any(i => i.ItemId == "472") == (failure != "seed"), "Seed Saver isolated from unrelated failures");
                 Check(context.PendingExtras.Any(i => i.ItemId == "gold_carrot") == (failure != "companion"), "Companion isolated from unrelated failures");
                 HarvestContext.Current = context;
@@ -172,6 +173,32 @@ internal static class ReviewFixTests
             finally { Traits.SaltRandomFactory = null; }
         }
         Console.WriteLine("Passed Companion base growth/regrowth chances through the harvest path, including modified phases and first/repeat harvests. Uses test doubles.");
+    }
+    private static void CheckMaterialHarvest()
+    {
+        ModEntry.Instance.Config = new ModConfig { MutationChance = 0 };
+        foreach (var (trait, item, rate) in new[] { ("copper_bearing", "378", .10), ("iron_bearing", "380", .10),
+            ("gold_bearing", "384", .10), ("coal_bearing", "382", .05), ("maple_bearing", "724", .05) })
+            foreach (int regrow in new[] { -1, 1 })
+                foreach (bool success in new[] { false, true })
+                {
+                    Game1.objectData[item] = new();
+                    var plant = new Crop { Dirt = new HoeDirt(), Data = new CropData { DaysInPhase = [5], RegrowDays = regrow } };
+                    plant.Dirt.crop = plant;
+                    plant.currentPhase.Value = plant.phaseDays.Count - 1;
+                    Traits.Write(plant.modData, [trait + ":1"]);
+                    plant.modData[MutationState.Key] = "-";
+                    Traits.SaltRandomFactory = _ => new FixedCompanionRandom(success ? rate - .001 : rate);
+                    try
+                    {
+                        var extras = new HarvestContext(plant).PendingExtras;
+                        Check(extras.Count == (success ? 1 : 0), "material harvest obeys ore/coal boundary on annuals and regrowers");
+                        if (success) Check(extras[0].ItemId == item && extras[0].Stack == 1 && extras[0].Quality == 0
+                            && extras[0].modData.Count == 0, "material harvest emits the correct plain ore, coal or tapper product");
+                    }
+                    finally { Traits.SaltRandomFactory = null; }
+                }
+        Console.WriteLine("Passed ore and coal output IDs/rates through the harvest path. Uses test doubles.");
     }
     private sealed class FixedCompanionRandom(double value) : Random
     {

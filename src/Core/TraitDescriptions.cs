@@ -13,11 +13,11 @@ internal static class TraitDescriptions
         string Chance(double perLevel) => Percent(Math.Clamp(perLevel * level, 0, 1));
         string? material = id switch
         {
-            "copper_bearing" => "Copper Bar", "iron_bearing" => "Iron Bar", "gold_bearing" => "Gold Bar",
-            "maple_bearing" => "Maple Syrup", "resin_bearing" => "Oak Resin", "tar_bearing" => "Pine Tar", _ => null
+            "copper_bearing" => "Copper Ore", "iron_bearing" => "Iron Ore", "gold_bearing" => "Gold Ore",
+            "coal_bearing" => "Coal", "maple_bearing" => "Maple Syrup", "resin_bearing" => "Oak Resin", "tar_bearing" => "Pine Tar", _ => null
         };
         if (material != null)
-            return $"{Percent(.05 * level)} chance for 1 {material} per harvest per full 5 base growth days.";
+            return $"{Percent(TraitRules.MaterialDrops[id].ChancePercent / 100.0 * level)} chance for 1 {material} per harvest per full 5 base growth days.";
 
         return id switch
         {

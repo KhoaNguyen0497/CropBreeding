@@ -88,7 +88,17 @@ public sealed class ModEntry : Mod
                 {
                     string file = e.NameWithoutLocale.IsEquivalentTo(Id + "/ResearchMachine")
                         ? "assets/research-machine.png" : "assets/breeding-machine.png";
-                    return Helper.ModContent.Load<Texture2D>(file);
+                    Texture2D texture = Helper.ModContent.Load<Texture2D>(file);
+                    if (file == "assets/research-machine.png")
+                        ErrorHandler.Try("Apply research machine shadow", () =>
+                        {
+                            var pixels = new Microsoft.Xna.Framework.Color[texture.Width * texture.Height];
+                            texture.GetData(pixels);
+                            Core.MachineShadow.Apply(pixels, texture.Width, texture.Height,
+                                Microsoft.Xna.Framework.Color.FromNonPremultiplied(0, 21, 58, 105), p => p.A == 0);
+                            texture.SetData(pixels);
+                        });
+                    return texture;
                 }
                 catch (Exception ex)
                 {

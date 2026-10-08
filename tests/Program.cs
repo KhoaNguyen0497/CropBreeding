@@ -156,7 +156,7 @@ Breed("seed_saver:5", "", 3, "seed_saver:5");
 Check(TraitRules.Without(T("researcher:5,high_yield:3,companion:2"), "researcher").SequenceEqual(T("high_yield:3,companion:2")), "remove selected trait preserves other levels");
 Check(TraitRules.Without(T("researcher:5"), "researcher").Length == 0, "removing last trait gives plain seed");
 Check(TraitRules.Without(T("high_yield:3"), "researcher").SequenceEqual(T("high_yield:3")), "absent removal preserves traits");
-Check(TraitRules.MaterialDropCount(4, 5, 0) == 0, "under five base days gives no bars");
+Check(TraitRules.MaterialDropCount(4, 5, 0) == 0, "under five base days gives no materials");
 Check(TraitRules.MaterialDropCount(5, 1, .049) == 1, "first five-day block 5 percent");
 Check(TraitRules.MaterialDropCount(9, 1, .05) == 0, "partial block ignored and threshold fails");
 Check(TraitRules.MaterialDropCount(28, 1, .249) == 1, "28 days level one 25 percent success");
@@ -261,6 +261,36 @@ var availableRoll = new SelectedTraitRandom(0);
 Check(TraitRules.Mutate([], 3, 1, availableRoll, false, id => id == "evergreen").SequenceEqual(T("evergreen"))
     && availableRoll.PoolSize == 1, "unavailable traits excluded before selection");
 Console.WriteLine("Passed full-pool mutation selection, wasted capped/maxed picks, no rerolls and intrinsic eligibility checks.");
+
+foreach (string id in new[] { "copper_bearing", "iron_bearing", "gold_bearing" })
+{
+    Check(TraitRules.MaterialDrops[id].ChancePercent == 10, "ore rate is doubled");
+    Check(TraitRules.MaterialDropCount(5, 1, .099, TraitRules.MaterialDrops[id].ChancePercent) == 1, "ore 10 percent succeeds below boundary");
+    Check(TraitRules.MaterialDropCount(5, 1, .10, TraitRules.MaterialDrops[id].ChancePercent) == 0, "ore boundary fails");
+    Check(TraitRules.MaterialDropCount(28, 5, .499, TraitRules.MaterialDrops[id].ChancePercent) == 3, "ore overflow grants two plus half chance for third");
+    Check(TraitRules.MaterialDropCount(28, 5, .50, TraitRules.MaterialDrops[id].ChancePercent) == 2, "ore overflow boundary");
+}
+Check(TraitRules.MaterialDrops["copper_bearing"].ItemId == "378" && TraitRules.MaterialDrops["iron_bearing"].ItemId == "380"
+    && TraitRules.MaterialDrops["gold_bearing"].ItemId == "384", "ore IDs replace bars");
+Check(TraitRules.MaterialDrops["coal_bearing"].ItemId == "382" && TraitRules.MaterialDrops["coal_bearing"].ChancePercent == 5,
+    "Coal Bearing drops coal at five percent");
+Check(TraitRules.Label("coal_bearing:5") == "Coal Bearing 5", "coal label and level");
+var shadowPixels = new int[32 * 32];
+shadowPixels[30 * 32 + 4] = 9;
+MachineShadow.Apply(shadowPixels, 32, 32, 1, p => p == 0);
+Check(shadowPixels[30 * 32 + 4] == 9, "shadow preserves opaque art");
+for (int y = 0; y < 32; y++)
+    for (int x = 0; x < 32; x++)
+    {
+        if (x == 4 && y == 30) continue;
+        int localX = x % 16;
+        bool footprint = y is 29 or 30 ? localX >= 2 && localX <= 13 : y == 31 && localX >= 4 && localX <= 11;
+        Check(shadowPixels[y * 32 + x] == (footprint ? 1 : 0), "compact shadow is confined to both frame bases");
+    }
+MachineShadow.Apply(shadowPixels, 32, 32, 2, p => p == 0);
+Check(shadowPixels[29 * 32 + 2] == 1, "repeated load cannot darken an existing shadow");
+Console.WriteLine("Passed ore/coal rates, IDs, overflow and load-time shadow footprint checks.");
+
 
 sealed class SelectedTraitRandom(int index, double chanceRoll = 0) : Random
 {

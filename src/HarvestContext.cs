@@ -54,7 +54,7 @@ internal sealed class HarvestContext
                 int level = TraitRules.Level(Inherited, id);
                 // Base crop data only: no planted speed, Companion, or regrowth countdown.
                 baseGrowthDays ??= crop.GetData()!.DaysInPhase.Sum(days => Math.Max(0, days));
-                int count = TraitRules.MaterialDropCount(baseGrowthDays.Value, level, Traits.RandomFor(crop, material.Salt).NextDouble());
+                int count = TraitRules.MaterialDropCount(baseGrowthDays.Value, level, Traits.RandomFor(crop, material.Salt).NextDouble(), material.ChancePercent);
                 if (count > 0) PendingExtras.Add(ItemRegistry.Create("(O)" + material.ItemId, count, 0));
             }
             catch (Exception ex) { ErrorHandler.Report("Prepare material " + TraitRules.Id(token), ex); }
