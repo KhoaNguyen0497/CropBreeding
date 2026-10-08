@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Restored the Breeding Machine's vanilla workbench side borders, base, feet and silhouette, keeping biology details inside the wooden frame.
+- Restored the Research Machine's original Slime Incubator dome contour, crisp glass palette and highlights. The sprout still appears only while processing; timing remains two in-game hours.
+- Added an on-demand, read-only `cropbreeding_research_check` console diagnostic for machine input and callback failures. Automate's reported input rejection is still under investigation; this is not a confirmed compatibility fix.
+
 ## 1.0.11
 
 - Reduced Research Machine processing to a fixed 2 in-game hours (120 minutes), with no configuration option.

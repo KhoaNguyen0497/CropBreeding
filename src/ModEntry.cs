@@ -75,6 +75,8 @@ public sealed class ModEntry : Mod
                 foreach (var pair in CropCatalog.Data.Where(p => CropCatalog.EligibleSeed(p.Key)))
                     Monitor.Log($"{pair.Key} -> {pair.Value.HarvestItemId}", LogLevel.Info);
         }));
+        helper.ConsoleCommands.Add("cropbreeding_research_check", "Select a Researcher seed and face the Research Machine. Log input, machine and callback checks without processing anything.",
+            (_, _) => ErrorHandler.Try("Research diagnostics", ResearchDiagnostics.Run));
     }
     private void AssetRequested(object? sender, AssetRequestedEventArgs e)
     {
