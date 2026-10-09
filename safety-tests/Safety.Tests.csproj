@@ -4,6 +4,7 @@
     <LangVersion>12</LangVersion><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../src/RetiredTraits.cs" Link="RetiredTraits.cs" />
     <Compile Include="../src/Core/ResearchRules.cs" Link="ResearchRules.cs" />
     <Compile Include="../src/ResearchMachine.cs" Link="ResearchMachine.cs" />
     <Compile Include="../src/StationStacks.cs" Link="StationStacks.cs" />
@@ -21,7 +22,6 @@
     <Compile Include="../src/Breeder.cs" Link="Breeder.cs" />
     <Compile Include="../src/HarvestContext.cs" Link="HarvestContext.cs" />
     <Compile Include="../src/JunimoHarvestOutput.cs" Link="JunimoHarvestOutput.cs" />
-    <Compile Include="../src/RootedWalnuts.cs" Link="RootedWalnuts.cs" />
     <Compile Include="../src/SeedInheritance.cs" Link="SeedInheritance.cs" />
     <Compile Include="../src/Integrations/BetterJunimosIntegration.cs" Link="BetterJunimosIntegration.cs" />
     <Compile Include="../src/Integrations/BetterJunimosFertilizerIntegration.cs" Link="BetterJunimosFertilizerIntegration.cs" />

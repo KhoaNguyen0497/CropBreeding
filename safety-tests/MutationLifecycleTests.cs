@@ -83,13 +83,6 @@ internal static class MutationLifecycleTests
         Traits.RandomFactory = () => new FixedRandom(0, 1); // High Yield on the next ready cycle.
         MutationState.AfterGrowth(regrow);
         Check(regrow.modData[MutationState.Key] == "high_yield:1" && Traits.RandomCalls == beforeRegrowth + 1, "next regrowing harvest rolls anew");
-        MutationState.CompleteHarvest(plant, true); // Rooted's existing reset follows successful harvest cleanup.
-        plant.currentPhase.Value = 0;
-        MutationState.AfterGrowth(plant);
-        Check(!plant.modData.ContainsKey(MutationState.Key) && !MutationState.HasMutation(plant), "Rooted seed-stage restart has no old outcome/icon");
-        plant.currentPhase.Value = plant.phaseDays.Count - 1;
-        MutationState.AfterGrowth(plant);
-        Check(plant.modData[MutationState.Key] == "high_yield:1", "Rooted's next ready cycle gets a fresh outcome");
 
         ModEntry.Instance.Config.MutationChance = .05;
         Traits.RandomFactory = () => new FixedRandom(.06, 1);
@@ -133,7 +126,7 @@ internal static class MutationLifecycleTests
         Check(error.modData[MutationState.Key] == "fast_growth:3", "later action still works after mutation error");
         error.modData[MutationState.Key] = "broken data";
         Check(MutationState.ForHarvest(error, Traits.Read(error.modData)).SequenceEqual(new[] { "fast_growth:2" }), "corrupt pending outcome falls back to inherited traits");
-        Console.WriteLine("Passed stored mutation success/failure, readiness, waiting/reload, blocked picks, harvest fallback, regrowth/Rooted cycle state, host ownership and error recovery. Uses test doubles.");
+        Console.WriteLine("Passed stored mutation success/failure, readiness, waiting/reload, blocked picks, harvest fallback, regrowth cycle state, host ownership and error recovery. Uses test doubles.");
     }
 
     private sealed class FixedRandom(double roll, int index) : Random

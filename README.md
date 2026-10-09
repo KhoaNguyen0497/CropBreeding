@@ -52,7 +52,7 @@ Existing Researcher 1 crops and seeds keep their saved traits. Researcher no lon
 
 ## Traits
 
-Trait percentages are fixed, per level unless stated otherwise.
+Trait percentages are per level unless stated otherwise. Seed Saver is configurable from 5% to 20%, defaulting to 10%; other trait rates are fixed.
 
 | Trait | Effect |
 |---|---|
@@ -62,15 +62,15 @@ Trait percentages are fixed, per level unless stated otherwise.
 | Companion | Up to 20% chance for one chosen, plain companion crop. Chance scales with the main crop's base regrowth days / 10, or base growth days / 7 for single-harvest crops, capped at full chance. Adds half the companion's base growth time to growth and regrowth. |
 | Evergreen | Level 5 allows all-season planting and survival, including winter. Levels 1–4 are dormant. |
 | Researcher | Single level. Research Machine replaces it with two successful trait rolls in 2 in-game hours. |
-| Seed Saver | 10% chance to return one matching seed with the parent's original traits. |
-| Rooted | 10% chance for a single-harvest crop to restart from seed stage with its original traits. |
+| Seed Saver | Configurable chance (default 10%) to return one matching seed with the parent's original traits. |
 | Nurse Crop | 30% chance to advance adjacent non-fruit trees by one stage; excess chance adds stages. Stops one stage before maturity. Single-harvest crops only. |
-| Copper / Iron / Gold Bearing | Three separate traits producing their respective bars, using the material rule below. |
+| Copper / Iron / Gold Bearing | Three separate traits producing their respective ores, using the material rule below. |
+| Coal Bearing | Produces coal at the 5% material rate. |
 | Maple / Resin / Tar Bearing | Three separate traits producing Maple Syrup, Oak Resin or Pine Tar, using the same rule. |
 
-**Material rule:** each complete five days of the crop's base initial growth gives a 5% chance per level for one item. Chances above 100% guarantee items plus a roll for the remainder. Regrowing crops use their initial growth time for every harvest.
+**Material rule:** each complete five days of the crop's base initial growth gives a 10% chance per level for ore, or 5% for coal and tapper products. Chances above 100% guarantee items plus a roll for the remainder. Regrowing crops use their initial growth time for every harvest.
 
-Mutation rolls choose from all eligible traits. Picking a maxed trait, or a new trait when all slots are full, gives no mutation. Prepared results stay fixed until harvest, including failed rolls. Regrowing and Rooted crops prepare a new result for each new harvest cycle.
+Mutation rolls choose from all eligible traits. Picking a maxed trait, or a new trait when all slots are full, gives no mutation. Prepared results stay fixed until harvest, including failed rolls. Regrowing crops prepare a new result for each new harvest cycle.
 
 ## Compatibility and limits
 
@@ -80,7 +80,7 @@ Mutation rolls choose from all eligible traits. Picking a maxed trait, or a new 
 - **Better Junimos** transfers the actual selected seed's traits and preserves trait timing when fertilizing. Its existing seasonal selection, winter work settings and inventory-cache limitations still apply. [Details](docs/BETTER-JUNIMOS.md).
 - Full Junimo-hut overflow can lose traits. Giant crops yield ordinary, untraited produce.
 - Processing and crafting outputs, including Seed Maker seeds, do not inherit traits, except the Research Machine’s researched seeds. Trait produce can be consumed normally by recipes and other machines.
-- Settings support Generic Mod Config Menu: mutation chance, maximum traits, regrowing mutations, breeding cost, and chat errors. Chat errors are enabled by default.
+- Settings support Generic Mod Config Menu: mutation chance, maximum traits, regrowing mutations, breeding cost, Seed Saver chance, and chat errors. Chat errors are enabled by default.
 
 Build and automated checks are covered; live gameplay, controller and end-to-end mod integration testing remain outstanding. See [testing notes](docs/TESTING.md).
 
@@ -93,3 +93,7 @@ Build and automated checks are covered; live gameplay, controller and end-to-end
 To uninstall, back up your save, run `cropbreeding_cleanup` in the SMAPI console while the mod is installed, save and quit, then remove the mod. Cleanup removes traits and both machines, including their contents.
 
 Copper, Iron and Gold Bearing produce ore at 10% per level per full five base growth days. Coal Bearing produces coal at 5% using the same rule. Tapper-product traits retain their 5% rate. Whole 100% chances guarantee items; the remaining chance can add one more.
+
+The Seed Saver setting applies at the next harvest, including already-ready plants, and total chance caps at 100%. GMCM shows 5–20%; in `config.json`, `SeedSaverChance` uses decimal probabilities (`0.05`–`0.20`, default `0.10`). No restart is needed when changing it in GMCM.
+
+Rooted was retired in 1.0.17. Loading a save removes Rooted from existing seeds and crops in inventories, storage and machines, preserving quantities, quality, other traits and Companion assignments. Rooted-only items become plain. Save normally to persist the cleanup.

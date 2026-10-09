@@ -61,7 +61,7 @@ internal sealed class HarvestContext
         }
         try
         {
-            if (Traits.RandomFor(crop, 71).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "seed_saver") * CropBreeding.Core.TraitRules.SeedSaverChance, 0, 1))
+            if (Traits.RandomFor(crop, 71).NextDouble() < Math.Clamp(TraitRules.Level(Inherited, "seed_saver") * ModEntry.Instance.Config.SeedSaverChance, 0, 1))
             {
                 Item seed = ItemRegistry.Create("(O)" + CropCatalog.Raw(crop.netSeedIndex.Value), 1, 0);
                 Traits.Write(seed.modData, Inherited);
@@ -89,7 +89,7 @@ internal sealed class HarvestContext
 
     internal static bool Ready(Crop crop) => MutationState.Ready(crop);
 
-    // Called once after a successful harvest, before Rooted can restart the crop.
+    // Called once after a successful harvest.
     // One plant-wide roll; at most eight tile lookups, with no world scan or daily update.
     internal void GrowNearbyTrees()
     {
@@ -123,45 +123,6 @@ internal sealed class HarvestContext
         {
             foreach (var entry in changed)
                 ErrorHandler.Try("Restore tree stage", () => entry.Tree.growthStage.Value = entry.Stage);
-            throw;
-        }
-    }
-
-    internal bool TryRestart()
-    {
-        var data = Plant.GetData();
-        if (!WasReady || Plant.dead.Value || data == null || Plant.Dirt is not HoeDirtAlias soil
-            || !ReferenceEquals(soil.crop, Plant) || !Traits.Eligible(Plant, soil)
-            || !TraitRules.RootedTriggers(TraitRules.Level(Inherited, "rooted"), CropBreeding.Core.TraitRules.RootedChance,
-                data.RegrowDays > 0, Traits.RandomFor(Plant, 107).NextDouble())) return false;
-
-        var snapshot = new CropSnapshot(Plant);
-        try
-        {
-            // Reuse the plant so its inherited traits, color and other mods' metadata survive.
-            // Remove our saved phase deltas before rebuilding vanilla growth, avoiding accumulation.
-            Companion.RemoveGrowthDelay(soil);
-            Plant.ResetPhaseDays();
-            Plant.currentPhase.Value = 0;
-            Plant.dayOfCurrentPhase.Value = 0;
-            Plant.fullyGrown.Value = false;
-            Plant.phaseToShow.Value = -1;
-            // Sunflower harvest temporarily changes this to its bonus seed item.
-            Plant.indexOfHarvest.Value = CropCatalog.Raw(data.HarvestItemId);
-            Plant.raisedSeeds.Value = data.IsRaised;
-            soil.nearWaterForPaddy.Value = -1;
-            soil.applySpeedIncreases(Game1.player);
-            if (soil.hasPaddyCrop() && soil.paddyWaterCheck())
-            {
-                soil.state.Value = 1;
-                soil.updateNeighbors();
-            }
-            Plant.updateDrawMath(soil.Tile);
-            return true;
-        }
-        catch
-        {
-            ErrorHandler.Try("Restore crop after Rooted failure", snapshot.Restore);
             throw;
         }
     }

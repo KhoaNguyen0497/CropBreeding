@@ -44,19 +44,34 @@ Check(config.BreedingCost == 10 && config.MaximumTraits == CropBreeding.Core.Tra
 config.BreedingCost = 0; config.Normalize();
 Check(config.BreedingCost == 1, "breeding never accepts a free or negative cost");
 
+config.SeedSaverChance = double.PositiveInfinity; config.Normalize();
+Check(config.SeedSaverChance == .10, "nonfinite trait chances restore defaults");
+config.SeedSaverChance = double.NaN; config.Normalize();
+Check(config.SeedSaverChance == .10, "NaN Seed Saver chance restores default");
+config.SeedSaverChance = -1; config.Normalize();
+Check(config.SeedSaverChance == .05, "Seed Saver chance enforces five percent minimum");
+config.SeedSaverChance = 2; config.Normalize();
+Check(config.SeedSaverChance == .20, "trait chances clamp to valid probabilities");
 var api = new ConfigApi();
 ModEntry.Instance.Helper.ModRegistry.Api = api;
 GenericModConfigMenuIntegration.Register();
 var fields = api.Numbers.Keys.Concat(api.Booleans.Keys).ToHashSet();
-Check(typeof(ModConfig).GetProperties().All(p => fields.Contains(p.Name)) && fields.Count == 5, "every config setting appears in GMCM");
+Check(typeof(ModConfig).GetProperties().All(p => fields.Contains(p.Name)) && fields.Count == 6, "every config setting appears in GMCM");
 api.Numbers[nameof(ModConfig.MutationChance)].Set(25);
 Check(ModEntry.Instance.Config.MutationChance == .25, "GMCM percentages convert correctly");
+api.Numbers[nameof(ModConfig.SeedSaverChance)].Set(15);
+Check(ModEntry.Instance.Config.SeedSaverChance == .15, "Seed Saver chance converts percentage to probability");
+api.Numbers[nameof(ModConfig.SeedSaverChance)].Set(0);
+Check(ModEntry.Instance.Config.SeedSaverChance == .05, "GMCM enforces five percent minimum");
+api.Numbers[nameof(ModConfig.SeedSaverChance)].Set(100);
+Check(ModEntry.Instance.Config.SeedSaverChance == .20, "GMCM enforces five-to-twenty percent limits");
 api.Numbers[nameof(ModConfig.BreedingCost)].Set(5);
 Check(ModEntry.Instance.Config.BreedingCost == 5, "GMCM breeding cost changes the crop requirement");
 api.Booleans[nameof(ModConfig.ShowErrorsInChat)].Set(true);
 api.Save();
 Check(ModEntry.Instance.Helper.Saves == 1 && ModEntry.Instance.Config.ShowErrorsInChat, "GMCM save persists settings");
 api.Reset();
+Check(api.Numbers[nameof(ModConfig.SeedSaverChance)].Get() == 10, "trait chances reset to ten percent per level");
 Check(api.Numbers[nameof(ModConfig.MutationChance)].Get() == 5 && api.Booleans[nameof(ModConfig.ShowErrorsInChat)].Get() && api.Numbers[nameof(ModConfig.BreedingCost)].Get() == 3, "callbacks use reset config");
 ModEntry.Instance.Helper.Throw = true;
 api.Save(); // file-write error must not escape into GMCM.
@@ -75,7 +90,7 @@ LookupDescriptionTests.Run();
 ReviewFixTests.Run();
 BetterJunimosPlantingTests.Run();
 BetterJunimosFertilizerTests.Run();
-RootedWalnutTests.Run();
+RetiredTraitTests.Run();
 
 BreedingCostTests.Run();
 Patches.CheckStationInput();

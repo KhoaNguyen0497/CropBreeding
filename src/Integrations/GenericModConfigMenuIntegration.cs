@@ -33,14 +33,16 @@ internal static class GenericModConfigMenuIntegration
             api.AddNumberOption(mod.ModManifest, () => mod.Config.BreedingCost, value => mod.Config.BreedingCost = Math.Clamp(value, 1, 10),
                 () => "Breeding crop cost", () => "Each breeding or merge consumes one matching seed and this many donor crops, producing one seed. Cost 1: 1 seed + 1 crop. Default 3: 1 seed + 3 crops. Donor crops must come from one matching stack. The next recipe uses the current cost; unused donor crops stay in the left slot for another merge. Companion assignment and trait removal are unchanged.",
                 1, 10, 1, fieldId: nameof(ModConfig.BreedingCost));
+            api.AddSectionTitle(mod.ModManifest, () => "Trait chances");
+            Percent(nameof(ModConfig.SeedSaverChance), "Seed Saver chance per level", "Chance per inherited trait level for one extra matching seed per harvest. Total chance caps at 100%; never gives more than one seed. Range 5–20%; default 10%. Applies at the next harvest, including already-ready crops.", c => c.SeedSaverChance, (c, v) => c.SeedSaverChance = v, 5, 20);
             api.AddSectionTitle(mod.ModManifest, () => "Error reporting");
             api.AddBoolOption(mod.ModManifest, () => mod.Config.ShowErrorsInChat, value => mod.Config.ShowErrorsInChat = value,
                 () => "Show errors in chat", () => "Takes effect immediately. Local chat notices are limited to once per action every 10 seconds. SMAPI logs each new error in full and summarizes identical repeats.", fieldId: nameof(ModConfig.ShowErrorsInChat));
 
-            void Percent(string id, string name, string help, Func<ModConfig, double> get, Action<ModConfig, double> set)
+            void Percent(string id, string name, string help, Func<ModConfig, double> get, Action<ModConfig, double> set, int min = 0, int max = 100)
                 => api.AddNumberOption(mod.ModManifest, () => (int)Math.Round(get(mod.Config) * 100),
-                    value => set(mod.Config, Math.Clamp(value, 0, 100) / 100.0), () => name, () => help,
-                    0, 100, 1, value => $"{value}%", id);
+                    value => set(mod.Config, Math.Clamp(value, min, max) / 100.0), () => name, () => help,
+                    min, max, 1, value => $"{value}%", id);
         }
         catch (Exception ex)
         {

@@ -59,6 +59,16 @@ public sealed class ModEntry : Mod
             if (e.NamesWithoutLocale.Any(n => n.IsEquivalentTo("Data/Crops"))) Companion.Invalidate();
         });
         helper.Events.GameLoop.SaveLoaded += (_, _) => ErrorHandler.Try("Unlock recipe", Unlock);
+        helper.Events.GameLoop.SaveLoaded += (_, _) => ErrorHandler.Try("Remove retired Rooted trait", () =>
+        {
+            if (!Context.IsMainPlayer) return;
+            // Official traversal includes inventories, chests and machine-held items.
+            Utility.ForEachItem(item =>
+            {
+                RetiredTraits.CleanItem(item);
+                return true;
+            });
+        });
         helper.Events.GameLoop.DayStarted += (_, _) => ErrorHandler.Try("Unlock recipe", Unlock);
         helper.ConsoleCommands.Add("cropbreeding_give", "Give one Breeding Machine.", (_, _) => ErrorHandler.Try("Give machine", () =>
         {

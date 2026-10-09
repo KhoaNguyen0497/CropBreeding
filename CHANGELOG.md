@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.17
+
+- Removed Rooted from gameplay, mutation and research. On save load, existing seeds and crops lose only Rooted; their quantities, quality, other traits and Companion assignments are preserved. Rooted-only items become plain. Cleanup includes stored and machine-held items.
+- Added a Seed Saver chance setting in Generic Mod Config Menu and config.json: 5% to 20% per trait level, default 10%. Its existing one-seed effect and inherited traits are unchanged.
+- Seed Saver and its Lookup Anything description use the configured chance. The setting applies to the next harvest, including already-ready crops; total chance caps at 100%, with at most one Seed Saver seed.
+
 ## 1.0.16
 
 - Breeding now leaves the bred seed in the right slot for successive merges. Unused donor crops stay in the left slot; extra input seeds return to inventory (or drop nearby if full). Companion assignment and trait removal keep their existing output slots.

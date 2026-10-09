@@ -60,8 +60,8 @@ internal static class MutationState
         }
     }
 
-    // A failed/full-inventory harvest retains the exact outcome. Successful regrowth and Rooted
-    // both start their next cycle without it; removed annual crops need no special handling.
+    // A failed/full-inventory harvest retains the exact outcome. Successful regrowers
+    // start their next cycle without it; removed annual crops need no special handling.
     internal static void CompleteHarvest(Crop crop, bool succeeded)
     {
         if (succeeded) crop.modData.Remove(Key);

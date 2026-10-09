@@ -7,16 +7,15 @@ namespace CropBreeding.Core;
 public static class TraitRules
 {
     public const int MaximumLevel = 5;
-    // Fixed gameplay balance; only the base mutation chance is configurable.
+    // Fixed gameplay balance, plus defaults for configurable Seed Saver rate.
     public const double GrowthReductionPerLevel = .05;
     public const double ExtraYieldPerLevel = .20;
     public const double CompanionChance = .20;
     public const double QualityUpgradeChance = .05;
     public const double SeedSaverChance = .10;
-    public const double RootedChance = .10;
     public static int MaxLevel(string id) => id == "researcher" ? 1 : MaximumLevel;
 
-    public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver", "copper_bearing", "iron_bearing", "gold_bearing", "rooted", "nurse_crop",
+    public static readonly string[] Known = ["fast_growth", "high_yield", "high_quality", "companion", "evergreen", "researcher", "seed_saver", "copper_bearing", "iron_bearing", "gold_bearing", "nurse_crop",
         "maple_bearing", "resin_bearing", "tar_bearing", "coal_bearing"];
     // Exact object IDs, with independent stable rolls.
     public static readonly IReadOnlyDictionary<string, (string ItemId, int Salt, int ChancePercent)> MaterialDrops =
@@ -39,8 +38,6 @@ public static class TraitRules
     public static int AdvanceImmatureTree(int currentStage, int stages, int matureStage)
         => currentStage < 0 || currentStage >= matureStage - 1 || stages <= 0
             ? currentStage : currentStage + Math.Min(stages, matureStage - 1 - currentStage);
-    public static bool RootedTriggers(int level, double chancePerLevel, bool canRegrow, double roll)
-        => !canRegrow && roll < Math.Clamp(Math.Clamp(level, 0, MaximumLevel) * chancePerLevel, 0, 1);
     public static int MaterialDropCount(int baseGrowthDays, int level, double roll, int chancePercent = 5)
     {
         // Each full five-day block contributes the material-specific percentage per inherited level.
@@ -111,7 +108,7 @@ public static class TraitRules
         if (random.NextDouble() >= Math.Clamp(chance, 0, 1)) return current;
         // Roll the full crop-eligible pool before checking slots/levels. Blocked picks are wasted, never rerolled.
         string[] choices = Known.Where(id => (isAvailable?.Invoke(id) ?? true)
-            && (id is not ("rooted" or "nurse_crop") || !canRegrow)).ToArray();
+            && (id != "nurse_crop" || !canRegrow)).ToArray();
         if (choices.Length == 0) return current;
         string chosen = choices[random.Next(choices.Length)];
         int level = Level(current, chosen);
@@ -161,7 +158,7 @@ public static class TraitRules
         string name = Id(token) switch
         {
             "fast_growth" => "Fast Growth", "high_yield" => "High Yield", "high_quality" => "High Quality", "companion" => "Companion", "evergreen" => "Evergreen", "researcher" => "Researcher", "seed_saver" => "Seed Saver",
-            "copper_bearing" => "Copper Bearing", "iron_bearing" => "Iron Bearing", "gold_bearing" => "Gold Bearing", "coal_bearing" => "Coal Bearing", "rooted" => "Rooted", "nurse_crop" => "Nurse Crop",
+            "copper_bearing" => "Copper Bearing", "iron_bearing" => "Iron Bearing", "gold_bearing" => "Gold Bearing", "coal_bearing" => "Coal Bearing", "nurse_crop" => "Nurse Crop",
             "maple_bearing" => "Maple Bearing", "resin_bearing" => "Resin Bearing", "tar_bearing" => "Tar Bearing", _ => Id(token)
         };
         return Id(token) == "researcher" ? name : $"{name} {TokenLevel(token)}";

@@ -16,7 +16,7 @@ internal static class ResearchRulesTests
             int after = result.Sum(t => TraitRules.Level([t], TraitRules.Id(t)));
             Check(after == before + 2, "exactly two successful increases");
             Check(result.All(t => TraitRules.Level([t], TraitRules.Id(t)) <= 5), "level cap respected");
-            Check(!regrows || !result.Any(t => TraitRules.Id(t) is "rooted" or "nurse_crop"), "regrowing eligibility respected");
+            Check(!regrows || !result.Any(t => TraitRules.Id(t) == "nurse_crop"), "regrowing eligibility respected");
         }
         Check(ResearchRules.TryResearch(["researcher:1"], 3, true, new Random(1), out var doubled, id => id == "fast_growth")
             && doubled.SequenceEqual(new[] { "fast_growth:2" }), "same trait twice gives level two");

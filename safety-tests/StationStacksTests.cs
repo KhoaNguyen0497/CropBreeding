@@ -68,7 +68,7 @@ internal static class StationStacksTests
         {
             var machine = new SObject(); Item? right = null;
             var donor = Item("24", 5, "high_yield:2", "companion:1");
-            var seed = Item("472", 5, "evergreen:3", "rooted:4");
+            var seed = Item("472", 5, "evergreen:3", "seed_saver:4");
             var first = seedFirst ? seed : donor;
             var second = seedFirst ? donor : seed;
             Check(StationStacks.Insert(machine, ref right, first), "first input may stage before combination is known");
@@ -138,7 +138,7 @@ internal static class StationStacksTests
             var result = right;
             Check(!StationStacks.BreedInPlace(machine, ref right, out spare) && ReferenceEquals(result, right) && spare == null,
                 "empty donor rejection preserves result seed");
-            var invalid = Item("24", cost, "rooted:1", "evergreen:1");
+            var invalid = Item("24", cost, "coal_bearing:1", "evergreen:1");
             Check(!StationStacks.Insert(machine, ref right, invalid) && invalid.Stack == cost && ReferenceEquals(result, right),
                 "over-cap next donor cannot consume the current result");
         }

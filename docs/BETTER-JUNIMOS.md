@@ -4,11 +4,11 @@ Reviewed 2026-10-07 against `hawkfalcon/Stardew-Mods` commit `faa40d440fd75c9f70
 
 ## Harvesting and raisins
 
-`HarvestCropsAbility` leaves actual crop harvesting to vanilla. `PatchTryToHarvestHere` starts the harvest timer; `PatchJunimoShake` adjusts timing/animation after vanilla update. Neither replaces the actual `Crop.harvest` call. Our readiness fallback, stored mutation, primary output decoration, bonus delivery, regrowth timing, Nurse Crop and Rooted therefore share the same harvest path.
+`HarvestCropsAbility` leaves actual crop harvesting to vanilla. `PatchTryToHarvestHere` starts the harvest timer; `PatchJunimoShake` adjusts timing/animation after vanilla update. Neither replaces the actual `Crop.harvest` call. Our readiness fallback, stored mutation, primary output decoration, bonus delivery, regrowth timing Nurse Crop therefore share the same harvest path.
 
-Nurse Crop runs before Rooted resets the plant. Rooted changes the successful annual harvest's removal result to false after restarting it, so vanilla Junimo update leaves the plant in place. Both effects remain annual-only. The island-walnut interaction is now fixed for vanilla hand/scythe soil actions. Direct Junimo harvesting still uses its existing vanilla walnut behavior; this does not add a new automated walnut roll.
+Nurse Crop remains annual-only. Rooted was retired in 1.0.17; crop removal and island-walnut behavior use the normal vanilla path.
 
-Vanilla Junimo update clears `lastItemHarvested`, calls `Crop.harvest`, then—if raisins are active—rolls 20% to add `lastItemHarvested.getOne()` and explicitly preserves quality. This copies **one item**, not the full potato/coffee/High Yield batch. The copy does not call `Crop.harvest` again, so it does not roll mutation, restart Rooted, grow trees or award other breeding bonuses again.
+Vanilla Junimo update clears `lastItemHarvested`, calls `Crop.harvest`, then—if raisins are active—rolls 20% to add `lastItemHarvested.getOne()` and explicitly preserves quality. This copies **one item**, not the full potato/coffee/High Yield batch. The copy does not call `Crop.harvest` again, so it does not roll mutation, grow trees or award other breeding bonuses again.
 
 CropBreeding now retains the last actual primary item emitted by its harvest clone hook, after mutation and High Quality are applied. Bonus delivery restores that item as the raisin target in `finally`, even if an individual bonus delivery fails. Vanilla sunflower seeds/wheat hay and our Companion/material/Seed Saver/High Yield extras cannot replace the target. Same-ID Companion output is also excluded: identity comes from the original harvest output path, not a search through bonus items. Copying the outgoing item retains custom metadata and colored-item identity. Better Junimos' Botanist prefix can still set the outgoing item's quality before storage; the retained reference sees that change.
 
@@ -53,6 +53,6 @@ Automated checks and the remaining live checklist are in TESTING.md.
 
 ## Additional accepted upstream behavior
 
-Better Junimos' copied planting speed formula can reduce an already-zero phase below zero under strong bonuses. This can waste a growth reduction (e.g. Taro with Hyper Speed-Gro, Agriculturist and paddy water), while a later Rooted restart uses vanilla's correct calculation. The user accepted leaving this upstream bug unchanged. This is separate from the fertilizer recalculation integration.
+Better Junimos' copied planting speed formula can reduce an already-zero phase below zero under strong bonuses. This can waste a growth reduction (e.g. Taro with Hyper Speed-Gro, Agriculturist and paddy water). The user accepted leaving this upstream bug unchanged. This is separate from the fertilizer recalculation integration.
 
 Its seed-availability cache can miss seeds newly deposited by Seed Saver or ordinary harvests until a hut-menu close or day-start refresh. This too is accepted unchanged. Its selected seed determines a replacement crop's traits; it does not preserve the harvested plant's traits unless those are present on the selected seed. Winter/rain work settings also apply when workers are serving a greenhouse from an outdoor hut.

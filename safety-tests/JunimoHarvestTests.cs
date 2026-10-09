@@ -50,26 +50,24 @@ internal static class JunimoHarvestTests
             }
 
             var annual = ReadyPlant("24");
-            Traits.Write(annual.modData, ["nurse_crop:5", "rooted:5"]);
+            Traits.Write(annual.modData, ["nurse_crop:5"]);
             var tree = new Tree();
             annual.currentLocation.terrainFeatures[new(1, 0)] = tree;
             var harvest = new HarvestContext(annual);
             harvest.GrowNearbyTrees();
             Check(tree.growthStage.Value == 2, "Nurse Crop runs for original ready annual harvest");
-            Check(harvest.TryRestart() && annual.currentPhase.Value == 0, "Rooted restarts original plant");
             var keeper = new JunimoHarvester();
             Item crop = harvest.Decorate(new Item())[0];
             JunimoHarvestOutput.DeliverExtras(keeper, [], crop);
             keeper.tryToAddItemToHut(keeper.LastItem!.getOne());
-            Check(tree.growthStage.Value == 2 && annual.currentPhase.Value == 0, "copy neither nurses twice nor harvests Rooted restart");
+            Check(tree.growthStage.Value == 2, "copy does not nurse twice");
 
             var natural = ReadyPlant("24");
             natural.Data!.RegrowDays = 4;
-            Traits.Write(natural.modData, ["nurse_crop:5", "rooted:5"]);
+            Traits.Write(natural.modData, ["nurse_crop:5"]);
             var regrowContext = new HarvestContext(natural);
             natural.currentLocation.terrainFeatures[new(1, 0)] = new Tree();
             regrowContext.GrowNearbyTrees();
-            Check(!regrowContext.TryRestart(), "natural regrowers do not acquire annual Rooted behavior");
             Check(((Tree)natural.currentLocation.terrainFeatures[new(1, 0)]).growthStage.Value == 0, "natural regrowers do not nurse");
 
             Item fallback = new();

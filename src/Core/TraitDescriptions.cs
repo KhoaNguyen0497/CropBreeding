@@ -32,8 +32,7 @@ internal static class TraitDescriptions
                 ? "Dormant until level 5: allows planting and growing in all seasons."
                 : "Allows planting and growing in all seasons.",
             "researcher" => "Single-level trait. Research Machine replaces it with two successful trait rolls in 2 in-game hours. Existing traits can be upgraded; trait and level caps apply.",
-            "seed_saver" => $"{Chance(CropBreeding.Core.TraitRules.SeedSaverChance)} chance per harvest for 1 matching seed. Keeps the plant's original traits and Companion.",
-            "rooted" => $"{Chance(CropBreeding.Core.TraitRules.RootedChance)} chance to restart a single-harvest crop from seed stage for free. Keeps original traits and Companion.",
+            "seed_saver" => $"{Chance(config.SeedSaverChance)} chance per harvest for 1 matching seed. Keeps the plant's original traits and Companion.",
             "nurse_crop" => $"Single-harvest crops: {Percent(.30 * level)} chance on harvest to advance adjacent non-fruit trees by one stage, stopping before maturity.",
             _ => ""
         };

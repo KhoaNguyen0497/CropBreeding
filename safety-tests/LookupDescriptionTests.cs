@@ -40,6 +40,12 @@ internal static class LookupDescriptionTests
 
         Check(!TraitDescriptions.Describe("researcher:1", config).Contains("%"), "Researcher no longer advertises a mutation bonus");
 
+        config.SeedSaverChance = .15;
+        Check(TraitDescriptions.Describe("seed_saver:2", config).Contains("30%"), "lookup uses independent configured trait rates");
+        config.SeedSaverChance = .20;
+        Check(TraitDescriptions.Describe("seed_saver:5", config).Contains("100%"), "lookup caps total chance at 100 percent");
+        config.SeedSaverChance = .05;
+        Check(TraitDescriptions.Describe("seed_saver:5", config).StartsWith("25%"), "lookup shows minimum configured chance");
         var harmony = new Harmony();
         LookupTraitDescriptions.Register(harmony, typeof(LookupSubject), ModEntry.Instance.Monitor);
         Check(harmony.Postfix?.IsGenericMethod == true && !harmony.Postfix.ContainsGenericParameters, "native field type closes generic postfix");
@@ -66,10 +72,10 @@ internal static class LookupDescriptionTests
         Check(enumerations == 1 && fields.Length == 4 && fields[^1].Label == "Vanilla", "append original fields once without changing them");
         Check(fields.Any(f => f.Label == "High Yield 3" && f.Value.Contains("60%"))
             && fields.Any(f => f.Label == "Companion 2" && f.Value.Contains("Parsnip")), "seed/produce trait rows contain current level and companion");
-        var crop = new Crop(); crop.modData[Traits.Key] = "rooted:4";
+        var crop = new Crop(); crop.modData[Traits.Key] = "seed_saver:4";
         fields = Apply(new LookupSubject(item, crop), []).ToArray();
-        Check(fields.Length == 2 && fields[1].Label == "Rooted 4" && fields[1].Value.Contains("40%"), "planted crop metadata takes priority over sample item");
-        Check(!crop.modData.ContainsKey(MutationState.Key) && crop.modData[Traits.Key] == "rooted:4", "lookup never prepares mutations or changes traits");
+        Check(fields.Length == 2 && fields[1].Label == "Seed Saver 4" && fields[1].Value.Contains("40%"), "planted crop metadata takes priority over sample item");
+        Check(!crop.modData.ContainsKey(MutationState.Key) && crop.modData[Traits.Key] == "seed_saver:4", "lookup never prepares mutations or changes traits");
         var plain = new Item();
         Check(ReferenceEquals(Apply(new LookupSubject(plain), original), original), "plain items unchanged");
         crop.dead.Value = true;
@@ -84,6 +90,6 @@ internal static class LookupDescriptionTests
         var incompatible = new Harmony();
         LookupTraitDescriptions.Register(incompatible, typeof(Item), ModEntry.Instance.Monitor);
         Check(incompatible.Postfix == null, "unknown lookup contract skipped safely");
-        Console.WriteLine("Passed all 16 trait descriptions at levels 1-5, config-aware values, companion text, native lookup field construction, source precedence, lazy enumeration and error fallback. Uses test doubles.");
+        Console.WriteLine("Passed all 15 trait descriptions at levels 1-5, config-aware values, companion text, native lookup field construction, source precedence, lazy enumeration and error fallback. Uses test doubles.");
     }
 }

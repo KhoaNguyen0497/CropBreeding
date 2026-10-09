@@ -9,7 +9,7 @@ namespace CropBreeding.Core;
 internal static class ResearchRules
 {
     private static string[] Eligible(bool canRegrow, Func<string, bool>? available) => TraitRules.Known
-        .Where(id => id != "researcher" && (!canRegrow || id is not ("rooted" or "nurse_crop"))
+        .Where(id => id != "researcher" && (!canRegrow || id != "nurse_crop")
             && (available?.Invoke(id) ?? true)).ToArray();
 
     internal static bool CanResearch(IEnumerable<string> traits, int limit, bool canRegrow, Func<string, bool>? available = null)

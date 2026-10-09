@@ -9,6 +9,7 @@ internal static class ReviewFixTests
     private static void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
     internal static void Run()
     {
+        CheckConfigurableHarvestChances();
         CheckMaterialHarvest();
         var throttle = new ErrorThrottle();
         Check(throttle.Next("harvest", "first", 0).Full, "first error logged fully");
@@ -173,6 +174,33 @@ internal static class ReviewFixTests
             finally { Traits.SaltRandomFactory = null; }
         }
         Console.WriteLine("Passed Companion base growth/regrowth chances through the harvest path, including modified phases and first/repeat harvests. Uses test doubles.");
+    }
+    private static void CheckConfigurableHarvestChances()
+    {
+        foreach (var sample in new (double Chance, int Level, double Roll, bool Success)[] { (.05, 1, .049, true), (.05, 1, .05, false),
+            (.20, 2, .399, true), (.20, 2, .40, false), (.20, 5, .999, true) })
+        {
+            ModEntry.Instance.Config = new ModConfig { MutationChance = 0, SeedSaverChance = .10 };
+            var plant = new Crop { Dirt = new HoeDirt(), Data = new CropData { DaysInPhase = [5], RegrowDays = -1 } };
+            plant.Dirt.crop = plant;
+            plant.currentPhase.Value = plant.phaseDays.Count - 1;
+            plant.dayOfCurrentPhase.Value = 0;
+            Traits.Write(plant.modData, ["seed_saver:" + sample.Level]);
+            plant.modData[MutationState.Key] = "-";
+            // Changing the setting on a ready crop must affect this harvest.
+            ModEntry.Instance.Config.SeedSaverChance = sample.Chance;
+            Traits.SaltRandomFactory = _ => new FixedCompanionRandom(sample.Roll);
+            try
+            {
+                var context = new HarvestContext(plant);
+                Check(context.PendingExtras.Count == (sample.Success ? 1 : 0), "Seed Saver uses configured rate and caps to one seed");
+                if (sample.Success) Check(context.PendingExtras[0].Stack == 1 && Traits.Level(context.PendingExtras[0].modData, "seed_saver") == sample.Level,
+                    "saved seed retains inherited traits");
+            }
+            finally { Traits.SaltRandomFactory = null; }
+        }
+        ModEntry.Instance.Config = new ModConfig();
+        Console.WriteLine("Passed configurable Seed Saver harvest chances, minimum, thresholds, cap and ready-crop edits. Uses test doubles.");
     }
     private static void CheckMaterialHarvest()
     {
