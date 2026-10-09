@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.16
 
 - Breeding now leaves the bred seed in the right slot for successive merges. Unused donor crops stay in the left slot; extra input seeds return to inventory (or drop nearby if full). Companion assignment and trait removal keep their existing output slots.
 
