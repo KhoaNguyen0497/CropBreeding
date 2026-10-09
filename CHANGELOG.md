@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Breeding now leaves the bred seed in the right slot for successive merges. Unused donor crops stay in the left slot; extra input seeds return to inventory (or drop nearby if full). Companion assignment and trait removal keep their existing output slots.
+
 ## 1.0.15
 
 - Added a compact vanilla-colour ground shadow to the Research Machine, matching Fertilizer Makers. Applied once when its texture loads, preserving the sprite and avoiding per-frame draw patches.

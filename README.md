@@ -30,6 +30,8 @@ Empty both slots before switching modes.
 | Set Companion | 1 seed with Companion + 1 eligible crop | Assigns a different crop as companion; consumes the crop. Cannot choose the seed's own crop. |
 | Remove Trait | 1 seed with traits | Removes one selected trait for free. |
 
+Breeding leaves the result seed in the right slot, ready for the next merge. Leftover donor crops stay on the left; extra input seeds return to inventory.
+
 **Breeding cost:** configurable from 1 to 10. A value of `x` requires 1 seed and `x` donor crops, producing one seed. Cost 1 uses 1 seed and 1 crop; the default cost 3 uses 1 seed and 3 crops. Set Companion and Remove Trait keep their one-seed costs.
 
 **Merging:** combine all traits from the crop and matching seeds, at any levels. Matching trait levels add together, capped at each trait's maximum (normally 5; Researcher 1). Plain seeds copy the crop's traits. Plain crops and outputs exceeding the configured trait-count cap are rejected. Each merge consumes one seed and the configured number of crops, producing one seed.

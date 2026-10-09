@@ -70,6 +70,22 @@ internal static class StationStacks
         source.Stack -= count;
         return true;
     }
+    // Breeding retains its single output as the next right-hand input. Other modes
+    // keep their original left-hand output contract. Prepare seed surplus first.
+    internal static bool BreedInPlace(SObject machine, ref Item? right, out Item? unusedSeeds)
+    {
+        unusedSeeds = null;
+        if (Breeder.RemoveMode(machine) || Breeder.CompanionMode(machine) || !CanProcess(machine, right)) return false;
+        Item? remainder = right!.Stack > 1 ? right.getOne() : null;
+        if (remainder != null) remainder.Stack = right.Stack - 1;
+        if (!Process(machine, right, null, out Item? crops)) return false;
+        right = machine.heldObject.Value;
+        Breeder.Clear(machine);
+        machine.heldObject.Value = (SObject?)crops;
+        unusedSeeds = remainder;
+        return true;
+    }
+
     internal static bool Process(SObject machine, Item? right, string? removeTrait, out Item? surplus)
     {
         surplus = null;

@@ -117,6 +117,32 @@ internal static class StationStacksTests
                 "changed cost consumes only current requirement and preserves surplus");
             ModEntry.Instance.Config.BreedingCost = 3;
         }
+        foreach (int cost in new[] { 1, 3, 10 })
+        {
+            ModEntry.Instance.Config = new ModConfig { BreedingCost = cost };
+            var machine = new SObject(); Item? right = null;
+            StationStacks.Insert(machine, ref right, Item("24", cost * 3, "high_yield:1"));
+            StationStacks.Insert(machine, ref right, Item("472", 7, "companion:2"));
+            Companion.Write(right!.modData, "192");
+            Check(StationStacks.BreedInPlace(machine, ref right, out var spare) && spare?.Stack == 6
+                && Traits.Level(spare.modData, "high_yield") == 0 && Traits.Level(spare.modData, "companion") == 2
+                && Companion.Read(spare.modData) == "192" && spare.Quality == 2, "unused seed stack returned unchanged");
+            Check(right!.Stack == 1 && right.Quality == 0 && Traits.Level(right.modData, "high_yield") == 1
+                && Companion.Read(right.modData) == "192" && machine.heldObject.Value!.Stack == cost * 2
+                && !machine.readyForHarvest.Value, "bred seed moves right while donor surplus stays left");
+            for (int level = 2; level <= 3; level++)
+                Check(StationStacks.BreedInPlace(machine, ref right, out spare) && spare == null
+                    && Traits.Level(right!.modData, "high_yield") == level, "successive merges reuse the right-hand seed");
+            Check(machine.heldObject.Value == null && !machine.readyForHarvest.Value && right!.Stack == 1,
+                "final batch clears crops without leaving a duplicate output");
+            var result = right;
+            Check(!StationStacks.BreedInPlace(machine, ref right, out spare) && ReferenceEquals(result, right) && spare == null,
+                "empty donor rejection preserves result seed");
+            var invalid = Item("24", cost, "rooted:1", "evergreen:1");
+            Check(!StationStacks.Insert(machine, ref right, invalid) && invalid.Stack == cost && ReferenceEquals(result, right),
+                "over-cap next donor cannot consume the current result");
+        }
+        ModEntry.Instance.Config = new ModConfig { BreedingCost = 3 };
         Console.WriteLine("Passed quick-insert routing in all modes, full-stack quantities, explicit processing, surplus preservation and invalid/occupied input rejection. Uses test doubles.");
     }
 }

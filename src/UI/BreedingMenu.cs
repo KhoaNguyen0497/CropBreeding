@@ -434,6 +434,17 @@ internal sealed class BreedingMenu : MenuWithInventory
                     else message = "Insert a seed with traits and choose a trait to remove.";
                     return;
                 }
+                if (!SettingCompanion)
+                {
+                    if (CanBreed && StationStacks.BreedInPlace(machine, ref seeds, out surplus))
+                    {
+                        snapshot = null;
+                        message = "Bred seed is in the right slot. Add crops to merge again, or collect it.";
+                        Game1.playSound("coin");
+                    }
+                    else message = $"Need {Breeder.CropsRequired} donor crops and 1 compatible seed.";
+                    return;
+                }
                 if (CanBreed && StationStacks.Process(machine, seeds, null, out surplus))
                 {
                     seeds!.Stack -= Breeder.SeedsRequired;
